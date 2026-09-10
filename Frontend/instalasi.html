@@ -122,7 +122,7 @@ a{text-decoration:none;color:inherit}
 .console-head .led{width:6px;height:6px;border-radius:50%;background:var(--txt-3)}
 .console-head.live .led{background:var(--green);box-shadow:0 0 6px var(--green)}
 .console-body{max-height:280px;overflow:auto;padding:12px 13px;font-family:var(--mono);font-size:11px;line-height:1.65;white-space:pre-wrap;word-break:break-word;color:#8fa3b3}
-.console-body .key{color:#7fb2e8}.console-body .str{color:#c3e88d}.console-body .method{color:var(--accent);font-weight:600}.console-body .url{color:var(--txt-2)}.console-body .ok{color:var(--green)}.console-body .muted{color:var(--txt-3)}.console-body .amber{color:var(--amber)}
+.console-body .key{color:#7fb2e8}.console-body .str{color:#c3e88d}.console-body .method{color:var(--accent);font-weight:600}.console-body .url{color:var(--txt-2)}.console-body .ok{color:var(--green)}.console-body .muted{color:var(--txt-3)}.console-body .err{color:var(--red)}.console-body .amber{color:var(--amber)}
 .actions{display:flex;gap:11px;margin-top:2px}
 .actions .btn{flex:1}
 
@@ -228,7 +228,7 @@ a{text-decoration:none;color:inherit}
         <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M9 13h6M9 17h4"/></svg></div><b>Bacaan Radiologi</b><small>FHIR DiagnosticReport</small></div>
         <div class="card-body">
           <div class="field-row">
-            <div class="field" style="flex:.8"><label>Kode ICD-10</label><input class="mono" id="icd" value="K35.80" /></div>
+            <div class="field" style="flex:.8"><label>Kode ICD-10</label><input class="mono" id="icd" value="K35.8" /></div>
             <div class="field" style="flex:1.4"><label>Diagnosis</label><input id="dx" value="Acute appendicitis, unspecified" /></div>
           </div>
           <div class="field"><label>Temuan / Kesan</label><textarea id="finding" rows="2">Tampak penebalan dinding apendiks disertai fat stranding periapendikular. Kesan: appendicitis akut.</textarea></div>
@@ -317,14 +317,15 @@ dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];showFile(f?f.name
 // save
 $('#saveBtn').addEventListener('click',()=>{const b=$('#saveBtn');b.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Tersimpan di Instalasi DB';setTimeout(()=>{b.innerHTML='<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan ke Instalasi DB'},2200)});
 
-// send to SATUSEHAT (mock)
+// send to SATUSEHAT: real backend call, simulated exchange as offline fallback
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
-$('#sendBtn').addEventListener('click',async()=>{
+// Offline fallback: the original simulated exchange, used when the backend is unreachable.
+async function mockSend(icd,dx){
   const b=$('#sendBtn');b.style.pointerEvents='none';b.style.opacity='.75';
   cHead.classList.add('live');cStatus.textContent='running…';
-  const icd=$('#icd').value,dx=$('#dx').value;
   consoleEl.innerHTML='<span class="muted"># POST → api-satusehat-stg.dto.kemkes.go.id</span>';
   const log=h=>{consoleEl.innerHTML+='\n'+h;consoleEl.scrollTop=consoleEl.scrollHeight};
+  log('<span class="muted"># backend tidak terhubung · simulasi</span>');
   await wait(300);log('<span class="method">POST</span> <span class="url">/oauth2/v1/accesstoken</span>');
   await wait(500);log('<span class="ok">200 OK</span> <span class="muted">{ access_token:"ey…", expires_in:"3599" }</span>');
   await wait(350);log('\n<span class="method">POST</span> <span class="url">/fhir-r4/v1/ImagingStudy</span>');
@@ -338,6 +339,60 @@ $('#sendBtn').addEventListener('click',async()=>{
   document.querySelectorAll('.step')[4].classList.add('done');
   b.style.pointerEvents='';b.style.opacity='';b.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Terkirim ke SATUSEHAT';
   setTimeout(()=>{b.innerHTML='<svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Kirim ke SATUSEHAT'},2800);
+}
+// API base: same origin when served by the backend (also works over LAN),
+// localhost:8000 when the page is opened directly as a file.
+const API_BASE=location.protocol.startsWith('http')?location.origin:'http://localhost:8000';
+const SEND_LABEL='<svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Kirim ke SATUSEHAT';
+function errorText(r){try{const i=r.issue&&r.issue[0];return (i&&((i.details&&i.details.text)||i.diagnostics))||(r.fault&&r.fault.faultstring)||JSON.stringify(r).slice(0,220);}catch(_){return '';}}
+function buildPayload(){
+  return {
+    name:$('#nama').value.trim(),
+    nik:$('#nik').value.trim(),
+    modality:$('#modality').value.split(' ')[0],
+    description:$('#exam').value.trim(),
+    icd10:$('#icd').value.trim(),
+    diagnosis:$('#dx').value.trim(),
+    finding:$('#finding').value.trim(),
+    instalasi:$('#unit').value
+  };
+}
+$('#sendBtn').addEventListener('click',async()=>{
+  const b=$('#sendBtn'),payload=buildPayload();
+  b.style.pointerEvents='none';b.style.opacity='.75';
+  let data;
+  try{
+    const r=await fetch(API_BASE+'/api/satusehat/send-study',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    data=await r.json();
+  }catch(err){
+    console.warn('SATUSEHAT backend unreachable, using simulation:',err);
+    return mockSend(payload.icd10,payload.diagnosis);
+  }
+  cHead.classList.add('live');cStatus.textContent='running…';
+  consoleEl.innerHTML='<span class="muted"># '+esc(API_BASE)+'/api/satusehat/send-study · mode '+esc(data.mode??'')+'</span>';
+  const log=h=>{consoleEl.innerHTML+='\n'+h;consoleEl.scrollTop=consoleEl.scrollHeight};
+  for(const step of data.logs||[]){
+    const req=step.request||{},res=step.response||{},code=Number(step.status)||0,ok=code>=200&&code<300;
+    log('\n<span class="method">'+esc(req.method??'')+'</span> <span class="url">'+esc(req.url??'')+'</span>'+(req.cached?' <span class="muted">(cached)</span>':''));
+    let line='<span class="'+(ok?'ok':'err')+'">'+code+' '+(ok?(code===201?'Created':'OK'):'Error')+'</span>';
+    if(ok&&res.id)line+=' <span class="key">id</span>:<span class="str">"'+esc(res.id)+'"</span>';
+    else if(ok&&step.step==='token')line+=' <span class="muted">{ access_token:"'+esc(String(res.access_token||'').slice(0,12))+'…" }</span>';
+    else if(ok&&res.resourceType==='Bundle')line+=' <span class="muted">ditemukan '+esc(res.total??0)+'</span>';
+    else if(!ok)line+=' <span class="muted">'+esc(errorText(res))+'</span>';
+    log(line);
+  }
+  const errors=(data.logs||[]).filter(l=>!(Number(l.status)>=200&&Number(l.status)<300)).length;
+  if(data.ok){
+    log('\n<span class="key">ImagingStudy</span>: <span class="str">"'+esc(data.imaging_study_id)+'"</span>');
+    log('<span class="key">DiagnosticReport</span>: <span class="str">"'+esc(data.diagnostic_report_id)+'"</span>');
+  }
+  log('\n'+(data.ok?'<span class="ok">✓ Studi terkirim</span>':'<span class="err">✗ Pengiriman gagal</span>')+' <span class="muted">· mode '+esc(data.mode??'')+' · '+errors+' error</span>');
+  cStatus.textContent=data.ok?'done · '+data.mode:'error · '+data.mode;
+  if(data.ok){document.querySelectorAll('.step')[3].classList.add('done');document.querySelectorAll('.step')[4].classList.add('done');}
+  b.style.pointerEvents='';b.style.opacity='';
+  b.innerHTML=data.ok?'<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Terkirim ke SATUSEHAT':SEND_LABEL;
+  if(data.ok)setTimeout(()=>{b.innerHTML=SEND_LABEL},2800);
 });
 </script>
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
