@@ -1,0 +1,6 @@
+{
+  "name": "SatuSehat PACS Hub",
+  "description": "Unified Picture Archiving and Communication System (PACS) hub connecting Central DICOM Archive, Instalasi Radiologi, and Instalasi Bedah with SatuSehat clean design.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

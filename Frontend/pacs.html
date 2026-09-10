@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SATUSEHAT PACS Hub · Viewer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg-void:#050709;--bg-app:#0a0e12;--bg-elev:#0e1319;--bg-panel:#121820;--bg-panel-2:#171f28;--bg-hover:#1c2530;
+  --line:#212a34;--line-soft:#181f27;--txt:#dfe7ee;--txt-2:#93a1af;--txt-3:#586572;
+  --accent:#29c6c2;--accent-2:#1aa8a4;--accent-dim:rgba(41,198,194,.13);
+  --sel:#2d8fff;--sel-dim:rgba(45,143,255,.14);--cross:rgba(83,226,138,.55);
+  --amber:#f2a63b;--amber-dim:rgba(242,166,59,.13);--green:#35c46b;--red:#e5484d;
+  --ovl:#eaf0f5;--ovl-2:#aab5bf;
+  --shadow:0 8px 30px rgba(0,0,0,.5);--radius:6px;--mono:'JetBrains Mono','Consolas',monospace;
+  --h-brand:44px;--h-patient:52px;--h-tool:44px;--h-strip:104px;--w-rail:198px;--w-panel:320px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg-void);color:var(--txt);font-size:13px;line-height:1.4;overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+a{text-decoration:none;color:inherit}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:var(--bg-void)}::-webkit-scrollbar-thumb{background:#26313c;border-radius:5px;border:2px solid var(--bg-void)}
+.mono{font-family:var(--mono)}
+
+.app{display:grid;height:100vh;grid-template-rows:var(--h-brand) var(--h-patient) var(--h-tool) 1fr var(--h-strip);background:var(--bg-app)}
+
+/* brand */
+.brand{display:flex;align-items:center;gap:14px;padding:0 14px;background:linear-gradient(180deg,#0d1218,#080b0f);border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:9px}
+.logo-mark{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;box-shadow:0 0 0 1px rgba(41,198,194,.3),0 2px 8px rgba(41,198,194,.25)}
+.logo-mark svg{width:16px;height:16px;stroke:#04211f;stroke-width:2.2;fill:none}
+.logo-name{font-weight:700;font-size:13.5px;letter-spacing:-.01em}.logo-name b{color:var(--accent)}
+.logo-sub{font-size:9px;letter-spacing:.14em;color:var(--txt-3);text-transform:uppercase;font-weight:600;margin-top:1px}
+.brand-sep{width:1px;height:22px;background:var(--line)}
+.env-badge{display:flex;align-items:center;gap:6px;padding:3px 9px;border-radius:20px;background:var(--amber-dim);border:1px solid rgba(242,166,59,.3)}
+.env-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.env-badge span{font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--amber)}
+.topnav{display:flex;gap:2px;margin-left:6px}
+.topnav a{padding:6px 13px;border-radius:6px;font-size:12px;font-weight:600;color:var(--txt-2);transition:.12s}
+.topnav a:hover{background:var(--bg-hover);color:var(--txt)}.topnav a.active{background:var(--accent-dim);color:var(--accent)}
+.brand-spacer{flex:1}
+.conn{display:flex;align-items:center;gap:7px;padding:4px 10px;border-radius:var(--radius);background:var(--bg-panel);border:1px solid var(--line)}
+.conn .led{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green);animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.conn small{font-size:10.5px;color:var(--txt-2)}.conn small b{color:var(--txt);font-weight:600}
+.brand-user{display:flex;align-items:center;gap:9px;padding-left:4px}
+.avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2c3a47,#1c2732);border:1px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--txt-2)}
+.brand-user .who{line-height:1.25}.brand-user .who b{font-size:11.5px;font-weight:600}.brand-user .who small{display:block;font-size:9.5px;color:var(--txt-3)}
+
+/* patient */
+.patient{display:flex;align-items:center;background:var(--bg-elev);border-bottom:1px solid var(--line);position:relative}
+.patient::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--amber)}
+.pt-id{display:flex;align-items:center;gap:12px;padding:0 18px 0 20px}
+.pt-photo{width:34px;height:34px;border-radius:5px;background:#0c1116;border:1px solid var(--line);display:grid;place-items:center}
+.pt-photo svg{width:19px;height:19px;stroke:var(--txt-3);stroke-width:1.6;fill:none}
+.pt-name{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.pt-name .sex{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;background:#243b52;color:#7fb2e8;font-size:10px;font-weight:700;margin-left:7px;vertical-align:middle}
+.pt-fields{display:flex;align-items:stretch;height:100%;flex:1}
+.pt-field{display:flex;flex-direction:column;justify-content:center;padding:0 16px;border-left:1px solid var(--line-soft);min-width:0}
+.pt-field label{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3);font-weight:600;margin-bottom:2px}
+.pt-field span{font-size:12px;font-weight:500}.pt-field .mono{font-size:11.5px;color:var(--txt)}
+.ihs-ok{color:var(--green)!important;display:flex;align-items:center;gap:4px}.ihs-ok svg{width:11px;height:11px;stroke:var(--green);stroke-width:2.4;fill:none}
+
+/* toolbar */
+.toolbar{display:flex;align-items:center;gap:4px;padding:0 10px;background:var(--bg-app);border-bottom:1px solid var(--line)}
+.tool-group{display:flex;align-items:center;gap:2px}
+.tsep{width:1px;height:24px;background:var(--line);margin:0 8px}
+.tool{width:33px;height:33px;border-radius:5px;display:grid;place-items:center;color:var(--txt-2);transition:.12s;position:relative}
+.tool svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.tool:hover{background:var(--bg-hover);color:var(--txt)}
+.tool.active{background:var(--sel-dim);color:var(--sel);box-shadow:inset 0 0 0 1px rgba(45,143,255,.35)}
+.tool[data-tip]:hover::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#01060a;color:var(--txt);font-size:10px;padding:4px 8px;border-radius:4px;white-space:nowrap;border:1px solid var(--line);z-index:50;box-shadow:var(--shadow);pointer-events:none}
+.wl-readout{display:flex;align-items:center;gap:10px;margin-left:6px;padding:5px 11px;background:var(--bg-panel);border:1px solid var(--line);border-radius:5px}
+.wl-readout .wl{display:flex;flex-direction:column}.wl-readout .wl label{font-size:8px;letter-spacing:.08em;color:var(--txt-3);font-weight:600}.wl-readout .wl b{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--sel)}
+.toolbar-spacer{flex:1}
+.preset-sel{display:flex;align-items:center;gap:7px;padding:6px 11px;background:var(--bg-panel);border:1px solid var(--line);border-radius:5px;font-size:11.5px;color:var(--txt-2)}
+.preset-sel svg{width:13px;height:13px;stroke:var(--txt-3);fill:none;stroke-width:1.8}.preset-sel b{color:var(--txt);font-weight:600}
+
+/* workspace */
+.workspace{display:grid;grid-template-columns:var(--w-rail) 1fr var(--w-panel);min-height:0;overflow:hidden}
+.rail{background:var(--bg-elev);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.rail-head{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--line-soft)}
+.rail-head span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-2);font-weight:600}
+.rail-head b{font-family:var(--mono);font-size:10px;color:var(--txt-3);background:var(--bg-panel);padding:1px 6px;border-radius:10px}
+.rail-list{overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px;flex:1}
+.series{border:1px solid var(--line-soft);border-radius:6px;overflow:hidden;background:var(--bg-panel);cursor:pointer;transition:.12s}
+.series:hover{border-color:#33414e}
+.series.active{border-color:var(--sel);box-shadow:0 0 0 1px var(--sel),0 4px 14px rgba(45,143,255,.14)}
+.series-thumb{aspect-ratio:1/1;background:#000;position:relative;display:block}
+.series-thumb svg{width:100%;height:100%;display:block}
+.series-badge{position:absolute;top:5px;left:5px;font-family:var(--mono);font-size:8.5px;font-weight:600;padding:1px 5px;border-radius:3px;background:rgba(0,0,0,.7);color:var(--sel);border:1px solid rgba(45,143,255,.35)}
+.series-count{position:absolute;bottom:5px;right:5px;font-family:var(--mono);font-size:8.5px;color:var(--ovl-2);background:rgba(0,0,0,.6);padding:1px 5px;border-radius:3px}
+.series-meta{padding:6px 8px}.series-meta .st{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.series-meta .sd{font-size:9.5px;color:var(--txt-3);margin-top:1px;font-family:var(--mono)}
+
+/* viewer */
+.viewer{background:#000;position:relative;min-width:0;display:flex;flex-direction:column}
+.vgrid{flex:1;display:grid;gap:2px;background:var(--line-soft);padding:2px;min-height:0}
+.vgrid.layout-1{grid-template-columns:1fr;grid-template-rows:1fr}
+.vgrid.layout-2{grid-template-columns:1fr 1fr;grid-template-rows:1fr}
+.vgrid.layout-4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.vgrid.layout-4 .vp:nth-child(n+5),.vgrid.layout-2 .vp:nth-child(n+3),.vgrid.layout-1 .vp:nth-child(n+2){display:none}
+.vp{position:relative;background:#000;overflow:hidden;cursor:crosshair;box-shadow:inset 0 0 0 1px transparent;transition:box-shadow .1s}
+.vp.active{box-shadow:inset 0 0 0 2px var(--sel)}
+.vp-scan{position:absolute;inset:0}.vp-scan svg{width:100%;height:100%;display:block}
+/* crosshairs */
+.ch-h,.ch-v{position:absolute;background:var(--cross);pointer-events:none;opacity:.85}
+.ch-h{left:0;right:0;height:1px;top:50%}
+.ch-v{top:0;bottom:0;width:1px;left:50%}
+.vp:not(.active) .ch-h,.vp:not(.active) .ch-v{opacity:.4}
+/* orientation */
+.omark{position:absolute;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:12px;font-weight:700;color:#cdd6de;opacity:.7;text-shadow:0 1px 3px #000;pointer-events:none}
+.omark.t{top:5px;left:50%;transform:translateX(-50%)}.omark.b{bottom:5px;left:50%;transform:translateX(-50%)}
+.omark.l{left:6px;top:50%;transform:translateY(-50%)}.omark.r{right:6px;top:50%;transform:translateY(-50%)}
+/* overlays */
+.ovl{position:absolute;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:10px;line-height:1.5;text-shadow:0 1px 2px rgba(0,0,0,.92),0 0 1px rgba(0,0,0,.8);pointer-events:none;color:#d7dee4}
+.ovl.tl{top:7px;left:8px}.ovl.tr{top:7px;right:8px;text-align:right}.ovl.bl{bottom:7px;left:8px}.ovl.br{bottom:7px;right:8px;text-align:right}
+.ovl .k{color:#98a2aa;font-weight:400}.ovl .v{color:#eef3f6;font-weight:400}.ovl .b{color:#eef3f6;font-weight:500}.ovl .a{color:#d7dee4;font-weight:400}
+/* ruler */
+.ruler{position:absolute;right:8px;top:28%;height:44%;width:9px;pointer-events:none;opacity:.6}
+.ruler::before{content:'';position:absolute;right:0;top:0;bottom:0;width:1px;background:#c9d3dc}
+.ruler i{position:absolute;right:0;width:6px;height:1px;background:#c9d3dc}
+.ruler small{position:absolute;right:11px;bottom:-4px;font-family:var(--mono);font-size:8px;color:#c9d3dc;white-space:nowrap}
+/* slice scroll */
+.scroll{position:absolute;right:2px;top:14%;bottom:14%;width:3px;background:rgba(255,255,255,.08);border-radius:2px;pointer-events:none}
+.scroll i{position:absolute;left:-1px;width:5px;height:22%;background:var(--sel);border-radius:2px;top:30%;box-shadow:0 0 6px rgba(45,143,255,.5)}
+.slice-no{position:absolute;right:9px;top:11%;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:10px;color:#d7dee4;text-shadow:0 1px 2px #000}
+.diag-wm{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:8.5px;font-weight:400;letter-spacing:.09em;color:rgba(196,206,214,.42);pointer-events:none;white-space:nowrap}
+/* radial wheel */
+.wheel{position:absolute;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;display:none;z-index:40;background:radial-gradient(circle,rgba(20,26,33,.96) 42%,rgba(12,16,20,.94) 43%);border:1px solid #2a3540;box-shadow:0 10px 40px rgba(0,0,0,.7)}
+.wheel.show{display:block}
+.wheel .arc{position:absolute;inset:2px;border-radius:50%;border:3px solid transparent;border-top-color:var(--sel);border-right-color:rgba(45,143,255,.4);opacity:.9}
+.wheel .hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:50%;background:#0a0e12;border:1px solid #2a3540;display:grid;place-items:center;font-size:8.5px;font-weight:700;letter-spacing:.08em;color:#9aa7b4}
+.wheel .seg{position:absolute;top:50%;left:50%;width:30px;height:30px;border-radius:8px;background:#141a20;border:1px solid #2a3540;display:grid;place-items:center;color:#c9d3dc;font-family:var(--mono);font-size:9px;font-weight:600}
+.wheel .seg:hover{background:var(--sel-dim);color:var(--sel);border-color:var(--sel)}
+.wheel .seg svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8}
+
+/* right panel */
+.panel{background:var(--bg-elev);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.panel-tabs{display:flex;border-bottom:1px solid var(--line)}
+.panel-tab{flex:1;padding:11px 8px;font-size:11px;font-weight:600;color:var(--txt-3);border-bottom:2px solid transparent;transition:.12s}
+.panel-tab:hover{color:var(--txt-2)}.panel-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.panel-body{flex:1;overflow-y:auto;padding:14px}
+.pane{display:none;flex-direction:column;gap:16px}.pane.active{display:flex}
+.section-h{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3);font-weight:600;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.section-h::after{content:'';flex:1;height:1px;background:var(--line-soft)}
+.kv{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line-soft);font-size:12px}.kv:last-child{border-bottom:none}
+.kv .k{color:var(--txt-3)}.kv .v{font-weight:500;font-family:var(--mono);font-size:11.5px}
+.res-row{display:flex;align-items:center;gap:10px;padding:9px 11px;background:var(--bg-panel);border:1px solid var(--line-soft);border-radius:6px;margin-bottom:7px}
+.res-row .ricon{width:26px;height:26px;border-radius:5px;background:var(--accent-dim);display:grid;place-items:center;flex-shrink:0}
+.res-row .ricon svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:1.7}
+.res-row .rinfo{flex:1;min-width:0}.res-row .rinfo b{font-size:11.5px;font-weight:600;display:block}.res-row .rinfo small{font-size:9.5px;color:var(--txt-3);font-family:var(--mono)}
+.res-status{font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:10px}
+.res-status.ready{background:rgba(88,101,114,.18);color:var(--txt-2)}.res-status.sent{background:rgba(53,196,107,.15);color:var(--green)}.res-status.sending{background:var(--amber-dim);color:var(--amber)}
+.field{margin-bottom:11px}.field label{display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--txt-3);font-weight:600;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;background:var(--bg-panel);border:1px solid var(--line);border-radius:5px;padding:8px 10px;color:var(--txt);font-family:inherit;font-size:12.5px;outline:none;transition:border-color .12s}
+.field input:focus,.field textarea:focus{border-color:var(--accent)}.field .icd{font-family:var(--mono)}
+.field-row{display:flex;gap:9px}.field-row .field{flex:1}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;border-radius:6px;font-size:12.5px;font-weight:600;transition:filter .12s,transform .06s}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:linear-gradient(180deg,var(--accent),var(--accent-2));color:#042321;box-shadow:0 3px 12px rgba(41,198,194,.3)}.btn-primary:hover{filter:brightness(1.08)}
+.btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.console{background:#04070a;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.console-head{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;background:var(--bg-panel);border-bottom:1px solid var(--line)}
+.console-head span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2);font-weight:600;display:flex;align-items:center;gap:7px}
+.console-head .led{width:6px;height:6px;border-radius:50%;background:var(--txt-3)}.console-head.live .led{background:var(--green);box-shadow:0 0 6px var(--green)}
+.console-body{max-height:220px;overflow:auto;padding:10px 11px;font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word;color:#8fa3b3}
+.console-body .method{color:var(--sel);font-weight:600}.console-body .url{color:var(--txt-2)}.console-body .ok{color:var(--green)}.console-body .key{color:#7fb2e8}.console-body .str{color:#c3e88d}.console-body .muted{color:var(--txt-3)}
+
+/* strip */
+.strip{background:var(--bg-elev);border-top:1px solid var(--line);display:flex;flex-direction:column}
+.strip-head{display:flex;align-items:center;gap:12px;padding:6px 14px;border-bottom:1px solid var(--line-soft)}
+.strip-head span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-2);font-weight:600}.strip-head .line{flex:1;height:1px;background:var(--line-soft)}
+.strip-list{flex:1;display:flex;gap:8px;padding:8px 14px;overflow-x:auto}
+.wcard{display:flex;gap:9px;min-width:224px;padding:7px;background:var(--bg-panel);border:1px solid var(--line-soft);border-radius:6px;cursor:pointer;transition:.12s}
+.wcard:hover{border-color:#33414e}.wcard.active{border-color:var(--sel)}
+.wcard-thumb{width:52px;height:52px;border-radius:4px;overflow:hidden;background:#000;flex-shrink:0}.wcard-thumb svg{width:100%;height:100%}
+.wcard-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.mod-badge{font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:var(--sel-dim);color:var(--sel);align-self:flex-start}
+.wcard-info .wt{font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+.wcard-info .wd{font-size:9.5px;color:var(--txt-3);font-family:var(--mono);margin-top:2px}
+.wcard-info .wtag{display:inline-flex;align-items:center;gap:4px;margin-top:5px;font-size:9px;font-weight:600;color:var(--txt-2)}.wcard-info .wtag .dot{width:5px;height:5px;border-radius:50%}
+@media(max-width:1200px){:root{--w-panel:280px;--w-rail:172px}}
+/* real DICOM mode (DWV) */
+.load-btn{display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:6px;font-size:12px;font-weight:600;background:var(--sel-dim);border:1px solid rgba(45,143,255,.35);color:var(--sel);margin-right:2px}
+.load-btn:hover{filter:brightness(1.12)}.load-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.dwv-mode{position:absolute;inset:0;z-index:20;background:#000;display:none}
+.dwv-mode.show{display:block}
+#layerGroup0{position:absolute;inset:0;width:100%;height:100%}
+#layerGroup0 canvas{position:absolute}
+.dwv-close{position:absolute;top:10px;right:10px;z-index:30;display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:6px;background:rgba(18,24,32,.92);border:1px solid var(--line);color:var(--txt-2);font-size:12px;font-weight:600;cursor:pointer}
+.dwv-close:hover{color:var(--txt);border-color:#33414e}.dwv-close svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.dwv-dz{position:absolute;inset:0;z-index:25;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(5,7,9,.86);border:2px dashed var(--line)}
+.dwv-dz.drag{border-color:var(--sel);background:rgba(45,143,255,.08)}.dwv-dz.hide{display:none}
+.dwv-dz svg{width:44px;height:44px;stroke:var(--sel);fill:none;stroke-width:1.4}.dwv-dz b{font-size:15px;font-weight:700}.dwv-dz p{font-size:12px;color:var(--txt-2)}
+.dwv-dz .dz-btns{display:flex;gap:10px;margin-top:4px}
+.dwv-spin{position:absolute;inset:0;z-index:28;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:rgba(0,0,0,.5)}
+.dwv-spin.show{display:flex}.dwv-spin .ring{width:36px;height:36px;border:3px solid var(--line);border-top-color:var(--sel);border-radius:50%;animation:spin .8s linear infinite}
+.dwv-spin small{font-family:var(--mono);font-size:11px;color:var(--txt-2)}@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="brand">
+    <a href="index.html" class="logo">
+      <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18" stroke-linecap="round"/><path d="M7 7l10 10M17 7L7 17" opacity=".4" stroke-linecap="round"/></svg></div>
+      <div><div class="logo-name">SATUSEHAT <b>PACS</b> Hub</div><div class="logo-sub">Central DICOM Archive</div></div>
+    </a>
+    <div class="brand-sep"></div>
+    <div class="env-badge"><i class="dot"></i><span>SANDBOX</span></div>
+    <nav class="topnav"><a href="index.html">Menu</a><a href="instalasi.html">Instalasi</a><a href="pacs.html" class="active">PACS Viewer</a></nav>
+    <div class="brand-spacer"></div>
+    <div class="conn"><i class="led"></i><small>SATUSEHAT <b>Terhubung</b> · FHIR R4</small></div>
+    <div class="brand-user"><div class="avatar">RA</div><div class="who"><b>dr. Rahmat Adiputra, Sp.Rad</b><small>Radiolog · RSUD Dr. Soetomo</small></div></div>
+  </header>
+
+  <div class="patient">
+    <div class="pt-id">
+      <div class="pt-photo"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+      <div class="pt-name">SUTRISNO, Budi <span class="sex">L</span></div>
+    </div>
+    <div class="pt-fields">
+      <div class="pt-field"><label>No. RM</label><span class="mono">00-12-84-56</span></div>
+      <div class="pt-field"><label>NIK</label><span class="mono">3578012504780003</span></div>
+      <div class="pt-field"><label>Tgl. Lahir</label><span class="mono">25 Apr 1978 · 47th</span></div>
+      <div class="pt-field"><label>IHS Number</label><span class="mono ihs-ok"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>P02478315092</span></div>
+      <div class="pt-field"><label>Penjamin</label><span>BPJS Kesehatan</span></div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="load-btn" id="openDicom"><svg viewBox="0 0 24 24"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Buka DICOM</button>
+    <button class="load-btn" id="openFolder" style="background:var(--bg-panel);border-color:var(--line);color:var(--txt-2)"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Folder</button>
+    <input type="file" id="pacsFile" accept=".dcm,application/dicom" multiple style="display:none" />
+    <input type="file" id="pacsFolder" webkitdirectory multiple style="display:none" />
+    <div class="tsep"></div>
+    <div class="tool-group">
+      <button class="tool active" data-tool="scroll" data-tip="Stack / Scroll"><svg viewBox="0 0 24 24"><path d="M12 5v14M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></button>
+      <button class="tool" data-tool="wl" data-tip="Window / Level"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 010 18z" fill="currentColor" stroke="none"/></svg></button>
+      <button class="tool" data-tool="zoom" data-tip="Zoom"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg></button>
+      <button class="tool" data-tool="pan" data-tip="Pan"><svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 00-4 0M14 10V4a2 2 0 00-4 0v6M10 10.5V6a2 2 0 00-4 0v8"/><path d="M18 8a2 2 0 014 0v6a8 8 0 01-8 8h-2a8 8 0 01-6.6-3.5L3 15"/></svg></button>
+    </div>
+    <div class="tsep"></div>
+    <div class="tool-group">
+      <button class="tool" data-tool="length" data-tip="Ukur Jarak"><svg viewBox="0 0 24 24"><path d="M3 17L17 3l4 4L7 21z"/><path d="M8 8l2 2M11 5l2 2M5 11l2 2"/></svg></button>
+      <button class="tool" data-tool="angle" data-tip="Ukur Sudut"><svg viewBox="0 0 24 24"><path d="M5 19h16M5 19V5M5 19l14-7"/></svg></button>
+      <button class="tool" data-tool="annot" data-tip="Anotasi"><svg viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16z"/><path d="M13 5l4 4"/></svg></button>
+      <button class="tool" data-tool="invert" data-tip="Invert"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 3a9 9 0 010 18" fill="currentColor" stroke="none" opacity=".9"/></svg></button>
+    </div>
+    <div class="tsep"></div>
+    <div class="tool-group" id="layouts">
+      <button class="tool" data-layout="1" data-tip="1×1"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1"/></svg></button>
+      <button class="tool" data-layout="2" data-tip="1×2"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="16" rx="1"/><rect x="13" y="4" width="7" height="16" rx="1"/></svg></button>
+      <button class="tool active" data-layout="4" data-tip="2×2"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg></button>
+    </div>
+    <div class="wl-readout"><div class="wl"><label>WINDOW</label><b id="wlW">400</b></div><div class="wl"><label>LEVEL</label><b id="wlL">40</b></div></div>
+    <div class="toolbar-spacer"></div>
+    <div class="preset-sel"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Preset:
+      <select id="wlPreset" style="background:none;border:none;color:var(--txt);font-family:inherit;font-weight:600;font-size:11.5px;outline:none;cursor:pointer">
+        <option value="">—</option><option value="40,400">Abdomen</option><option value="-600,1500">Lung / Paru</option><option value="400,1800">Bone / Tulang</option><option value="40,80">Brain / Otak</option><option value="50,350">Mediastinum</option><option value="50,400">Soft Tissue</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="workspace">
+    <aside class="rail">
+      <div class="rail-head"><span>Series</span><b id="seriesCount">4</b></div>
+      <div class="rail-list" id="railList"></div>
+    </aside>
+
+    <main class="viewer">
+      <div class="vgrid layout-4" id="vgrid"></div>
+      <div class="dwv-mode" id="dwvMode">
+        <div id="layerGroup0"></div>
+        <button class="dwv-close" id="dwvClose"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>Kembali ke arsip</button>
+        <div class="ovl tl" id="dwvTL"></div>
+        <div class="ovl tr" id="dwvTR"></div>
+        <div class="ovl br"><span class="a">SATUSEHAT PACS · DWV live</span><br><span class="k">RSUD Dr. Soetomo</span></div>
+        <div class="dwv-spin" id="dwvSpin"><div class="ring"></div><small>memuat citra…</small></div>
+        <div class="dwv-dz" id="dwvDz">
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 15l-5-5-7 7"/><circle cx="8.5" cy="10" r="1.5"/></svg>
+          <b>Seret berkas DICOM ke sini</b><p>viewer asli bertenaga DWV — buka file .dcm milikmu</p>
+          <div class="dz-btns"><button class="load-btn" id="dzPick">Pilih file .dcm</button><button class="load-btn" id="dzSample" style="background:var(--bg-panel);border-color:var(--line);color:var(--txt-2)">Muat X-Ray contoh</button></div>
+        </div>
+      </div>
+      <div class="wheel" id="wheel">
+        <div class="arc"></div><div class="hub">ZOOM</div>
+        <button class="seg" style="transform:translate(-50%,-50%) rotate(-90deg) translate(46px) rotate(90deg)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 010 18z" fill="currentColor" stroke="none"/></svg></button>
+        <button class="seg" style="transform:translate(-50%,-50%) rotate(-30deg) translate(46px) rotate(30deg)">S</button>
+        <button class="seg" style="transform:translate(-50%,-50%) rotate(30deg) translate(46px) rotate(-30deg)"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-3-6.7M21 4v4h-4"/></svg></button>
+        <button class="seg" style="transform:translate(-50%,-50%) rotate(90deg) translate(46px) rotate(-90deg)"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg></button>
+        <button class="seg" style="transform:translate(-50%,-50%) rotate(150deg) translate(46px) rotate(-150deg)">M</button>
+        <button class="seg" style="transform:translate(-50%,-50%) rotate(210deg) translate(46px) rotate(-210deg)"><svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 00-4 0M14 10V4a2 2 0 00-4 0v6M10 10.5V6a2 2 0 00-4 0v8"/><path d="M18 8a2 2 0 014 0v6a8 8 0 01-8 8h-2a8 8 0 01-6.6-3.5L3 15"/></svg></button>
+      </div>
+    </main>
+
+    <aside class="panel">
+      <div class="panel-tabs"><button class="panel-tab active" data-pane="study">Study Info</button><button class="panel-tab" data-pane="satu">SATUSEHAT</button></div>
+      <div class="panel-body">
+        <div class="pane active" data-pane="study">
+          <div><div class="section-h">Study</div>
+            <div class="kv"><span class="k">Accession</span><span class="v">RAD-2025-004821</span></div>
+            <div class="kv"><span class="k">Study Date</span><span class="v">10 Sep 2025 · 09:14</span></div>
+            <div class="kv"><span class="k">Modality</span><span class="v">CT</span></div>
+            <div class="kv"><span class="k">Body Part</span><span class="v">ABDOMEN</span></div>
+            <div class="kv"><span class="k">Series · Img</span><span class="v">4 · 512</span></div>
+          </div>
+          <div><div class="section-h">Permintaan</div>
+            <div class="kv"><span class="k">Dokter Perujuk</span><span class="v" style="font-family:inherit">dr. Sari W.</span></div>
+            <div class="kv"><span class="k">Instalasi</span><span class="v" style="font-family:inherit">Rad · Soetomo</span></div>
+            <div class="kv"><span class="k">Klinis</span><span class="v" style="font-family:inherit">Nyeri perut</span></div>
+            <div class="kv"><span class="k">Status</span><span class="v" style="color:var(--green);font-family:inherit">Dibaca</span></div>
+          </div>
+        </div>
+        <div class="pane" data-pane="satu">
+          <div><div class="section-h">Resource FHIR</div>
+            <div class="res-row"><div class="ricon"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg></div><div class="rinfo"><b>ServiceRequest</b><small>order/rad-004821</small></div><span class="res-status sent" data-res="sr">Sent</span></div>
+            <div class="res-row"><div class="ricon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg></div><div class="rinfo"><b>ImagingStudy</b><small>study/1.2.840…4821</small></div><span class="res-status ready" data-res="is">Ready</span></div>
+            <div class="res-row"><div class="ricon"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg></div><div class="rinfo"><b>DiagnosticReport</b><small>report/rad-004821</small></div><span class="res-status ready" data-res="dr">Ready</span></div>
+          </div>
+          <div><div class="section-h">Bacaan Radiologi</div>
+            <div class="field-row"><div class="field" style="flex:.9"><label>Kode ICD-10</label><input class="icd" value="K35.80" /></div><div class="field" style="flex:1.4"><label>Diagnosis</label><input value="Appendicitis, akut" /></div></div>
+            <div class="field"><label>Temuan</label><textarea rows="3">Penebalan dinding apendiks dengan fat stranding periapendikular. Kesan appendicitis akut.</textarea></div>
+            <button class="btn btn-primary" id="sendBtn"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Kirim ke SATUSEHAT</button>
+          </div>
+          <div><div class="section-h">API Console</div>
+            <div class="console"><div class="console-head" id="consoleHead"><span><i class="led"></i>FHIR R4 · Sandbox</span><span class="mono" style="font-size:9px;color:var(--txt-3)" id="consoleStatus">idle</span></div>
+              <div class="console-body" id="console"><span class="muted"># Menunggu aksi… tekan "Kirim ke SATUSEHAT"</span></div></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="strip">
+    <div class="strip-head"><span>Riwayat Pemeriksaan · Budi Sutrisno</span><div class="line"></div><span style="color:var(--txt-3)">4 studi</span></div>
+    <div class="strip-list" id="stripList"></div>
+  </div>
+</div>
+
+<script>
+/* ---- realistic grayscale scan generator (CT/MRI look) ---- */
+function scanSVG(type, seed, detail){
+  const s = (seed||Math.floor(Math.random()*9999))|0;
+  const warp='w'+s, tex='t'+s, vig='v'+s, soft='s'+s;
+  const warpF = detail ? `filter="url(#${warp})"` : '';
+  const defs = `<defs>
+    ${detail?`<filter id="${warp}"><feTurbulence type="fractalNoise" baseFrequency="0.014 0.019" numOctaves="2" seed="${s}" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="15" xChannelSelector="R" yChannelSelector="G"/></filter>`:''}
+    <filter id="${tex}"><feTurbulence type="fractalNoise" baseFrequency="${detail?0.9:1.1}" numOctaves="3" seed="${s}"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0.5"/></feComponentTransfer></filter>
+    <radialGradient id="${soft}" cx="50%" cy="47%" r="62%"><stop offset="0%" stop-color="#616a72"/><stop offset="58%" stop-color="#3d454d"/><stop offset="86%" stop-color="#1d232a"/><stop offset="100%" stop-color="#0a0d10"/></radialGradient>
+    <radialGradient id="${vig}" cx="50%" cy="50%" r="70%"><stop offset="60%" stop-color="#00000000"/><stop offset="100%" stop-color="#000"/></radialGradient>
+  </defs>`;
+  let g='';
+  if(type==='thorax'){
+    g=`<ellipse cx="200" cy="205" rx="152" ry="118" fill="url(#${soft})"/>
+      <ellipse cx="200" cy="205" rx="152" ry="118" fill="none" stroke="#d3d9de" stroke-width="2.4" opacity=".55"/>
+      <ellipse cx="132" cy="195" rx="60" ry="80" fill="#050708"/><ellipse cx="268" cy="195" rx="60" ry="80" fill="#050708"/>
+      <ellipse cx="200" cy="225" rx="42" ry="52" fill="#4c555d"/><ellipse cx="188" cy="232" rx="24" ry="28" fill="#5a636b"/>
+      <path d="M58 190 Q92 118 158 104" stroke="#dfe4e8" stroke-width="5" fill="none" opacity=".5"/>
+      <path d="M342 190 Q308 118 242 104" stroke="#dfe4e8" stroke-width="5" fill="none" opacity=".5"/>
+      <ellipse cx="200" cy="108" rx="12" ry="7" fill="#dfe4e8" opacity=".55"/>
+      <ellipse cx="200" cy="280" rx="24" ry="19" fill="#eef2f5"/><path d="M187 274 Q200 269 213 274 Q212 285 200 289 Q188 285 187 274" fill="#14181d"/>
+      <ellipse cx="168" cy="282" rx="8" ry="5" fill="#e2e7ea"/><ellipse cx="232" cy="282" rx="8" ry="5" fill="#e2e7ea"/>`;
+  } else if(type==='coronal'){
+    g=`<ellipse cx="200" cy="200" rx="112" ry="178" fill="url(#${soft})"/>
+      <ellipse cx="200" cy="200" rx="112" ry="178" fill="none" stroke="#d3d9de" stroke-width="2.2" opacity=".5"/>
+      <ellipse cx="150" cy="120" rx="52" ry="60" fill="#060809"/><ellipse cx="252" cy="120" rx="52" ry="60" fill="#060809"/>
+      <ellipse cx="150" cy="205" rx="44" ry="46" fill="#5a636b"/><ellipse cx="255" cy="210" rx="34" ry="40" fill="#535c64"/>
+      ${[70,100,130,160,190,220,250].map((y,i)=>`<ellipse cx="200" cy="${y}" rx="17" ry="10" fill="#eef2f5"/><rect x="192" y="${y+9}" width="16" height="5" rx="2" fill="#14181d"/>`).join('')}
+      <path d="M120 300 Q150 350 200 352 Q250 350 280 300 L280 340 Q240 372 200 372 Q160 372 120 340 Z" fill="#e6ebee" opacity=".85"/>
+      <path d="M96 150 Q120 140 150 150" stroke="#dfe4e8" stroke-width="4" fill="none" opacity=".45"/>
+      <path d="M304 150 Q280 140 250 150" stroke="#dfe4e8" stroke-width="4" fill="none" opacity=".45"/>`;
+  } else if(type==='mri'){
+    g=`<ellipse cx="200" cy="205" rx="124" ry="140" fill="url(#${soft})"/>
+      <ellipse cx="200" cy="205" rx="124" ry="140" fill="none" stroke="#e4e9ec" stroke-width="2.6" opacity=".6"/>
+      <ellipse cx="176" cy="176" rx="30" ry="26" fill="#6d767e" stroke="#0d1013" stroke-width="3"/>
+      <ellipse cx="230" cy="188" rx="26" ry="23" fill="#646d75" stroke="#0d1013" stroke-width="3"/>
+      <ellipse cx="200" cy="238" rx="34" ry="27" fill="#5d666e" stroke="#0d1013" stroke-width="3"/>
+      <ellipse cx="150" cy="220" rx="20" ry="17" fill="#69727a" stroke="#0d1013" stroke-width="2.5"/>
+      ${[[150,150],[250,158],[168,262],[240,258],[205,175],[128,200],[272,210]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="6" fill="#060809"/>`).join('')}`;
+  } else { /* axial abdomen */
+    g=`<ellipse cx="200" cy="206" rx="150" ry="126" fill="url(#${soft})"/>
+      <ellipse cx="200" cy="206" rx="150" ry="126" fill="none" stroke="#d3d9de" stroke-width="2.4" opacity=".6"/>
+      <ellipse cx="200" cy="206" rx="140" ry="116" fill="none" stroke="#1c2127" stroke-width="9" opacity=".55"/>
+      <ellipse cx="150" cy="168" rx="52" ry="44" fill="#5c656d"/><ellipse cx="258" cy="182" rx="34" ry="30" fill="#545d65"/>
+      <ellipse cx="206" cy="152" rx="23" ry="19" fill="#2b3138"/>
+      <circle cx="172" cy="232" r="10" fill="#060809"/><circle cx="236" cy="238" r="8" fill="#070809"/><circle cx="205" cy="255" r="7" fill="#060809"/>
+      <ellipse cx="200" cy="272" rx="25" ry="21" fill="#eef2f5"/><path d="M186 266 Q200 261 214 266 Q213 278 200 282 Q187 278 186 266" fill="#13171c"/>
+      <ellipse cx="167" cy="274" rx="8.5" ry="5.5" fill="#e2e7ea"/><ellipse cx="233" cy="274" rx="8.5" ry="5.5" fill="#e2e7ea"/>`;
+  }
+  return `<svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${defs}
+    <rect width="400" height="400" fill="#010203"/>
+    <g ${warpF}>${g}</g>
+    <rect width="400" height="400" filter="url(#${tex})" opacity="${detail?0.3:0.22}"/>
+    <rect width="400" height="400" fill="url(#${vig})"/>
+  </svg>`;
+}
+
+const SERIES=[
+  {code:'CT',st:'CT ABDOMEN 5.0',cnt:132,type:'coronal',W:400,L:40,view:'Coronal',thick:'5.0'},
+  {code:'CT',st:'CT ABDOMEN 1.25',cnt:512,type:'abdomen',W:350,L:50,view:'Axial',thick:'1.25'},
+  {code:'CT',st:'CT THORAX 5.0',cnt:96,type:'thorax',W:1500,L:-600,view:'Axial',thick:'5.0'},
+  {code:'MR',st:'MRI ABDOMEN T2',cnt:28,type:'mri',W:1200,L:560,view:'Axial',thick:'4.0'},
+];
+const WORK=[
+  {t:'CT ABDOMEN + Kontras',d:'10 Sep 2025',mod:'CT',type:'coronal',tag:'Baru',color:'var(--sel)'},
+  {t:'CT THORAX',d:'21 Ags 2025',mod:'CT',type:'thorax',tag:'Selesai',color:'var(--green)'},
+  {t:'MRI ABDOMEN',d:'02 Jul 2025',mod:'MR',type:'mri',tag:'Selesai',color:'var(--green)'},
+  {t:'CT ABDOMEN',d:'14 Mar 2025',mod:'CT',type:'abdomen',tag:'Arsip',color:'var(--txt-3)'},
+];
+const oriMap={Axial:['A','P','R','L'],Coronal:['H','F','R','L'],Sagittal:['H','F','A','P']};
+
+const railList=document.getElementById('railList');
+SERIES.forEach((s,i)=>{
+  const el=document.createElement('div');el.className='series'+(i===0?' active':'');
+  el.innerHTML=`<div class="series-thumb">${scanSVG(s.type,i+1,false)}<span class="series-badge">${s.code}</span><span class="series-count">${s.cnt}</span></div>
+    <div class="series-meta"><div class="st">${s.st}</div><div class="sd">Se ${i+1} · ${s.cnt} img · ${s.thick}mm</div></div>`;
+  el.onclick=()=>{document.querySelectorAll('.series').forEach(x=>x.classList.remove('active'));el.classList.add('active');loadSeries(i);};
+  railList.appendChild(el);
+});
+document.getElementById('seriesCount').textContent=SERIES.length;
+
+const vgrid=document.getElementById('vgrid');
+let PANELS=[0,1,2,3];
+function buildPanels(){
+  vgrid.innerHTML='';
+  PANELS.forEach((si,idx)=>{
+    const s=SERIES[si]||SERIES[0];const o=oriMap[s.view]||oriMap.Axial;
+    const cur=Math.max(1,Math.round(s.cnt*[0.35,0.5,0.62,0.44][idx%4]));
+    const vp=document.createElement('div');vp.className='vp'+(idx===0?' active':'');
+    vp.innerHTML=`<div class="vp-scan">${scanSVG(s.type,si*13+idx+1,true)}</div>
+      <div class="ch-h"></div><div class="ch-v"></div>
+      <span class="omark t">${o[0]}</span><span class="omark b">${o[1]}</span><span class="omark l">${o[2]}</span><span class="omark r">${o[3]}</span>
+      <div class="diag-wm">SANDBOX · NOT FOR DIAGNOSTIC USE</div>
+      <div class="ovl tl"><span class="v">SUTRISNO, BUDI</span><br><span class="k">PID</span> <span class="v">00-12-84-56</span><br><span class="k">SID 2389649 · 10-Sep-2025</span><br><span class="k">Acc RAD-2025-004821</span></div>
+      <div class="ovl tr"><span class="b">${s.st}</span><br><span class="k">Se:</span><span class="v">${si+1}</span> <span class="k">Im:</span><span class="v">${cur}/${s.cnt}</span><br><span class="k">View:</span> <span class="v">${s.view}</span></div>
+      <div class="ovl bl"><span class="k">W</span> <span class="v">${s.W}</span> <span class="k">C</span> <span class="v">${s.L}</span><br><span class="k">Lossless · ${s.thick}mm</span><br><span class="k">Zoom 100%</span></div>
+      <div class="ovl br"><span class="a">SATUSEHAT PACS</span><br><span class="k">RSUD Dr. Soetomo</span><br><span class="k">@Sandbox · FHIR R4</span></div>
+      <div class="slice-no">${cur} / ${s.cnt}</div>
+      <div class="scroll"><i></i></div>
+      <div class="ruler"><i style="top:0"></i><i style="top:25%"></i><i style="top:50%"></i><i style="top:75%"></i><i style="top:100%"></i><small>5.0 cm</small></div>`;
+    vp.onclick=()=>{document.querySelectorAll('.vp').forEach(x=>x.classList.remove('active'));vp.classList.add('active');};
+    vgrid.appendChild(vp);
+  });
+}
+buildPanels();
+function loadSeries(i){const s=SERIES[i];document.getElementById('wlW').textContent=s.W;document.getElementById('wlL').textContent=s.L;
+  const active=document.querySelector('.vp.active')||document.querySelector('.vp');const idx=[...vgrid.children].indexOf(active);
+  PANELS[idx]=i;buildPanels();[...vgrid.children][idx]?.classList.add('active');}
+
+const stripList=document.getElementById('stripList');
+WORK.forEach((w,i)=>{const el=document.createElement('div');el.className='wcard'+(i===0?' active':'');
+  el.innerHTML=`<div class="wcard-thumb">${scanSVG(w.type,i+40,false)}</div>
+    <div class="wcard-info"><span class="mod-badge">${w.mod}</span><div class="wt">${w.t}</div><div class="wd">${w.d} · Acc RAD-…${4821-i}</div><div class="wtag"><span class="dot" style="background:${w.color}"></span>${w.tag}</div></div>`;
+  el.onclick=()=>{document.querySelectorAll('.wcard').forEach(x=>x.classList.remove('active'));el.classList.add('active');};stripList.appendChild(el);});
+
+/* radial wheel on right-click */
+const wheel=document.getElementById('wheel');
+vgrid.addEventListener('contextmenu',e=>{e.preventDefault();const r=vgrid.getBoundingClientRect();wheel.style.left=(e.clientX-r.left)+'px';wheel.style.top=(e.clientY-r.top)+'px';wheel.classList.add('show');});
+document.addEventListener('click',()=>wheel.classList.remove('show'));
+wheel.addEventListener('click',e=>e.stopPropagation());
+
+document.querySelectorAll('.tool[data-tool]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tool[data-tool]').forEach(x=>x.classList.remove('active'));b.classList.add('active');});
+document.querySelectorAll('.tool[data-layout]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tool[data-layout]').forEach(x=>x.classList.remove('active'));b.classList.add('active');vgrid.className='vgrid layout-'+b.dataset.layout;});
+document.querySelectorAll('.panel-tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.panel-tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));t.classList.add('active');document.querySelector('.pane[data-pane="'+t.dataset.pane+'"]').classList.add('active');});
+
+const consoleEl=document.getElementById('console'),consoleHead=document.getElementById('consoleHead'),consoleStatus=document.getElementById('consoleStatus'),sendBtn=document.getElementById('sendBtn');
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function setRes(res,cls,txt){const e=document.querySelector('.res-status[data-res="'+res+'"]');if(e){e.className='res-status '+cls;e.textContent=txt;}}
+sendBtn.onclick=async()=>{
+  const icd=document.querySelector('.icd').value.trim(),dx=document.querySelectorAll('.pane[data-pane="satu"] input')[1].value.trim();
+  consoleEl.innerHTML='<span class="muted"># api-satusehat-stg.dto.kemkes.go.id · FHIR R4</span>';consoleHead.classList.add('live');consoleStatus.textContent='running…';sendBtn.style.pointerEvents='none';sendBtn.style.opacity='.7';
+  const log=h=>{consoleEl.innerHTML+='\n'+h;consoleEl.scrollTop=consoleEl.scrollHeight};
+  await wait(320);log('<span class="method">POST</span> <span class="url">/oauth2/v1/accesstoken</span>');
+  await wait(480);log('<span class="ok">200 OK</span> <span class="muted">{ access_token:"ey…", expires_in:"3599" }</span>');
+  await wait(360);setRes('is','sending','Sending');log('\n<span class="method">POST</span> <span class="url">/fhir-r4/v1/ImagingStudy</span>');
+  await wait(620);log('<span class="ok">201 Created</span> <span class="key">id</span>:<span class="str">"9a3f…ims"</span>');setRes('is','sent','Sent');
+  await wait(320);setRes('dr','sending','Sending');log('\n<span class="method">POST</span> <span class="url">/fhir-r4/v1/DiagnosticReport</span>');log('  <span class="key">code</span>:<span class="str">"'+icd+'"</span> <span class="muted">// '+dx+'</span>');
+  await wait(680);log('<span class="ok">201 Created</span> <span class="key">id</span>:<span class="str">"b71e…dr"</span>');setRes('dr','sent','Sent');
+  await wait(260);log('\n<span class="ok">✓ Study terkirim</span> <span class="muted">· 2 resource · 0 error</span>');consoleStatus.textContent='done · 200';
+  sendBtn.style.pointerEvents='';sendBtn.style.opacity='';sendBtn.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> Terkirim';
+  setTimeout(()=>{sendBtn.innerHTML='<svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg> Kirim ke SATUSEHAT'},2600);
+};
+</script>
+<script type="module">
+import { App, AppOptions, ViewConfig, WindowLevel } from 'https://cdn.jsdelivr.net/npm/dwv@0.37.0-beta.12/+esm';
+const $=s=>document.querySelector(s);
+let dwvApp;
+try{ const vc=new ViewConfig('layerGroup0'); const opt=new AppOptions({'*':[vc]}); opt.tools={Scroll:{},WindowLevel:{},ZoomAndPan:{}}; dwvApp=new App(); dwvApp.init(opt); }
+catch(e){ console.error('DWV init',e); }
+const dwvMode=$('#dwvMode'),dwvDz=$('#dwvDz'),dwvSpin=$('#dwvSpin');
+function openMode(){ dwvMode.classList.add('show'); }
+function closeMode(){ dwvMode.classList.remove('show'); }
+$('#dwvClose').onclick=closeMode;
+$('#openDicom').onclick=()=>$('#pacsFile').click();
+$('#dzPick').onclick=()=>$('#pacsFile').click();
+$('#dzSample').onclick=()=>{ openMode(); dwvSpin.classList.add('show'); dwvApp.loadURLs(['sample-chest.dcm']); };
+$('#pacsFile').addEventListener('change',e=>{ if(e.target.files.length){ openMode(); dwvSpin.classList.add('show'); dwvApp.loadFiles(e.target.files);} });
+const viewer=document.querySelector('.viewer');
+['dragover','dragenter'].forEach(ev=>viewer.addEventListener(ev,e=>{e.preventDefault();openMode();dwvDz.classList.add('drag');}));
+viewer.addEventListener('dragleave',e=>{e.preventDefault();dwvDz.classList.remove('drag');});
+viewer.addEventListener('drop',e=>{e.preventDefault();dwvDz.classList.remove('drag');openMode();if(e.dataTransfer.files.length){dwvSpin.classList.add('show');dwvApp.loadFiles(e.dataTransfer.files);}});
+function tag(m,t){try{return m[t]&&m[t].value?m[t].value[0]:'';}catch(_){return '';}}
+dwvApp&&dwvApp.addEventListener('load',ev=>{
+  dwvDz.classList.add('hide'); dwvSpin.classList.remove('show');
+  try{const id=ev.detail.dataid;const d=dwvApp.getDataController().get(id);const m=d.meta;
+    const name=String(tag(m,'00100010')||'ANONYMOUS').replace(/\^/g,', ');const mod=tag(m,'00080060')||'—';
+    const rows=tag(m,'00280010')||'?';const cols=tag(m,'00280011')||'?';const desc=tag(m,'00081030')||tag(m,'0008103E')||'DICOM Study';
+    $('#dwvTL').innerHTML='<span class="v">'+name+'</span><br><span class="k">'+mod+' · '+desc+'</span><br><span class="k">'+rows+'×'+cols+' · DWV live</span>';
+    $('#dwvTR').innerHTML='<span class="v">'+mod+'</span><br><span class="k">Real DICOM</span>';
+    const ww=tag(m,'00281051'),wc=tag(m,'00281050'); if(ww)$('#wlW').textContent=Math.round(ww); if(wc)$('#wlL').textContent=Math.round(wc);
+    dwvApp.setTool('Scroll');
+  }catch(_){}
+});
+dwvApp&&dwvApp.addEventListener('wlchange',ev=>{try{const v=ev.detail.value;if(v){$('#wlL').textContent=Math.round(v[0]);$('#wlW').textContent=Math.round(v[1]);}}catch(_){}});
+dwvApp&&dwvApp.addEventListener('loaderror',()=>{dwvSpin.classList.remove('show');});
+const toolMap={wl:'WindowLevel',zoom:'ZoomAndPan',pan:'ZoomAndPan',scroll:'Scroll'};
+document.querySelectorAll('.tool[data-tool]').forEach(b=>b.addEventListener('click',()=>{ if(dwvMode.classList.contains('show')&&dwvApp){const t=toolMap[b.dataset.tool];if(t)try{dwvApp.setTool(t);}catch(_){}}}));
+// W/L presets ("other windows")
+function getVC(){ try{ return dwvApp.getStageController().getActiveLayerGroup().getActiveViewLayer().getViewController(); }catch(_){ return null; } }
+$('#wlPreset').addEventListener('change',e=>{ const v=e.target.value; if(!v)return; const p=v.split(',').map(Number); const vc=getVC(); if(vc){ try{ vc.setWindowLevel(new WindowLevel(p[0],p[1])); $('#wlL').textContent=p[0]; $('#wlW').textContent=p[1]; }catch(err){ console.warn('preset',err); } } });
+// folder / multi-slice series
+$('#openFolder').onclick=()=>$('#pacsFolder').click();
+$('#pacsFolder').addEventListener('change',e=>{ const files=[...e.target.files].filter(f=>/\.dcm$/i.test(f.name)||f.type==='application/dicom'); if(files.length){ openMode(); dwvSpin.classList.add('show'); dwvApp.loadFiles(files); dwvApp.setTool && setTimeout(()=>{try{dwvApp.setTool('Scroll');}catch(_){}} ,300); } });
+</script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SATUSEHAT PACS Hub · Menu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg-void:#06080a;--bg-app:#0b0f14;--bg-elev:#10151b;--bg-panel:#131a22;--bg-panel-2:#182029;--bg-hover:#1d2731;
+  --line:#232d38;--line-soft:#1a222b;--txt:#dfe7ee;--txt-2:#93a1af;--txt-3:#5c6875;
+  --accent:#29c6c2;--accent-2:#1aa8a4;--accent-dim:rgba(41,198,194,.13);
+  --amber:#f2a63b;--amber-dim:rgba(242,166,59,.13);--green:#35c46b;--red:#e5484d;--blue:#4a90e2;--purple:#9d7bff;
+  --shadow:0 8px 30px rgba(0,0,0,.45);--radius:6px;--mono:'JetBrains Mono','Consolas',monospace;--h-brand:44px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg-void);color:var(--txt);font-size:13px;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1200px 600px at 80% -10%,rgba(41,198,194,.06),transparent),radial-gradient(900px 500px at 0% 0%,rgba(74,144,226,.05),transparent);}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+a{text-decoration:none;color:inherit}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-track{background:var(--bg-void)}::-webkit-scrollbar-thumb{background:#28323d;border-radius:5px;border:2px solid var(--bg-void)}
+.mono{font-family:var(--mono)}
+
+/* brand bar */
+.brand{height:var(--h-brand);display:flex;align-items:center;gap:14px;padding:0 16px;background:linear-gradient(180deg,#0e141a,#0a0e13);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.logo{display:flex;align-items:center;gap:9px}
+.logo-mark{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;box-shadow:0 0 0 1px rgba(41,198,194,.3),0 2px 10px rgba(41,198,194,.3)}
+.logo-mark svg{width:16px;height:16px;stroke:#04211f;stroke-width:2.2;fill:none}
+.logo-name{font-weight:700;font-size:13.5px;letter-spacing:-.01em}.logo-name b{color:var(--accent)}
+.logo-sub{font-size:9px;letter-spacing:.14em;color:var(--txt-3);text-transform:uppercase;font-weight:600;margin-top:1px}
+.brand-sep{width:1px;height:22px;background:var(--line)}
+.env-badge{display:flex;align-items:center;gap:6px;padding:3px 9px;border-radius:20px;background:var(--amber-dim);border:1px solid rgba(242,166,59,.3)}
+.env-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.env-badge span{font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--amber)}
+.topnav{display:flex;gap:2px;margin-left:6px}
+.topnav a{padding:6px 13px;border-radius:6px;font-size:12px;font-weight:600;color:var(--txt-2);transition:.12s}
+.topnav a:hover{background:var(--bg-hover);color:var(--txt)}
+.topnav a.active{background:var(--accent-dim);color:var(--accent)}
+.brand-spacer{flex:1}
+.conn{display:flex;align-items:center;gap:7px;padding:4px 10px;border-radius:var(--radius);background:var(--bg-panel);border:1px solid var(--line)}
+.conn .led{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green);animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.conn small{font-size:10.5px;color:var(--txt-2)}.conn small b{color:var(--txt)}
+.avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2c3a47,#1c2732);border:1px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--txt-2)}
+
+/* page container */
+.wrap{max-width:1180px;margin:0 auto;padding:34px 28px 60px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1fr 380px;gap:30px;align-items:center;margin-bottom:34px}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--accent);background:var(--accent-dim);border:1px solid rgba(41,198,194,.25);padding:5px 12px;border-radius:20px;margin-bottom:18px}
+.hero-eyebrow .d{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.hero h1{font-size:40px;font-weight:800;letter-spacing:-.025em;line-height:1.08;margin-bottom:14px}
+.hero h1 b{background:linear-gradient(120deg,var(--accent),#6fe3df);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:15px;color:var(--txt-2);line-height:1.6;max-width:560px;margin-bottom:22px}
+.hero-chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:8px;padding:8px 13px;background:var(--bg-panel);border:1px solid var(--line);border-radius:8px;font-size:12px;font-weight:500}
+.chip svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:1.8}
+.chip .led{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green)}
+.hero-visual{background:linear-gradient(160deg,#111922,#0c1116);border:1px solid var(--line);border-radius:16px;padding:8px;box-shadow:var(--shadow);overflow:hidden}
+.hero-visual svg{width:100%;height:auto;display:block}
+
+/* stat tiles */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:30px}
+.stat{background:linear-gradient(160deg,var(--bg-panel),var(--bg-elev));border:1px solid var(--line);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent)}
+.stat .st-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--txt-3);font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.stat .st-label svg{width:14px;height:14px;stroke:var(--txt-2);fill:none;stroke-width:1.8}
+.stat .st-num{font-family:var(--mono);font-size:28px;font-weight:600;letter-spacing:-.02em}
+.stat .st-sub{font-size:11px;color:var(--txt-3);margin-top:4px}
+.stat .st-sub b{color:var(--green)}
+.stat:nth-child(2)::before{background:linear-gradient(90deg,var(--green),transparent)}
+.stat:nth-child(3)::before{background:linear-gradient(90deg,var(--blue),transparent)}
+.stat:nth-child(4)::before{background:linear-gradient(90deg,var(--amber),transparent)}
+
+/* module cards */
+.sec-title{display:flex;align-items:center;gap:12px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--txt-2);font-weight:600;margin:6px 0 16px}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--line-soft)}
+.modules{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:34px}
+.mod{display:flex;flex-direction:column;background:linear-gradient(165deg,var(--bg-panel),var(--bg-elev));border:1px solid var(--line);border-radius:14px;padding:22px;position:relative;overflow:hidden;transition:transform .16s,border-color .16s,box-shadow .16s}
+.mod::after{content:'';position:absolute;inset:0;background:radial-gradient(400px 200px at 50% -20%,var(--glow,rgba(41,198,194,.14)),transparent);opacity:0;transition:opacity .2s;pointer-events:none}
+.mod:hover{transform:translateY(-4px);border-color:var(--brd,rgba(41,198,194,.4));box-shadow:0 14px 40px rgba(0,0,0,.4)}
+.mod:hover::after{opacity:1}
+.mod-icon{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;margin-bottom:16px;background:var(--ic-bg,var(--accent-dim));border:1px solid var(--ic-brd,rgba(41,198,194,.25))}
+.mod-icon svg{width:24px;height:24px;stroke:var(--ic,var(--accent));fill:none;stroke-width:1.7}
+.mod h3{font-size:17px;font-weight:700;letter-spacing:-.01em;margin-bottom:7px}
+.mod p{font-size:12.5px;color:var(--txt-2);line-height:1.55;margin-bottom:16px;flex:1}
+.mod-foot{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--line-soft)}
+.mod-stat{font-size:11px;color:var(--txt-3)}.mod-stat b{font-family:var(--mono);color:var(--txt);font-size:13px}
+.mod-go{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ic,var(--accent))}
+.mod-go svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;transition:transform .16s}
+.mod:hover .mod-go svg{transform:translateX(4px)}
+
+/* bottom two-col */
+.bottom{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+.card{background:var(--bg-elev);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line-soft)}
+.card-head span{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--txt-2);font-weight:600}
+.card-head a{font-size:11px;color:var(--accent);font-weight:600}
+.act{display:flex;align-items:center;gap:13px;padding:13px 18px;border-bottom:1px solid var(--line-soft)}
+.act:last-child{border-bottom:none}
+.act-ic{width:34px;height:34px;border-radius:8px;background:var(--bg-panel);display:grid;place-items:center;flex-shrink:0}
+.act-ic svg{width:16px;height:16px;stroke:var(--accent);fill:none;stroke-width:1.7}
+.act-main{flex:1;min-width:0}.act-main b{font-size:12.5px;font-weight:600;display:block}.act-main small{font-size:11px;color:var(--txt-3);font-family:var(--mono)}
+.act-tag{font-size:9.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:12px}
+.act-tag.sent{background:rgba(53,196,107,.15);color:var(--green)}
+.act-tag.new{background:var(--accent-dim);color:var(--accent)}
+.act-tag.wait{background:var(--amber-dim);color:var(--amber)}
+/* integration card */
+.integ{padding:18px}
+.integ-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line-soft)}
+.integ-row:last-child{border-bottom:none}
+.integ-row .l{display:flex;align-items:center;gap:10px}
+.integ-row .l svg{width:16px;height:16px;stroke:var(--accent);fill:none;stroke-width:1.7}
+.integ-row .l b{font-size:12.5px;font-weight:600}.integ-row .l small{display:block;font-size:10px;color:var(--txt-3);font-family:var(--mono)}
+.integ-row .n{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--green)}
+.integ-foot{margin-top:14px;padding:11px 13px;background:#05080b;border:1px solid var(--line);border-radius:8px;font-family:var(--mono);font-size:10.5px;color:var(--txt-2);line-height:1.6}
+.integ-foot .ok{color:var(--green)}.integ-foot .mut{color:var(--txt-3)}
+
+.footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--txt-3)}
+
+@media(max-width:960px){.hero{grid-template-columns:1fr}.hero-visual{display:none}.stats{grid-template-columns:1fr 1fr}.modules{grid-template-columns:1fr}.bottom{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="brand">
+  <a href="index.html" class="logo">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18" stroke-linecap="round"/><path d="M7 7l10 10M17 7L7 17" opacity=".4" stroke-linecap="round"/></svg></div>
+    <div><div class="logo-name">SATUSEHAT <b>PACS</b> Hub</div><div class="logo-sub">Central DICOM Archive · RIS/PACS</div></div>
+  </a>
+  <div class="brand-sep"></div>
+  <div class="env-badge"><i class="dot"></i><span>SANDBOX</span></div>
+  <nav class="topnav">
+    <a href="index.html" class="active">Menu</a>
+    <a href="instalasi.html">Instalasi</a>
+    <a href="pacs.html">PACS Viewer</a>
+  </nav>
+  <div class="brand-spacer"></div>
+  <div class="conn"><i class="led"></i><small>SATUSEHAT <b>Terhubung</b></small></div>
+  <div class="avatar">RA</div>
+</header>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div>
+      <div class="hero-eyebrow"><i class="d"></i>Integrasi FHIR R4 · Kementerian Kesehatan RI</div>
+      <h1>Satu arsip citra,<br><b>terhubung nasional.</b></h1>
+      <p>Hub PACS terpusat yang menyatukan Instalasi Radiologi dan Instalasi Bedah ke dalam satu Central DICOM Archive — lalu melaporkan setiap studi ke platform <b>SATUSEHAT</b> secara otomatis melalui standar HL7 FHIR R4.</p>
+      <div class="hero-chips">
+        <div class="chip"><i class="led"></i>Sandbox aktif</div>
+        <div class="chip"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg>OAuth2 · client_credentials</div>
+        <div class="chip"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg>DICOM · ImagingStudy</div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <svg viewBox="0 0 380 280" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="hub" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#29c6c2"/><stop offset="100%" stop-color="#1aa8a4"/></radialGradient>
+          <linearGradient id="ln" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#29c6c2" stop-opacity="0"/><stop offset="100%" stop-color="#29c6c2" stop-opacity=".7"/></linearGradient>
+        </defs>
+        <!-- links -->
+        <line x1="70" y1="90" x2="190" y2="150" stroke="url(#ln)" stroke-width="1.5"/>
+        <line x1="70" y1="210" x2="190" y2="150" stroke="url(#ln)" stroke-width="1.5"/>
+        <line x1="190" y1="150" x2="310" y2="70" stroke="#29c6c2" stroke-opacity=".5" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <!-- satusehat cloud -->
+        <g transform="translate(268,40)"><rect width="84" height="56" rx="12" fill="#0f1620" stroke="#2a3a44"/><text x="42" y="26" fill="#f2a63b" font-family="monospace" font-size="9" font-weight="700" text-anchor="middle">SATUSEHAT</text><text x="42" y="40" fill="#5c6875" font-family="monospace" font-size="7.5" text-anchor="middle">FHIR R4 · Nasional</text></g>
+        <!-- nodes -->
+        <g transform="translate(28,66)"><rect width="84" height="48" rx="10" fill="#111922" stroke="#2a3a44"/><circle cx="18" cy="24" r="7" fill="#29c6c2" opacity=".2"/><circle cx="18" cy="24" r="3.5" fill="#29c6c2"/><text x="34" y="21" fill="#dfe7ee" font-family="Inter" font-size="8.5" font-weight="600">Radiologi</text><text x="34" y="33" fill="#5c6875" font-family="monospace" font-size="7">DX · CT · MR</text></g>
+        <g transform="translate(28,186)"><rect width="84" height="48" rx="10" fill="#111922" stroke="#2a3a44"/><circle cx="18" cy="24" r="7" fill="#9d7bff" opacity=".2"/><circle cx="18" cy="24" r="3.5" fill="#9d7bff"/><text x="34" y="21" fill="#dfe7ee" font-family="Inter" font-size="8.5" font-weight="600">Bedah</text><text x="34" y="33" fill="#5c6875" font-family="monospace" font-size="7">Laporan Op</text></g>
+        <!-- central hub -->
+        <circle cx="190" cy="150" r="34" fill="url(#hub)" opacity=".16"/>
+        <circle cx="190" cy="150" r="24" fill="#0c1116" stroke="#29c6c2" stroke-width="1.5"/>
+        <path d="M190 138v24M178 150h24" stroke="#29c6c2" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="190" cy="150" r="34" fill="none" stroke="#29c6c2" stroke-opacity=".3" stroke-width="1"><animate attributeName="r" values="24;46;24" dur="3s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values=".5;0;.5" dur="3s" repeatCount="indefinite"/></circle>
+        <text x="190" y="200" fill="#93a1af" font-family="monospace" font-size="8" text-anchor="middle">PACS HUB</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats">
+    <div class="stat"><div class="st-label"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg>Studi Hari Ini</div><div class="st-num">24</div><div class="st-sub"><b>+6</b> vs kemarin</div></div>
+    <div class="stat"><div class="st-label"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Terkirim SATUSEHAT</div><div class="st-num">312</div><div class="st-sub"><b>100%</b> sukses</div></div>
+    <div class="stat"><div class="st-label"><svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><circle cx="4" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="20" cy="14" r="2"/></svg>Instalasi Terhubung</div><div class="st-num">3</div><div class="st-sub">Rad · Bedah · Arsip</div></div>
+    <div class="stat"><div class="st-label"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Menunggu Baca</div><div class="st-num">5</div><div class="st-sub">antrian radiolog</div></div>
+  </section>
+
+  <!-- MODULES -->
+  <div class="sec-title">Modul</div>
+  <section class="modules">
+    <a class="mod" href="instalasi.html" style="--brd:rgba(41,198,194,.4);--glow:rgba(41,198,194,.14);--ic:#29c6c2;--ic-bg:rgba(41,198,194,.13);--ic-brd:rgba(41,198,194,.25)">
+      <div class="mod-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18M8 14h4"/></svg></div>
+      <h3>Instalasi Radiologi</h3>
+      <p>Input pemeriksaan, registrasi pasien via NIK, upload citra DICOM/PNG, dan bacaan radiolog dengan kode ICD-10.</p>
+      <div class="mod-foot"><span class="mod-stat"><b>18</b> studi aktif</span><span class="mod-go">Buka <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+    </a>
+    <a class="mod" href="instalasi.html#bedah" style="--brd:rgba(157,123,255,.4);--glow:rgba(157,123,255,.14);--ic:#9d7bff;--ic-bg:rgba(157,123,255,.13);--ic-brd:rgba(157,123,255,.25)">
+      <div class="mod-icon"><svg viewBox="0 0 24 24"><path d="M14.5 3.5l6 6L9 21H3v-6z"/><path d="M12 6l6 6"/></svg></div>
+      <h3>Instalasi Bedah</h3>
+      <p>Laporan operasi, citra intra-operatif, dan prosedur yang dilaporkan sebagai Procedure & DiagnosticReport ke SATUSEHAT.</p>
+      <div class="mod-foot"><span class="mod-stat"><b>6</b> laporan hari ini</span><span class="mod-go">Buka <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+    </a>
+    <a class="mod" href="pacs.html" style="--brd:rgba(74,144,226,.4);--glow:rgba(74,144,226,.14);--ic:#4a90e2;--ic-bg:rgba(74,144,226,.13);--ic-brd:rgba(74,144,226,.25)">
+      <div class="mod-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+      <h3>PACS Viewer</h3>
+      <p>Central DICOM Archive — telaah citra multi-panel, window/level, anotasi, dan kirim ImagingStudy + DiagnosticReport ke SATUSEHAT.</p>
+      <div class="mod-foot"><span class="mod-stat"><b>512</b> citra arsip</span><span class="mod-go">Buka <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+    </a>
+  </section>
+
+  <!-- BOTTOM -->
+  <section class="bottom">
+    <div class="card">
+      <div class="card-head"><span>Aktivitas Terakhir</span><a href="pacs.html">Lihat semua</a></div>
+      <div class="act"><div class="act-ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg></div><div class="act-main"><b>CT ABDOMEN — Budi Sutrisno</b><small>Radiologi · Acc RAD-2025-004821</small></div><span class="act-tag sent">Terkirim</span></div>
+      <div class="act"><div class="act-ic"><svg viewBox="0 0 24 24"><path d="M14.5 3.5l6 6L9 21H3v-6z"/></svg></div><div class="act-main"><b>Laporan Op — Siti Aminah</b><small>Bedah · Appendektomi</small></div><span class="act-tag new">Baru</span></div>
+      <div class="act"><div class="act-ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg></div><div class="act-main"><b>X-RAY THORAX — Agus Salim</b><small>Radiologi · Acc RAD-2025-004819</small></div><span class="act-tag wait">Menunggu</span></div>
+      <div class="act"><div class="act-ic"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></div><div class="act-main"><b>CT THORAX — Budi Sutrisno</b><small>Arsip · ImagingStudy dikirim</small></div><span class="act-tag sent">Terkirim</span></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span>Integrasi SATUSEHAT</span><a href="pacs.html">Konsol</a></div>
+      <div class="integ">
+        <div class="integ-row"><div class="l"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg><div><b>ServiceRequest</b><small>order pemeriksaan</small></div></div><div class="n">128</div></div>
+        <div class="integ-row"><div class="l"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg><div><b>ImagingStudy</b><small>metadata citra</small></div></div><div class="n">96</div></div>
+        <div class="integ-row"><div class="l"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg><div><b>DiagnosticReport</b><small>bacaan + ICD-10</small></div></div><div class="n">88</div></div>
+        <div class="integ-foot"><span class="mut"># last sync</span> <span class="ok">200 OK</span> · 10-Sep 09:14<br><span class="mut">api-satusehat-stg.dto.kemkes.go.id</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer"><span>SATUSEHAT PACS Hub · Tugas SIMRS · Sandbox environment</span><span class="mono">v0.1 · FHIR R4</span></div>
+</div>
+
+</body>
+</html>

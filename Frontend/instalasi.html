@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Instalasi Workstation · SATUSEHAT PACS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg-void:#06080a;--bg-app:#0b0f14;--bg-elev:#10151b;--bg-panel:#131a22;--bg-panel-2:#182029;--bg-hover:#1d2731;
+  --line:#232d38;--line-soft:#1a222b;--txt:#dfe7ee;--txt-2:#93a1af;--txt-3:#5c6875;
+  --accent:#29c6c2;--accent-2:#1aa8a4;--accent-dim:rgba(41,198,194,.13);
+  --amber:#f2a63b;--amber-dim:rgba(242,166,59,.13);--green:#35c46b;--red:#e5484d;--blue:#4a90e2;--purple:#9d7bff;
+  --shadow:0 8px 30px rgba(0,0,0,.45);--radius:6px;--mono:'JetBrains Mono','Consolas',monospace;--h-brand:44px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg-void);color:var(--txt);font-size:13px;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1000px 500px at 85% -5%,rgba(41,198,194,.05),transparent)}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+a{text-decoration:none;color:inherit}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-track{background:var(--bg-void)}::-webkit-scrollbar-thumb{background:#28323d;border-radius:5px;border:2px solid var(--bg-void)}
+.mono{font-family:var(--mono)}
+
+/* brand */
+.brand{height:var(--h-brand);display:flex;align-items:center;gap:14px;padding:0 16px;background:linear-gradient(180deg,#0e141a,#0a0e13);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.logo{display:flex;align-items:center;gap:9px}
+.logo-mark{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;box-shadow:0 0 0 1px rgba(41,198,194,.3),0 2px 10px rgba(41,198,194,.3)}
+.logo-mark svg{width:16px;height:16px;stroke:#04211f;stroke-width:2.2;fill:none}
+.logo-name{font-weight:700;font-size:13.5px}.logo-name b{color:var(--accent)}
+.logo-sub{font-size:9px;letter-spacing:.14em;color:var(--txt-3);text-transform:uppercase;font-weight:600;margin-top:1px}
+.brand-sep{width:1px;height:22px;background:var(--line)}
+.env-badge{display:flex;align-items:center;gap:6px;padding:3px 9px;border-radius:20px;background:var(--amber-dim);border:1px solid rgba(242,166,59,.3)}
+.env-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.env-badge span{font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--amber)}
+.topnav{display:flex;gap:2px;margin-left:6px}
+.topnav a{padding:6px 13px;border-radius:6px;font-size:12px;font-weight:600;color:var(--txt-2);transition:.12s}
+.topnav a:hover{background:var(--bg-hover);color:var(--txt)}.topnav a.active{background:var(--accent-dim);color:var(--accent)}
+.brand-spacer{flex:1}
+.unit-sel{display:flex;align-items:center;gap:8px;padding:5px 12px;border-radius:var(--radius);background:var(--bg-panel);border:1px solid var(--line);font-size:12px}
+.unit-sel select{background:none;border:none;color:var(--txt);font-family:inherit;font-weight:600;font-size:12px;outline:none;cursor:pointer}
+.avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2c3a47,#1c2732);border:1px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--txt-2)}
+
+.wrap{max-width:1240px;margin:0 auto;padding:24px 26px 60px}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+.page-head h1{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.page-head p{font-size:13px;color:var(--txt-2);margin-top:4px}
+.page-head .accession{font-family:var(--mono);font-size:12px;color:var(--txt-3);background:var(--bg-panel);border:1px solid var(--line);padding:7px 12px;border-radius:8px}
+.page-head .accession b{color:var(--accent)}
+
+/* stepper */
+.stepper{display:flex;align-items:center;gap:0;margin-bottom:24px;background:var(--bg-elev);border:1px solid var(--line);border-radius:12px;padding:6px}
+.step{flex:1;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;position:relative}
+.step.active{background:var(--accent-dim)}
+.step .num{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;font-family:var(--mono);background:var(--bg-panel);color:var(--txt-3);border:1px solid var(--line);flex-shrink:0}
+.step.active .num{background:var(--accent);color:#042321;border-color:var(--accent)}
+.step.done .num{background:rgba(53,196,107,.2);color:var(--green);border-color:rgba(53,196,107,.4)}
+.step b{font-size:12px;font-weight:600}.step.active b{color:var(--accent)}.step:not(.active) b{color:var(--txt-2)}
+.step small{display:block;font-size:9.5px;color:var(--txt-3)}
+.step-arrow{color:var(--txt-3);opacity:.4;padding:0 2px}.step-arrow svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* layout */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.col{display:flex;flex-direction:column;gap:16px}
+.card{background:var(--bg-elev);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card-head{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line-soft)}
+.card-head .hicon{width:26px;height:26px;border-radius:7px;background:var(--accent-dim);display:grid;place-items:center}
+.card-head .hicon svg{width:15px;height:15px;stroke:var(--accent);fill:none;stroke-width:1.8}
+.card-head b{font-size:13px;font-weight:600}
+.card-head small{margin-left:auto;font-size:10px;color:var(--txt-3);font-family:var(--mono)}
+.card-body{padding:16px}
+
+/* fields */
+.field{margin-bottom:13px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--txt-3);font-weight:600;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;background:var(--bg-panel);border:1px solid var(--line);border-radius:7px;padding:9px 11px;color:var(--txt);font-family:inherit;font-size:13px;outline:none;transition:border-color .12s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.field .mono{font-family:var(--mono)}
+.field textarea{resize:vertical;line-height:1.5}
+.field-row{display:flex;gap:11px}.field-row .field{flex:1}
+.nik-row{display:flex;gap:8px;align-items:flex-end}
+.nik-row .field{flex:1;margin-bottom:0}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;border-radius:7px;font-size:12.5px;font-weight:600;transition:filter .12s,transform .06s,background .12s;white-space:nowrap}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+.btn-ghost{background:var(--bg-panel);border:1px solid var(--line);color:var(--txt-2)}
+.btn-ghost:hover{background:var(--bg-hover);color:var(--txt)}
+.btn-primary{background:linear-gradient(180deg,var(--accent),var(--accent-2));color:#042321;box-shadow:0 3px 12px rgba(41,198,194,.28)}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-block{width:100%;padding:12px}
+.ihs-badge{display:none;align-items:center;gap:8px;margin-top:11px;padding:9px 12px;background:rgba(53,196,107,.09);border:1px solid rgba(53,196,107,.3);border-radius:8px;font-size:12px}
+.ihs-badge.show{display:flex}
+.ihs-badge svg{width:15px;height:15px;stroke:var(--green);fill:none;stroke-width:2.4}
+.ihs-badge b{font-family:var(--mono);color:var(--green)}
+.ihs-badge span{color:var(--txt-2)}
+
+/* upload dropzone */
+.dropzone{border:1.5px dashed var(--line);border-radius:10px;padding:26px 18px;text-align:center;transition:.15s;cursor:pointer;background:var(--bg-panel)}
+.dropzone:hover,.dropzone.drag{border-color:var(--accent);background:var(--accent-dim)}
+.dropzone svg{width:34px;height:34px;stroke:var(--accent);fill:none;stroke-width:1.5;margin-bottom:10px}
+.dropzone b{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+.dropzone small{font-size:11px;color:var(--txt-3)}
+.dropzone .fmts{margin-top:10px;display:flex;gap:6px;justify-content:center}
+.dropzone .fmts span{font-family:var(--mono);font-size:9px;font-weight:600;padding:2px 7px;border-radius:4px;background:var(--bg-void);color:var(--txt-2);border:1px solid var(--line)}
+.preview{display:none;gap:13px;align-items:center;padding:12px;background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;margin-top:12px}
+.preview.show{display:flex}
+.preview .thumb{width:74px;height:74px;border-radius:8px;overflow:hidden;background:#05070a;flex-shrink:0;border:1px solid var(--line)}
+.preview .thumb svg{width:100%;height:100%;display:block}
+.preview .pinfo{flex:1;min-width:0}
+.preview .pinfo b{font-size:12.5px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.preview .pinfo small{font-size:10.5px;color:var(--txt-3);font-family:var(--mono);display:block;margin-top:3px}
+.preview .pmeta{display:flex;gap:6px;margin-top:7px}
+.preview .pmeta span{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:4px;background:var(--accent-dim);color:var(--accent)}
+
+/* live FHIR console */
+.console{background:#05080b;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.console-head{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--bg-panel);border-bottom:1px solid var(--line)}
+.console-head span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2);font-weight:600;display:flex;align-items:center;gap:8px}
+.console-head .led{width:6px;height:6px;border-radius:50%;background:var(--txt-3)}
+.console-head.live .led{background:var(--green);box-shadow:0 0 6px var(--green)}
+.console-body{max-height:280px;overflow:auto;padding:12px 13px;font-family:var(--mono);font-size:11px;line-height:1.65;white-space:pre-wrap;word-break:break-word;color:#8fa3b3}
+.console-body .key{color:#7fb2e8}.console-body .str{color:#c3e88d}.console-body .method{color:var(--accent);font-weight:600}.console-body .url{color:var(--txt-2)}.console-body .ok{color:var(--green)}.console-body .muted{color:var(--txt-3)}.console-body .amber{color:var(--amber)}
+.actions{display:flex;gap:11px;margin-top:2px}
+.actions .btn{flex:1}
+
+@media(max-width:920px){.grid{grid-template-columns:1fr}.stepper{overflow-x:auto}.page-head{flex-direction:column;align-items:flex-start;gap:10px}}
+</style>
+</head>
+<body>
+
+<header class="brand">
+  <a href="index.html" class="logo">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18" stroke-linecap="round"/><path d="M7 7l10 10M17 7L7 17" opacity=".4" stroke-linecap="round"/></svg></div>
+    <div><div class="logo-name">SATUSEHAT <b>PACS</b> Hub</div><div class="logo-sub">Instalasi Workstation</div></div>
+  </a>
+  <div class="brand-sep"></div>
+  <div class="env-badge"><i class="dot"></i><span>SANDBOX</span></div>
+  <nav class="topnav">
+    <a href="index.html">Menu</a>
+    <a href="instalasi.html" class="active">Instalasi</a>
+    <a href="pacs.html">PACS Viewer</a>
+  </nav>
+  <div class="brand-spacer"></div>
+  <div class="unit-sel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5c6875" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M4 10h16"/></svg><select id="unit"><option>Instalasi Radiologi</option><option>Instalasi Bedah</option></select></div>
+  <div class="avatar">RA</div>
+</header>
+
+<div class="wrap">
+  <div class="page-head">
+    <div><h1>Pendaftaran Pemeriksaan</h1><p id="unitSub">Instalasi Radiologi · RSUD Dr. Soetomo</p></div>
+    <div class="accession">Accession · <b>RAD-2025-004822</b></div>
+  </div>
+
+  <!-- STEPPER -->
+  <div class="stepper">
+    <div class="step active"><div class="num">1</div><div><b>Data Pasien</b><small>identitas & NIK</small></div></div>
+    <div class="step-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+    <div class="step"><div class="num">2</div><div><b>Permintaan</b><small>dokter & modality</small></div></div>
+    <div class="step-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+    <div class="step"><div class="num">3</div><div><b>Upload Citra</b><small>DICOM / PNG</small></div></div>
+    <div class="step-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+    <div class="step"><div class="num">4</div><div><b>Bacaan</b><small>ICD-10</small></div></div>
+    <div class="step-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+    <div class="step"><div class="num">5</div><div><b>Kirim</b><small>SATUSEHAT</small></div></div>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT: patient + request -->
+    <div class="col">
+      <div class="card">
+        <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div><b>Data Pasien</b><small>FHIR Patient</small></div>
+        <div class="card-body">
+          <div class="nik-row">
+            <div class="field"><label>NIK (KTP)</label><input class="mono" id="nik" placeholder="16 digit NIK" value="3578012504780003" /></div>
+            <button class="btn btn-ghost" id="cekBtn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Cek SATUSEHAT</button>
+          </div>
+          <div class="ihs-badge" id="ihsBadge"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg><span>IHS Number ditemukan:</span><b id="ihsVal">—</b></div>
+          <div class="field-row" style="margin-top:13px"><div class="field"><label>Nama Lengkap</label><input id="nama" value="Budi Sutrisno" /></div></div>
+          <div class="field-row">
+            <div class="field"><label>Jenis Kelamin</label><select id="jk"><option>Laki-laki</option><option>Perempuan</option></select></div>
+            <div class="field"><label>Tanggal Lahir</label><input class="mono" id="dob" value="1978-04-25" /></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>No. Rekam Medis</label><input class="mono" value="00-12-84-56" /></div>
+            <div class="field"><label>Penjamin</label><select><option>BPJS Kesehatan</option><option>Umum</option><option>Asuransi</option></select></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><path d="M9 12h6M9 16h4"/></svg></div><b>Permintaan Pemeriksaan</b><small>FHIR ServiceRequest</small></div>
+        <div class="card-body">
+          <div class="field-row">
+            <div class="field"><label>Dokter Perujuk</label><input value="dr. Sari Wulandari, Sp.PD" /></div>
+            <div class="field" style="flex:.7"><label>Modality</label><select id="modality"><option>CT</option><option>DX (X-Ray)</option><option>MR</option><option>US</option></select></div>
+          </div>
+          <div class="field"><label>Jenis Pemeriksaan</label><input id="exam" value="CT Abdomen dengan Kontras" /></div>
+          <div class="field"><label>Diagnosa Klinis / Indikasi</label><input value="Nyeri perut kanan bawah, suspek appendicitis" /></div>
+          <div class="field"><label>Instalasi Asal</label><select><option>Instalasi Radiologi · RSUD Dr. Soetomo</option><option>Instalasi Radiologi · RS Universitas Airlangga</option><option>Instalasi Bedah · RSUD Dr. Soetomo</option></select></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: upload + bacaan + console -->
+    <div class="col">
+      <div class="card">
+        <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/><circle cx="8.5" cy="10" r="1.5"/></svg></div><b>Upload Citra</b><small>→ PACS Archive</small></div>
+        <div class="card-body">
+          <div class="dropzone" id="dropzone">
+            <svg viewBox="0 0 24 24"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+            <b>Seret berkas ke sini atau klik untuk pilih</b>
+            <small>DICOM Series akan diarsipkan ke Central PACS</small>
+            <div class="fmts"><span>.DCM</span><span>.PNG</span><span>.JPG</span></div>
+          </div>
+          <input type="file" id="fileInput" accept=".dcm,.png,.jpg,.jpeg" style="display:none" />
+          <div class="preview" id="preview">
+            <div class="thumb" id="previewThumb"></div>
+            <div class="pinfo"><b id="fileName">chest_ct_abdomen.dcm</b><small id="fileMeta">512 × 512 · 132 slices · 24.8 MB</small>
+              <div class="pmeta"><span id="modBadge">CT</span><span>ABDOMEN</span><span>5.0mm</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M9 13h6M9 17h4"/></svg></div><b>Bacaan Radiologi</b><small>FHIR DiagnosticReport</small></div>
+        <div class="card-body">
+          <div class="field-row">
+            <div class="field" style="flex:.8"><label>Kode ICD-10</label><input class="mono" id="icd" value="K35.80" /></div>
+            <div class="field" style="flex:1.4"><label>Diagnosis</label><input id="dx" value="Acute appendicitis, unspecified" /></div>
+          </div>
+          <div class="field"><label>Temuan / Kesan</label><textarea id="finding" rows="2">Tampak penebalan dinding apendiks disertai fat stranding periapendikular. Kesan: appendicitis akut.</textarea></div>
+          <div class="actions">
+            <button class="btn btn-ghost" id="saveBtn"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan ke Instalasi DB</button>
+            <button class="btn btn-primary" id="sendBtn"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Kirim ke SATUSEHAT</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="console">
+        <div class="console-head" id="consoleHead"><span><i class="led"></i>FHIR R4 · Sandbox</span><span class="mono" style="font-size:9px;color:var(--txt-3)" id="cStatus">preview otomatis</span></div>
+        <div class="console-body" id="console"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function scanSVG(seed){
+  const id='g'+seed+Math.floor(Math.random()*9999);
+  return `<svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs>
+    <radialGradient id="s${id}" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#565e66"/><stop offset="55%" stop-color="#333a41"/><stop offset="82%" stop-color="#171b1f"/><stop offset="100%" stop-color="#04050700"/></radialGradient>
+    <filter id="n${id}"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2"/><feColorMatrix type="saturate" values="0"/></filter></defs>
+    <rect width="400" height="400" fill="#050608"/><ellipse cx="200" cy="200" rx="150" ry="130" fill="url(#s${id})"/>
+    <ellipse cx="160" cy="180" rx="45" ry="40" fill="#3d454c"/><ellipse cx="255" cy="190" rx="38" ry="34" fill="#454d54"/>
+    <ellipse cx="200" cy="285" rx="16" ry="13" fill="#eef2f5" opacity=".9"/><rect width="400" height="400" filter="url(#n${id})" opacity="0.05"/></svg>`;
+}
+const $=s=>document.querySelector(s);
+const consoleEl=$('#console'),cHead=$('#consoleHead'),cStatus=$('#cStatus');
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+// live FHIR preview
+function renderPreview(){
+  const nik=$('#nik').value,nama=$('#nama').value,jk=$('#jk').value,dob=$('#dob').value,icd=$('#icd').value,dx=$('#dx').value,mod=$('#modality').value.split(' ')[0],exam=$('#exam').value;
+  consoleEl.innerHTML =
+`<span class="muted"># Draft FHIR — diperbarui otomatis</span>
+{
+  <span class="key">"resourceType"</span>: <span class="str">"Patient"</span>,
+  <span class="key">"identifier"</span>: [{ <span class="key">"system"</span>:<span class="str">"…/nik"</span>, <span class="key">"value"</span>:<span class="str">"${esc(nik)}"</span> }],
+  <span class="key">"name"</span>: [{ <span class="key">"text"</span>:<span class="str">"${esc(nama)}"</span> }],
+  <span class="key">"gender"</span>: <span class="str">"${jk==='Laki-laki'?'male':'female'}"</span>,
+  <span class="key">"birthDate"</span>: <span class="str">"${esc(dob)}"</span>
+}
+{
+  <span class="key">"resourceType"</span>: <span class="str">"ImagingStudy"</span>,
+  <span class="key">"modality"</span>: [{ <span class="key">"code"</span>:<span class="str">"${esc(mod)}"</span> }],
+  <span class="key">"description"</span>: <span class="str">"${esc(exam)}"</span>,
+  <span class="key">"subject"</span>: { <span class="key">"reference"</span>:<span class="str">"Patient/…"</span> }
+}
+{
+  <span class="key">"resourceType"</span>: <span class="str">"DiagnosticReport"</span>,
+  <span class="key">"code"</span>: { <span class="key">"coding"</span>:[{ <span class="key">"system"</span>:<span class="str">"…/icd-10"</span>, <span class="key">"code"</span>:<span class="str">"${esc(icd)}"</span>, <span class="key">"display"</span>:<span class="str">"${esc(dx)}"</span> }] },
+  <span class="key">"conclusion"</span>: <span class="str">"${esc($('#finding').value.slice(0,60))}…"</span>
+}`;
+}
+['#nik','#nama','#jk','#dob','#icd','#dx','#modality','#exam','#finding'].forEach(s=>{const e=$(s);e&&e.addEventListener('input',renderPreview)});
+renderPreview();
+
+// unit switch
+$('#unit').addEventListener('change',e=>{$('#unitSub').textContent=e.target.value+' · RSUD Dr. Soetomo';});
+if(location.hash==='#bedah'){$('#unit').value='Instalasi Bedah';$('#unitSub').textContent='Instalasi Bedah · RSUD Dr. Soetomo';}
+
+// NIK lookup (mock)
+$('#cekBtn').addEventListener('click',async()=>{
+  const b=$('#cekBtn');b.style.pointerEvents='none';b.innerHTML='<svg viewBox="0 0 24 24" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.2-8.6"/></svg>Mencari…';
+  await new Promise(r=>setTimeout(r,900));
+  $('#ihsVal').textContent='P02478315092';$('#ihsBadge').classList.add('show');
+  b.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Ditemukan';b.style.pointerEvents='';
+  document.querySelectorAll('.step')[0].classList.add('done');
+});
+
+// upload
+const dz=$('#dropzone'),fi=$('#fileInput'),pv=$('#preview');
+function showFile(name){
+  $('#previewThumb').innerHTML=scanSVG(Date.now());
+  $('#fileName').textContent=name||'chest_ct_abdomen.dcm';
+  pv.classList.add('show');
+  document.querySelectorAll('.step')[2].classList.add('done');
+}
+dz.addEventListener('click',()=>fi.click());
+fi.addEventListener('change',e=>{if(e.target.files[0])showFile(e.target.files[0].name)});
+['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag')}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag')}));
+dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];showFile(f?f.name:'')});
+
+// save
+$('#saveBtn').addEventListener('click',()=>{const b=$('#saveBtn');b.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Tersimpan di Instalasi DB';setTimeout(()=>{b.innerHTML='<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan ke Instalasi DB'},2200)});
+
+// send to SATUSEHAT (mock)
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+$('#sendBtn').addEventListener('click',async()=>{
+  const b=$('#sendBtn');b.style.pointerEvents='none';b.style.opacity='.75';
+  cHead.classList.add('live');cStatus.textContent='running…';
+  const icd=$('#icd').value,dx=$('#dx').value;
+  consoleEl.innerHTML='<span class="muted"># POST → api-satusehat-stg.dto.kemkes.go.id</span>';
+  const log=h=>{consoleEl.innerHTML+='\n'+h;consoleEl.scrollTop=consoleEl.scrollHeight};
+  await wait(300);log('<span class="method">POST</span> <span class="url">/oauth2/v1/accesstoken</span>');
+  await wait(500);log('<span class="ok">200 OK</span> <span class="muted">{ access_token:"ey…", expires_in:"3599" }</span>');
+  await wait(350);log('\n<span class="method">POST</span> <span class="url">/fhir-r4/v1/ImagingStudy</span>');
+  await wait(600);log('<span class="ok">201 Created</span> <span class="key">id</span>:<span class="str">"9a3f…ims"</span>');
+  await wait(300);log('\n<span class="method">POST</span> <span class="url">/fhir-r4/v1/DiagnosticReport</span>');
+  log('  <span class="key">code</span>:<span class="str">"'+icd+'"</span> <span class="muted">// '+dx+'</span>');
+  await wait(650);log('<span class="ok">201 Created</span> <span class="key">id</span>:<span class="str">"b71e…dr"</span>');
+  await wait(250);log('\n<span class="ok">✓ Studi terkirim</span> <span class="muted">· 2 resource · 0 error</span>');
+  cStatus.textContent='done · 200';
+  document.querySelectorAll('.step')[3].classList.add('done');
+  document.querySelectorAll('.step')[4].classList.add('done');
+  b.style.pointerEvents='';b.style.opacity='';b.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Terkirim ke SATUSEHAT';
+  setTimeout(()=>{b.innerHTML='<svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Kirim ke SATUSEHAT'},2800);
+});
+</script>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+</body>
+</html>
