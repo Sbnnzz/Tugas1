@@ -545,6 +545,51 @@ sendBtn.onclick=async()=>{
   sendBtn.innerHTML=data.ok?'<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> Terkirim':SEND_ICON;
   if(data.ok)setTimeout(()=>{sendBtn.innerHTML=SEND_ICON},2600);
 };
+
+// Local PACS archive: worklist + series rail built from Backend/data (GET /api/studies).
+// Keeps the built-in demo cards when the backend is unreachable.
+const archiveName=s=>(s.file||'').replace(/^[0-9a-f]{12}_/,'');
+function archiveScanType(s){const t=((s.description||'')+' '+(s.modality||'')).toLowerCase();return /thorax|toraks|chest|dada|paru/.test(t)?'thorax':(s.modality==='MR'?'mri':'abdomen');}
+function archiveDate(iso){const d=new Date(iso);return isNaN(d)?'':d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});}
+function openFromArchive(s){if(s.file&&window.openArchiveStudy)window.openArchiveStudy(s);}
+async function loadArchive(){
+  let studies;
+  try{
+    const r=await fetch(API_BASE+'/api/studies');
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    studies=await r.json();
+  }catch(err){
+    console.warn('Archive unavailable, keeping demo worklist:',err);
+    return;
+  }
+  const heads=document.querySelectorAll('.strip-head > span');
+  if(heads[0])heads[0].textContent='Arsip PACS · Instalasi';
+  if(heads[1])heads[1].textContent=studies.length+' studi';
+  stripList.innerHTML='';
+  if(!studies.length){
+    stripList.innerHTML='<div class="wd" style="padding:14px;color:var(--txt-3)">Belum ada studi di arsip — upload &amp; simpan dari halaman Instalasi.</div>';
+    return;
+  }
+  studies.forEach((s,i)=>{
+    const el=document.createElement('div');el.className='wcard';
+    el.innerHTML=`<div class="wcard-thumb">${scanSVG(archiveScanType(s),i+40,false)}</div>
+    <div class="wcard-info"><span class="mod-badge">${esc(s.modality||'—')}</span><div class="wt">${esc(s.description||'Studi tanpa judul')}</div><div class="wd">${esc(archiveDate(s.created))} · ${esc(s.name||'—')}</div><div class="wtag"><span class="dot" style="background:${s.file?'var(--sel)':'var(--txt-3)'}"></span>${s.file?'Baru':'Tanpa citra'}</div></div>`;
+    el.onclick=()=>{document.querySelectorAll('.wcard').forEach(x=>x.classList.remove('active'));el.classList.add('active');openFromArchive(s);};
+    stripList.appendChild(el);
+  });
+  const withFile=studies.filter(s=>s.file);
+  if(!withFile.length)return;
+  railList.innerHTML='';
+  withFile.forEach((s,i)=>{
+    const el=document.createElement('div');el.className='series';
+    el.innerHTML=`<div class="series-thumb">${scanSVG(archiveScanType(s),i+1,false)}<span class="series-badge">${esc(s.modality||'—')}</span><span class="series-count">1</span></div>
+    <div class="series-meta"><div class="st">${esc((s.description||'Studi').toUpperCase())}</div><div class="sd">${esc(archiveName(s))}</div></div>`;
+    el.onclick=()=>{document.querySelectorAll('.series').forEach(x=>x.classList.remove('active'));el.classList.add('active');openFromArchive(s);};
+    railList.appendChild(el);
+  });
+  document.getElementById('seriesCount').textContent=withFile.length;
+}
+loadArchive();
 </script>
 <script type="module">
 import { App, AppOptions, ViewConfig, WindowLevel } from 'https://cdn.jsdelivr.net/npm/dwv@0.37.0-beta.12/+esm';
@@ -571,6 +616,7 @@ dwvApp&&dwvApp.addEventListener('load',ev=>{
     const name=String(tag(m,'00100010')||'ANONYMOUS').replace(/\^/g,', ');const mod=tag(m,'00080060')||'—';
     const rows=tag(m,'00280010')||'?';const cols=tag(m,'00280011')||'?';const desc=tag(m,'00081030')||tag(m,'0008103E')||'DICOM Study';
     window.currentStudy={name,pid:tag(m,'00100020')||'',mod,desc};
+    if(window.pendingArchive){const a=window.pendingArchive;window.currentStudy={name:a.name||name,pid:a.nik||'',mod:a.modality||mod,desc:a.description||desc};window.pendingArchive=null;}
     $('#dwvTL').innerHTML='<span class="v">'+name+'</span><br><span class="k">'+mod+' · '+desc+'</span><br><span class="k">'+rows+'×'+cols+' · DWV live</span>';
     $('#dwvTR').innerHTML='<span class="v">'+mod+'</span><br><span class="k">Real DICOM</span>';
     const ww=tag(m,'00281051'),wc=tag(m,'00281050'); if(ww)$('#wlW').textContent=Math.round(ww); if(wc)$('#wlL').textContent=Math.round(wc);
@@ -587,6 +633,29 @@ $('#wlPreset').addEventListener('change',e=>{ const v=e.target.value; if(!v)retu
 // folder / multi-slice series
 $('#openFolder').onclick=()=>$('#pacsFolder').click();
 $('#pacsFolder').addEventListener('change',e=>{ const files=[...e.target.files].filter(f=>/\.dcm$/i.test(f.name)||f.type==='application/dicom'); if(files.length){ openMode(); dwvSpin.classList.add('show'); dwvApp.loadFiles(files); dwvApp.setTool && setTimeout(()=>{try{dwvApp.setTool('Scroll');}catch(_){}} ,300); } });
+// Open a study from the local PACS archive in DWV, and prefill the SATUSEHAT tab with its saved reading.
+window.openArchiveStudy=async(study)=>{
+  if(!dwvApp||!study.file)return;
+  const satu=document.querySelector('.pane[data-pane="satu"]');
+  if(satu){
+    const inputs=satu.querySelectorAll('input');
+    if(study.icd10)satu.querySelector('.icd').value=study.icd10;
+    if(study.diagnosis&&inputs[1])inputs[1].value=study.diagnosis;
+    if(study.finding)satu.querySelector('textarea').value=study.finding;
+  }
+  openMode(); dwvSpin.classList.add('show');
+  try{
+    const r=await fetch(API_BASE+'/api/studies/'+encodeURIComponent(study.id)+'/file');
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const blob=await r.blob();
+    const name=study.file.replace(/^[0-9a-f]{12}_/,'');
+    window.pendingArchive=study;
+    dwvApp.loadFiles([new File([blob],name,{type:blob.type||'application/dicom'})]);
+  }catch(e){
+    dwvSpin.classList.remove('show');
+    console.error('archive load',e);
+  }
+};
 </script>
 </body>
 </html>

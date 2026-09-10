@@ -325,20 +325,54 @@ $('#cekBtn').addEventListener('click',async()=>{
 
 // upload
 const dz=$('#dropzone'),fi=$('#fileInput'),pv=$('#preview');
+let pickedFile=null;
 function showFile(name){
   $('#previewThumb').innerHTML=scanSVG(Date.now());
   $('#fileName').textContent=name||'chest_ct_abdomen.dcm';
+  if(pickedFile){$('#fileMeta').textContent=(pickedFile.size/1048576).toFixed(2)+' MB · '+(pickedFile.name.split('.').pop()||'').toUpperCase();$('#modBadge').textContent=$('#modality').value.split(' ')[0];}
   pv.classList.add('show');
   document.querySelectorAll('.step')[2].classList.add('done');
 }
 dz.addEventListener('click',()=>fi.click());
-fi.addEventListener('change',e=>{if(e.target.files[0])showFile(e.target.files[0].name)});
+fi.addEventListener('change',e=>{if(e.target.files[0]){pickedFile=e.target.files[0];showFile(pickedFile.name)}});
 ['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag')}));
 ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag')}));
-dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];showFile(f?f.name:'')});
+dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)pickedFile=f;showFile(f?f.name:'')});
 
-// save
-$('#saveBtn').addEventListener('click',()=>{const b=$('#saveBtn');b.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Tersimpan di Instalasi DB';setTimeout(()=>{b.innerHTML='<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan ke Instalasi DB'},2200)});
+// save: local PACS archive through the backend, simulated when it is unreachable
+function mockSave(){const b=$('#saveBtn');b.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Tersimpan di Instalasi DB';setTimeout(()=>{b.innerHTML='<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan ke Instalasi DB'},2200)}
+const SAVE_LABEL='<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan ke Instalasi DB';
+// Save to the local PACS archive (Backend/data): the picked file plus the form as metadata.
+$('#saveBtn').addEventListener('click',async()=>{
+  const b=$('#saveBtn');
+  const meta={
+    name:$('#nama').value.trim(),nik:$('#nik').value.trim(),gender:$('#jk').value,birthDate:$('#dob').value.trim(),
+    modality:$('#modality').value.split(' ')[0],description:$('#exam').value.trim(),
+    icd10:$('#icd').value.trim(),diagnosis:$('#dx').value.trim(),finding:$('#finding').value.trim(),
+    instalasi:$('#unit').value
+  };
+  const fd=new FormData();
+  if(pickedFile)fd.append('file',pickedFile,pickedFile.name);
+  fd.append('meta',JSON.stringify(meta));
+  b.style.pointerEvents='none';b.style.opacity='.75';
+  let r;
+  try{
+    r=await fetch(API_BASE+'/api/studies',{method:'POST',body:fd});
+  }catch(err){
+    console.warn('Archive backend unreachable, using simulation:',err);
+    b.style.pointerEvents='';b.style.opacity='';
+    return mockSave();
+  }
+  b.style.pointerEvents='';b.style.opacity='';
+  if(!r.ok){
+    b.innerHTML='Gagal simpan ('+r.status+')';
+    setTimeout(()=>{b.innerHTML=SAVE_LABEL},3000);
+    return;
+  }
+  const study=await r.json();
+  b.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Tersimpan · '+esc(study.id)+(study.file?'':' (tanpa citra)');
+  setTimeout(()=>{b.innerHTML=SAVE_LABEL},3000);
+});
 
 // send to SATUSEHAT: real backend call, simulated exchange as offline fallback
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
