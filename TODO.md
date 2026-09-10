@@ -26,6 +26,26 @@ ke Claude Code** dan dikerjain tanpa perlu tau obrolan sebelumnya. Kerjain urut.
 - **Aturan:** `Backend/.env` berisi rahasia — **jangan pernah di-commit** (udah
   gitignore). Semua kerjaan di `Frontend/` dan `Backend/`, bukan di `reference/`.
 
+### 🔧 Cheat-sheet teknis (Claude: baca sebelum ngoding)
+- **Run app:** `cd Backend && pip install -r requirements.txt && uvicorn main:app --reload --port 8000 --host 0.0.0.0` → buka `http://localhost:8000`. API di `/api/*`. Frontend juga bisa dibuka standalone via `file://` (DWV dari CDN, **butuh internet**). Cek mode: `curl localhost:8000/api/health`.
+- **DWV (viewer DICOM), API v0.37 (ESM dari jsdelivr):**
+  ```js
+  import { App, AppOptions, ViewConfig, WindowLevel } from 'https://cdn.jsdelivr.net/npm/dwv@0.37.0-beta.12/+esm';
+  const opt = new AppOptions({'*':[new ViewConfig('layerGroup0')]});
+  opt.tools = { Scroll:{}, WindowLevel:{}, ZoomAndPan:{} };
+  const app = new App(); app.init(opt);
+  app.loadFiles(fileList);            // atau app.loadURLs(['sample-chest.dcm'])
+  app.setTool('WindowLevel');         // 'Scroll' | 'ZoomAndPan'
+  // metadata & W/L setelah event 'load':
+  const meta = app.getDataController().get(ev.detail.dataid).meta;  // meta['00100010'].value[0] = nama, dst
+  const vc = app.getStageController().getActiveLayerGroup().getActiveViewLayer().getViewController();
+  vc.setWindowLevel(new WindowLevel(center, width));   // preset W/L
+  ```
+- **MOCK vs LIVE:** `config.py` cek `Backend/.env`. Kosong = **MOCK** (`satusehat.py` balikin respons FHIR palsu realistis, demo jalan offline). Isi creds = **LIVE** (hit `api-satusehat-stg.dto.kemkes.go.id`). Code path sama.
+- **Backend:** class `SatuSehat` di `satusehat.py` (`get_token`, `search_patient`, `create`, `send_study`) — tiap method balikin `{request, response, status}`. `main.py` serve `Frontend/` sebagai static (mount di `/`, harus paling akhir). Arsip lokal → `Backend/data/`.
+- **Gotchas:** jalanin uvicorn dari folder `Backend/` (path relatif). DICOM uncompressed render tanpa worker; yang compressed bisa gagal. Jangan print client secret.
+- **Gaya kode:** halaman HTML **self-contained** (CSS/JS inline), tema dark klinis pakai CSS var di `:root` — ikutin token yang ada. UI teks Indonesia, komentar/kode Inggris.
+
 > ⚠️ **Sebelum mulai:** history git udah di-rewrite. Kalau kalian clone lama,
 > **hapus & `git clone` ulang** dari https://github.com/Sbnnzz/Tugas1.
 
