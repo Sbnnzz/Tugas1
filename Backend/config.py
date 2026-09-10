@@ -33,6 +33,15 @@ _FORCE_MOCK = os.getenv("SATUSEHAT_MOCK", "").strip().lower() in ("1", "true", "
 MOCK = _FORCE_MOCK or not _HAS_CREDS
 MODE = "MOCK" if MOCK else "LIVE"
 
+# --- sandbox actors used by the radiology chain ---
+# Defaults are SATUSEHAT's published sandbox dummies; override in .env when needed.
+PRACTITIONER_ID = os.getenv("SATUSEHAT_PRACTITIONER_ID", "").strip() or "10009880728"
+PRACTITIONER_NAME = os.getenv("SATUSEHAT_PRACTITIONER_NAME", "").strip() or "dr. Alexander"
+DEFAULT_PATIENT_ID = os.getenv("SATUSEHAT_PATIENT_ID", "").strip() or "P02478375538"
+DEFAULT_PATIENT_NAME = os.getenv("SATUSEHAT_PATIENT_NAME", "").strip() or "Ardianto Putra"
+# Empty = use the org's first Location, or create "Instalasi Radiologi" once.
+LOCATION_ID = os.getenv("SATUSEHAT_LOCATION_ID", "").strip()
+
 # --- local storage (the "instalasi / PACS archive") ---
 DATA_DIR = os.path.join(_HERE, "data")
 UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
