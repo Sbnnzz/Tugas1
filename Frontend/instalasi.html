@@ -174,6 +174,7 @@ a{text-decoration:none;color:inherit}
   <div class="env-badge"><i class="dot"></i><span>SANDBOX</span></div>
   <nav class="topnav">
     <a href="index.html">Menu</a>
+    <a href="pendaftaran.html">Pendaftaran</a>
     <a href="instalasi.html" class="active">Instalasi Radiografi</a>
     <a href="pacs.html">PACS Viewer</a>
     <a href="bedah.html">Bedah</a>
@@ -254,9 +255,9 @@ a{text-decoration:none;color:inherit}
             <svg viewBox="0 0 24 24"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
             <b>Seret berkas ke sini atau klik untuk pilih</b>
             <small>DICOM Series akan diarsipkan ke Central PACS</small>
-            <div class="fmts"><span>.DCM</span><span>.IMA</span><span>.NII</span></div>
+            <div class="fmts"><span>.DCM</span><span>.IMA</span><span>.NII</span><span>.NII.GZ</span></div>
           </div>
-          <input type="file" id="fileInput" accept=".dcm,.ima,.dic,.img,.nii,.nii.gz" style="display:none" />
+          <input type="file" id="fileInput" accept=".dcm,.ima,.dic,.img,.nii,.nii.gz,.gz" style="display:none" />
           <div class="preview" id="preview">
             <div class="thumb" id="previewThumb"></div>
             <div class="pinfo"><b id="fileName">chest_ct_abdomen.dcm</b><small id="fileMeta">512 × 512 · 132 slices · 24.8 MB</small>
@@ -271,8 +272,11 @@ a{text-decoration:none;color:inherit}
           <div class="card" id="wzSummaryCard">
             <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div><b>Ringkasan</b><small>periksa sebelum kirim</small></div>
             <div class="card-body" id="wzSummaryBody"></div>
+            <div class="card-body" style="padding-top:0"><div class="actions">
+              <button class="btn btn-ghost" id="saveBtn"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan &amp; kirim ke Radiolog</button>
+            </div></div>
           </div>
-          <div class="card">
+          <div class="card" id="readCard">
             <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M9 13h6M9 17h4"/></svg></div><b>Bacaan Radiologi</b><small>hasil bacaan</small></div>
             <div class="card-body">
               <div class="field-row">
@@ -281,7 +285,6 @@ a{text-decoration:none;color:inherit}
               </div>
               <div class="field"><label>Temuan / Kesan</label><textarea id="finding" rows="2">Tampak penebalan dinding apendiks disertai fat stranding periapendikular. Kesan: appendicitis akut.</textarea></div>
               <div class="actions">
-                <button class="btn btn-ghost" id="saveBtn"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan &amp; kirim ke Radiolog</button>
                 <button class="btn btn-primary" id="sendBtn"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Kirim ke SATUSEHAT</button>
               </div>
             </div>
@@ -588,13 +591,11 @@ $('#sendBtn').addEventListener('click',async()=>{
   b.innerHTML=data.ok?'<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Terkirim ke SATUSEHAT':SEND_LABEL;
   if(data.ok)setTimeout(()=>{b.innerHTML=SEND_LABEL},2800);
 });
-// Role: a radiographer registers and uploads; the reading is written and sent by the radiologist in PACS.
+// Role: a radiographer uploads and passes the study on; the reading is written and sent by the
+// radiologist in PACS, so the Bacaan card is not shown to them at all.
 (window.simrsUser||Promise.resolve()).then(()=>{
   if(simrsCan('report'))return;
-  ['#icd','#dx','#finding'].forEach(q=>{const e=$(q);e.readOnly=true;e.style.opacity='.55';e.title='Diisi Radiolog di PACS';});
-  $('#sendBtn').style.display='none';
-  const note=$('#icd').closest('.card').querySelector('.card-head small');
-  if(note)note.textContent='diisi Radiolog di PACS';
+  $('#readCard').style.display='none';
 });
 // Incoming radiology requests: the radiographer picks one and the form is filled from it.
 // Patient and exam come from the request (read-only); the uploaded image must match what was ordered.

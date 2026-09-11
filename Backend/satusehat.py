@@ -8,6 +8,7 @@ raw exchange as proof of integration.
 When config.MOCK is True, no network call is made: realistic FHIR-shaped
 responses are returned instead (same code path, mocked final hop).
 """
+import re
 import time
 import uuid
 import datetime
@@ -85,6 +86,14 @@ DCM = "http://dicom.nema.org/resources/ontology/DCM"
 def _dicom_uid():
     """Globally unique DICOM UID derived from a UUID (the 2.25 root)."""
     return "2.25." + str(uuid.uuid4().int)
+
+
+def _patient_id(bundle):
+    """The Patient id from a NIK search. The sandbox holds duplicate records for the dummy NIKs
+    (made by other sandbox users, with UUID ids); the official one has an IHS number (P + 11 digits)."""
+    ids = [e.get("resource", {}).get("id") for e in (bundle or {}).get("entry", [])]
+    ids = [i for i in ids if i]
+    return next((i for i in ids if re.fullmatch(r"P\d{11}", i)), ids[0] if ids else "")
 
 
 class SatuSehat:
@@ -230,16 +239,18 @@ class SatuSehat:
 
     # ---- actors used by the radiology chain ----
     async def _patient(self, study, logs):
-        """Resolve the patient reference: search by NIK when a 16-digit NIK is given,
-        otherwise fall back to the configured sandbox dummy patient."""
+        """Resolve the patient reference: the IHS number from the patient registry when known,
+        else search by NIK when a 16-digit NIK is given, else the configured sandbox dummy patient."""
+        if study.get("ihs"):
+            return {"reference": f"Patient/{study['ihs']}", "display": study.get("name") or config.DEFAULT_PATIENT_NAME}
         nik = str(study.get("nik", "")).strip()
         if nik.isdigit() and len(nik) == 16:
             res = await self.search_patient(nik)
             logs.append({"step": "Patient", **res})
             body = res["response"] if isinstance(res["response"], dict) else {}
-            entries = body.get("entry", [])
-            if res["status"] < 300 and entries:
-                return {"reference": f"Patient/{entries[0]['resource']['id']}",
+            pid = _patient_id(body)
+            if res["status"] < 300 and pid:
+                return {"reference": f"Patient/{pid}",
                         "display": study.get("name") or config.DEFAULT_PATIENT_NAME}
         return {"reference": f"Patient/{config.DEFAULT_PATIENT_ID}", "display": config.DEFAULT_PATIENT_NAME}
 
@@ -278,6 +289,70 @@ class SatuSehat:
             return None
         self._locations[code] = {"reference": f"Location/{created['response']['id']}", "display": name}
         return self._locations[code]
+
+    # ---- patient registration ----
+    async def register_patient(self, p):
+        """Register a patient in SATUSEHAT by NIK. Searched first: the sandbox dummy patients
+        (and anyone registered before) already have an IHS number. Created only when not found.
+
+        p: {nik, name, gender (Laki-laki/Perempuan), birthDate, phone, address, city, birthPlace}
+        Returns {ok, mode, logs, ihs_number, how: found | created}."""
+        logs = []
+        result = {"ok": False, "mode": config.MODE, "logs": logs, "ihs_number": "", "how": ""}
+
+        tok = await self.get_token()
+        logs.append({"step": "token", **tok})
+        if tok["status"] >= 300:
+            return result
+
+        found = await self.search_patient(p["nik"])
+        logs.append({"step": "Patient", **found})
+        body = found["response"] if isinstance(found["response"], dict) else {}
+        if found["status"] >= 300:
+            return result
+        if _patient_id(body):
+            result.update(ok=True, ihs_number=_patient_id(body), how="found")
+            return result
+
+        nik = p["nik"]
+        # region codes (Kemendagri) come from the NIK: province 2 digits, city 4, district 6
+        region = [{"url": "province", "valueCode": nik[:2]}, {"url": "city", "valueCode": nik[:4]},
+                  {"url": "district", "valueCode": nik[:6]}, {"url": "village", "valueCode": nik[:6] + "1001"},
+                  {"url": "rt", "valueCode": "1"}, {"url": "rw", "valueCode": "1"}]
+        payload = {
+            "resourceType": "Patient",
+            "meta": {"profile": ["https://fhir.kemkes.go.id/r4/StructureDefinition/Patient"]},
+            "identifier": [{"use": "official", "system": "https://fhir.kemkes.go.id/id/nik", "value": nik}],
+            "active": True,
+            "name": [{"use": "official", "text": p["name"]}],
+            "gender": {"Laki-laki": "male", "Perempuan": "female"}.get(p.get("gender"), "unknown"),
+            "birthDate": p["birthDate"],
+            "deceasedBoolean": False,
+            "address": [{"use": "home", "line": [p.get("address") or "-"], "city": p.get("city") or "-",
+                         "country": "ID",
+                         "extension": [{"url": "https://fhir.kemkes.go.id/r4/StructureDefinition/administrativeCode",
+                                        "extension": region}]}],
+            "maritalStatus": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus",
+                                          "code": "U", "display": "unmarried"}], "text": "unmarried"},
+            "multipleBirthInteger": 0,
+            "communication": [{"language": {"coding": [{"system": "urn:ietf:bcp:47", "code": "id-ID",
+                                                        "display": "Indonesian"}], "text": "Indonesian"},
+                               "preferred": True}],
+            "extension": [{"url": "https://fhir.kemkes.go.id/r4/StructureDefinition/birthPlace",
+                           "valueAddress": {"city": p.get("birthPlace") or p.get("city") or "-", "country": "ID"}},
+                          {"url": "https://fhir.kemkes.go.id/r4/StructureDefinition/citizenshipStatus",
+                           "valueCode": "WNI"}],
+        }
+        if p.get("phone"):
+            payload["telecom"] = [{"system": "phone", "value": p["phone"], "use": "mobile"}]
+        created = await self.create("Patient", payload)
+        logs.append({"step": "Patient", **created})
+        body = created["response"] if isinstance(created["response"], dict) else {}
+        # SATUSEHAT answers a Patient create with {"data": {"patient_id": ...}}, not a FHIR resource
+        ihs = body.get("id") or (body.get("data") or {}).get("patient_id") or ""
+        if created["status"] < 300 and ihs:
+            result.update(ok=True, ihs_number=ihs, how="created")
+        return result
 
     # ---- high-level: the full radiology chain ----
     async def send_study(self, study):
@@ -455,7 +530,7 @@ class SatuSehat:
         start = _local_iso(sched.get("start")) or _now_iso()
         end = _local_iso(sched.get("end"))
 
-        patient = await self._patient({"nik": patient_in.get("nik", ""), "name": patient_in.get("name", "")}, logs)
+        patient = await self._patient({key: patient_in.get(key, "") for key in ("nik", "name", "ihs")}, logs)
         practitioner = {"reference": f"Practitioner/{config.PRACTITIONER_ID}", "display": config.PRACTITIONER_NAME}
         location = await self._location(logs, "OK-01", "Instalasi Bedah Sentral - Kamar Operasi 1", "Kamar Operasi 1")
         if location is None:

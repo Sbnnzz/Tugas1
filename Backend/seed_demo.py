@@ -27,6 +27,7 @@ import auth
 import config
 import operations
 import orders
+import patients
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SAMPLES = {
@@ -56,6 +57,12 @@ DEMO = [
     (("9104223107000004", "Dr. Alan Bagus Prasetya", "Laki-laki", "1977-09-03"), ("DX", "Foto Thorax PA"),
      ("Z01.8", "Foto thorax pra-operasi (rencana kolesistektomi)"), "Biasa", "chest_cr", "requested"),
 ]
+
+
+# Their IHS numbers (SATUSEHAT Patient ids); the demo patients go into the registry with these.
+IHS = {"9271060312000001": "P02478375538", "9204014804000002": "P03647103112",
+       "9104224509000003": "P00805884304", "9104223107000004": "P00912894463",
+       "9201076407000009": "P01058967035", "9210060207000010": "P02428473601"}
 
 
 def dicom_person_name(full_name):
@@ -101,6 +108,7 @@ def reset():
     con = sqlite3.connect(config.DB_PATH)
     con.execute("DELETE FROM orders")
     con.execute("DELETE FROM operations")
+    con.execute("DELETE FROM patients")
     con.commit()
     con.close()
     return backup
@@ -110,6 +118,7 @@ def main(argv):
     auth.init_db()
     orders.init_db()
     operations.init_db()
+    patients.init_db()
     if "--reset" in argv:
         print("backup:", reset())
     elif os.path.exists(config.STUDIES_DB) or orders.list_orders():
@@ -124,8 +133,10 @@ def main(argv):
     studies = []
     for patient, exam, indication, priority, sample, state in DEMO:
         nik, name, sex, birth = patient
+        registered = patients.get_patient(nik) or patients.add_patient(
+            nik, IHS[nik], "found", {"name": name, "gender": sex, "birthDate": birth}, REQUESTER_USER)
         order = orders.create_order({
-            "patient": {"nik": nik, "name": name, "gender": sex, "birthDate": birth},
+            "patient": patients.order_patient(registered),
             "exam": {"modality": exam[0], "description": exam[1]},
             "indication": {"icd10": indication[0], "text": indication[1]},
             "priority": priority, "note": "", "requester": REQUESTER_NAME,

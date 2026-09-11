@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="auth.js"></script>
+<title>Pendaftaran Pasien · SATUSEHAT PACS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg-void:#06080a;--bg-app:#0b0f14;--bg-elev:#10151b;--bg-panel:#131a22;--bg-panel-2:#182029;--bg-hover:#1d2731;
+  --line:#232d38;--line-soft:#1a222b;--txt:#dfe7ee;--txt-2:#93a1af;--txt-3:#5c6875;
+  --accent:#29c6c2;--accent-2:#1aa8a4;--accent-dim:rgba(41,198,194,.13);
+  --amber:#f2a63b;--amber-dim:rgba(242,166,59,.13);--green:#35c46b;--red:#e5484d;--blue:#4a90e2;--purple:#9d7bff;
+  --shadow:0 8px 30px rgba(0,0,0,.45);--radius:6px;--mono:'JetBrains Mono','Consolas',monospace;--h-brand:44px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg-void);color:var(--txt);font-size:13px;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1000px 500px at 85% -5%,rgba(41,198,194,.05),transparent)}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+a{text-decoration:none;color:inherit}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-track{background:var(--bg-void)}::-webkit-scrollbar-thumb{background:#28323d;border-radius:5px;border:2px solid var(--bg-void)}
+.mono{font-family:var(--mono)}
+
+/* brand */
+.brand{height:var(--h-brand);display:flex;align-items:center;gap:14px;padding:0 16px;background:linear-gradient(180deg,#0e141a,#0a0e13);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.logo{display:flex;align-items:center;gap:9px}
+.logo-mark{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;box-shadow:0 0 0 1px rgba(41,198,194,.3),0 2px 10px rgba(41,198,194,.3)}
+.logo-mark svg{width:16px;height:16px;stroke:#04211f;stroke-width:2.2;fill:none}
+.logo-name{font-weight:700;font-size:13.5px}.logo-name b{color:var(--accent)}
+.logo-sub{font-size:9px;letter-spacing:.14em;color:var(--txt-3);text-transform:uppercase;font-weight:600;margin-top:1px}
+.brand-sep{width:1px;height:22px;background:var(--line)}
+.env-badge{display:flex;align-items:center;gap:6px;padding:3px 9px;border-radius:20px;background:var(--amber-dim);border:1px solid rgba(242,166,59,.3)}
+.env-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.env-badge span{font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--amber)}
+.topnav{display:flex;gap:2px;margin-left:6px}
+.topnav a{padding:6px 13px;border-radius:6px;font-size:12px;font-weight:600;color:var(--txt-2);transition:.12s}
+.topnav a:hover{background:var(--bg-hover);color:var(--txt)}.topnav a.active{background:var(--accent-dim);color:var(--accent)}
+.brand-spacer{flex:1}
+.avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2c3a47,#1c2732);border:1px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--txt-2)}
+
+.wrap{max-width:1240px;margin:0 auto;padding:24px 26px 60px}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+.page-head h1{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.page-head p{font-size:13px;color:var(--txt-2);margin-top:4px}
+.page-head .accession{font-family:var(--mono);font-size:12px;color:var(--txt-3);background:var(--bg-panel);border:1px solid var(--line);padding:7px 12px;border-radius:8px}
+.page-head .accession b{color:var(--accent)}
+
+/* layout */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.col{display:flex;flex-direction:column;gap:16px}
+.card{background:var(--bg-elev);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card-head{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line-soft)}
+.card-head .hicon{width:26px;height:26px;border-radius:7px;background:var(--accent-dim);display:grid;place-items:center}
+.card-head .hicon svg{width:15px;height:15px;stroke:var(--accent);fill:none;stroke-width:1.8}
+.card-head b{font-size:13px;font-weight:600}
+.card-head small{margin-left:auto;font-size:10px;color:var(--txt-3);font-family:var(--mono)}
+.card-body{padding:16px}
+
+/* fields */
+.field{margin-bottom:13px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--txt-3);font-weight:600;margin-bottom:6px}
+.field input,.field select{width:100%;background:var(--bg-panel);border:1px solid var(--line);border-radius:7px;padding:9px 11px;color:var(--txt);font-family:inherit;font-size:13px;outline:none;transition:border-color .12s;color-scheme:dark}
+.field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.field .mono{font-family:var(--mono)}
+.field-row{display:flex;gap:11px}.field-row .field{flex:1}
+.req{color:var(--red)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;border-radius:7px;font-size:12.5px;font-weight:600;transition:filter .12s,transform .06s,background .12s;white-space:nowrap}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+.btn-ghost{background:var(--bg-panel);border:1px solid var(--line);color:var(--txt-2)}
+.btn-ghost:hover{background:var(--bg-hover);color:var(--txt)}
+.btn-primary{background:linear-gradient(180deg,var(--accent),var(--accent-2));color:#042321;box-shadow:0 3px 12px rgba(41,198,194,.28)}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-sm{padding:4px 10px;font-size:11px}
+.actions{display:flex;gap:11px;margin-top:2px}
+.actions .btn{flex:1}
+
+/* patient list */
+.rad-empty{font-size:12px;color:var(--txt-3)}
+.rad-item{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg-panel);margin-bottom:9px}
+.rad-item:last-child{margin-bottom:0}
+.rad-item .rt{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600}
+.rad-item .rd{font-size:10.5px;color:var(--txt-3);font-family:var(--mono);margin-top:3px}
+.rad-item .rd b{color:var(--accent);font-weight:600}
+.tag{margin-left:auto;font-style:normal;font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:10px}
+.tag.sent{background:rgba(53,196,107,.15);color:var(--green)}
+.tag.new{background:var(--accent-dim);color:var(--accent)}
+.search{margin-bottom:12px}
+.dummy{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line-soft);font-size:12px}
+.dummy:last-child{border-bottom:none}
+.dummy .n{flex:1;min-width:0}.dummy .n small{display:block;font-family:var(--mono);font-size:10.5px;color:var(--txt-3)}
+.dummy .done{font-size:10.5px;color:var(--green)}
+
+/* live FHIR console */
+.console{background:#05080b;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.console-head{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--bg-panel);border-bottom:1px solid var(--line)}
+.console-head span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2);font-weight:600;display:flex;align-items:center;gap:8px}
+.console-head .led{width:6px;height:6px;border-radius:50%;background:var(--txt-3)}
+.console-head.live .led{background:var(--green);box-shadow:0 0 6px var(--green)}
+.console-body{max-height:280px;overflow:auto;padding:12px 13px;font-family:var(--mono);font-size:11px;line-height:1.65;white-space:pre-wrap;word-break:break-word;color:#8fa3b3}
+.console-body .key{color:#7fb2e8}.console-body .str{color:#c3e88d}.console-body .method{color:var(--accent);font-weight:600}.console-body .url{color:var(--txt-2)}.console-body .ok{color:var(--green)}.console-body .muted{color:var(--txt-3)}.console-body .err{color:var(--red)}
+/* technical details (collapsed) + plain result line */
+.tech{margin-top:12px;border:1px solid var(--line);border-radius:9px;background:var(--bg-panel)}
+.tech>summary{cursor:pointer;list-style:none;padding:8px 12px;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--txt-3)}
+.tech>summary::-webkit-details-marker{display:none}
+.tech>summary::before{content:'\25B8  '}.tech[open]>summary::before{content:'\25BE  '}
+.tech[open]>summary{border-bottom:1px solid var(--line)}
+.tech>*:not(summary){margin:10px}
+.result-line{margin-top:12px;font-size:12.5px;line-height:1.5}
+.result-line:empty{display:none}
+.result-line.ok{color:var(--green)}.result-line.err{color:var(--red)}.result-line.info{color:var(--txt-2)}
+.result-line a{color:var(--accent);text-decoration:underline}
+
+@media(max-width:920px){.grid{grid-template-columns:1fr}.page-head{flex-direction:column;align-items:flex-start;gap:10px}.field-row{flex-direction:column;gap:0}}
+</style>
+</head>
+<body>
+
+<header class="brand">
+  <a href="index.html" class="logo">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18" stroke-linecap="round"/><path d="M7 7l10 10M17 7L7 17" opacity=".4" stroke-linecap="round"/></svg></div>
+    <div><div class="logo-name">SATUSEHAT <b>PACS</b> Hub</div><div class="logo-sub">Pendaftaran Pasien</div></div>
+  </a>
+  <div class="brand-sep"></div>
+  <div class="env-badge"><i class="dot"></i><span>SANDBOX</span></div>
+  <nav class="topnav">
+    <a href="index.html">Menu</a>
+    <a href="pendaftaran.html" class="active">Pendaftaran</a>
+    <a href="instalasi.html">Instalasi Radiografi</a>
+    <a href="pacs.html">PACS Viewer</a>
+    <a href="bedah.html">Bedah</a>
+  </nav>
+  <div class="brand-spacer"></div>
+  <div class="avatar">—</div>
+</header>
+
+<div class="wrap">
+  <div class="page-head">
+    <div><h1>Pendaftaran Pasien</h1><p>Registrasi pasien ke SATUSEHAT · RSUD Dr. Soetomo</p></div>
+    <div class="accession">Terdaftar · <b id="countVal">—</b></div>
+  </div>
+
+  <div class="grid">
+    <div class="col">
+      <div class="card">
+        <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div><b>Pasien Baru</b><small>identitas sesuai KTP</small></div>
+        <div class="card-body">
+          <div class="field"><label>NIK (KTP) <span class="req">*</span></label><input class="mono" id="nik" inputmode="numeric" maxlength="16" placeholder="16 digit NIK" /></div>
+          <div class="field"><label>Nama Lengkap <span class="req">*</span></label><input id="nama" placeholder="sesuai KTP" /></div>
+          <div class="field-row">
+            <div class="field"><label>Jenis Kelamin <span class="req">*</span></label><select id="jk"><option value="">— pilih —</option><option>Laki-laki</option><option>Perempuan</option></select></div>
+            <div class="field"><label>Tanggal Lahir <span class="req">*</span></label><input class="mono" type="date" id="dob" /></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Tempat Lahir</label><input id="birthPlace" placeholder="opsional" /></div>
+            <div class="field"><label>No. HP</label><input class="mono" id="phone" inputmode="tel" placeholder="opsional" /></div>
+          </div>
+          <div class="field-row">
+            <div class="field" style="flex:1.6"><label>Alamat</label><input id="address" placeholder="opsional" /></div>
+            <div class="field"><label>Kota</label><input id="city" placeholder="opsional" /></div>
+          </div>
+          <div class="actions"><button class="btn btn-primary" id="regBtn"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>Daftarkan ke SATUSEHAT</button></div>
+          <div class="result-line" id="resultLine"></div>
+          <details class="tech">
+            <summary>Detail teknis</summary>
+            <div class="console">
+              <div class="console-head" id="consoleHead"><span><i class="led"></i>FHIR R4 · Sandbox</span><span class="mono" style="font-size:9px;color:var(--txt-3)" id="cStatus">siap</span></div>
+              <div class="console-body" id="console"><span class="muted"># Patient: cari NIK → buat baru bila belum ada</span></div>
+            </div>
+          </details>
+        </div>
+      </div>
+      <details class="tech" style="margin-top:0">
+        <summary>Pasien uji coba SATUSEHAT Sandbox</summary>
+        <div id="dummyList"></div>
+      </details>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div><b>Pasien Terdaftar</b><small id="listCount">memuat…</small></div>
+        <div class="card-body">
+          <div class="field search"><input id="search" placeholder="Cari nama atau NIK…" /></div>
+          <div id="patientList"><div class="rad-empty">Memuat…</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=q=>document.querySelector(q);
+const API_BASE=location.protocol.startsWith('http')?location.origin:'http://localhost:8000';
+const esc=v=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const consoleEl=$('#console'),cHead=$('#consoleHead'),cStatus=$('#cStatus');
+const REG_LABEL=$('#regBtn').innerHTML;
+// SATUSEHAT's published sandbox dummy patients: they already exist in SATUSEHAT, so registering one
+// only links it (the IHS number is found by NIK).
+const DUMMY=[
+  ['9271060312000001','Ardianto Putra','Laki-laki','1992-01-09'],
+  ['9204014804000002','Claudia Sintia','Perempuan','1989-11-03'],
+  ['9104224509000003','Elizabeth Dior','Perempuan','1976-07-07'],
+  ['9104223107000004','Dr. Alan Bagus Prasetya','Laki-laki','1977-09-03'],
+  ['9104224606000005','Ghina Assyifa','Perempuan','2004-08-21'],
+  ['9201076001000007','Theodore Elisjah','Perempuan','1985-09-18'],
+  ['9201394901000008','Sonia Herdianti','Perempuan','1996-06-08'],
+  ['9201076407000009','Nancy Wang','Perempuan','1955-10-10'],
+  ['9210060207000010','Syarif Muhammad','Laki-laki','1988-11-02']
+];
+let all=[];
+
+$('#dob').max=new Date().toISOString().slice(0,10);
+function errorText(r){try{const i=r.issue&&r.issue[0];return (i&&((i.details&&i.details.text)||i.diagnostics))||(r.fault&&r.fault.faultstring)||r.message||r.detail||JSON.stringify(r).slice(0,220);}catch(_){return '';}}
+function fmtDob(v){const d=new Date(v+'T00:00');return !v||isNaN(d)?'—':d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});}
+function setResult(ok,html){const el=$('#resultLine');el.className='result-line'+(ok===true?' ok':ok===false?' err':' info');el.innerHTML=html||'';}
+function log(h){consoleEl.innerHTML+='\n'+h;consoleEl.scrollTop=consoleEl.scrollHeight;}
+
+async function loadList(){
+  try{const r=await fetch(API_BASE+'/api/patients');if(!r.ok)throw new Error('HTTP '+r.status);all=await r.json();}
+  catch(err){$('#patientList').innerHTML='<div class="rad-empty">Daftar pasien tidak dapat dimuat.</div>';return;}
+  render();renderDummies();
+}
+function render(){
+  const q=$('#search').value.trim().toLowerCase();
+  const list=all.filter(p=>!q||(p.name||'').toLowerCase().includes(q)||p.nik.includes(q));
+  $('#countVal').textContent=all.length+' pasien';$('#listCount').textContent=all.length+' pasien';
+  const box=$('#patientList');
+  if(!list.length){box.innerHTML='<div class="rad-empty">'+(all.length?'Tidak ada yang cocok.':'Belum ada pasien terdaftar. Daftarkan pasien di sebelah kiri.')+'</div>';return;}
+  box.innerHTML=list.map(p=>'<div class="rad-item"><div class="rt">'+esc(p.name)+
+    '<i class="tag '+(p.satusehat==='created'?'new':'sent')+'">'+(p.satusehat==='created'?'Baru di SATUSEHAT':'Sudah ada di SATUSEHAT')+'</i></div>'+
+    '<div class="rd">NIK '+esc(p.nik)+' · IHS <b>'+esc(p.ihs_number)+'</b></div>'+
+    '<div class="rd">'+esc(p.gender||'—')+' · lahir '+esc(fmtDob(p.birthDate))+(p.city?' · '+esc(p.city):'')+'</div></div>').join('');
+}
+function renderDummies(){
+  $('#dummyList').innerHTML=DUMMY.map(([nik,name,jk,dob],i)=>'<div class="dummy"><div class="n">'+esc(name)+'<small>'+nik+' · '+esc(jk)+' · '+dob+'</small></div>'+
+    (all.some(p=>p.nik===nik)?'<span class="done">✓ terdaftar</span>':'<button class="btn btn-ghost btn-sm" data-i="'+i+'">Isi form</button>')+'</div>').join('');
+  $('#dummyList').querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{
+    const [nik,name,jk,dob]=DUMMY[b.dataset.i];
+    $('#nik').value=nik;$('#nama').value=name;$('#jk').value=jk;$('#dob').value=dob;
+    setResult(null,'');window.scrollTo({top:0,behavior:'smooth'});
+  });
+}
+$('#search').addEventListener('input',render);
+$('#nik').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,16);});
+
+$('#regBtn').addEventListener('click',async()=>{
+  const b=$('#regBtn');
+  const body={nik:$('#nik').value.trim(),name:$('#nama').value.trim(),gender:$('#jk').value,birthDate:$('#dob').value,
+    birthPlace:$('#birthPlace').value.trim(),phone:$('#phone').value.trim(),address:$('#address').value.trim(),city:$('#city').value.trim()};
+  if(body.nik.length!==16){setResult(false,'✗ NIK harus 16 digit angka.');return;}
+  if(!body.name||!body.gender||!body.birthDate){setResult(false,'✗ Nama, jenis kelamin, dan tanggal lahir wajib diisi.');return;}
+  b.style.pointerEvents='none';b.style.opacity='.7';b.textContent='Mendaftarkan…';
+  cHead.classList.add('live');cStatus.textContent='running…';
+  consoleEl.innerHTML='<span class="muted"># '+esc(API_BASE)+'/api/patients</span>';
+  let data;
+  try{
+    const r=await fetch(API_BASE+'/api/patients',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    data=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(data.detail||('HTTP '+r.status));
+  }catch(err){
+    setResult(false,'✗ '+esc(err.message));cStatus.textContent='error';
+    b.style.pointerEvents='';b.style.opacity='';b.innerHTML=REG_LABEL;return;
+  }
+  log('<span class="muted"># mode '+esc(data.mode)+'</span>');
+  for(const step of data.logs||[]){
+    const req=step.request||{},res=step.response||{},code=Number(step.status)||0,ok=code>=200&&code<300;
+    log('\n<span class="method">'+esc(req.method)+'</span> <span class="url">'+esc(req.url)+'</span>'+(req.cached?' <span class="muted">(cached)</span>':''));
+    let line='<span class="'+(ok?'ok':'err')+'">'+code+' '+(ok?(code===201?'Created':'OK'):'Error')+'</span>';
+    if(ok&&step.step==='token')line+=' <span class="muted">{ access_token:"'+esc(String(res.access_token||'').slice(0,12))+'…" }</span>';
+    else if(ok&&res.resourceType==='Bundle')line+=' <span class="muted">ditemukan '+esc(res.total??0)+'</span>';
+    else if(ok)line+=' <span class="key">id</span>:<span class="str">"'+esc(res.id||(res.data&&res.data.patient_id)||'')+'"</span>';
+    else line+=' <span class="muted">'+esc(errorText(res))+'</span>';
+    log(line);
+  }
+  cStatus.textContent=(data.ok?'done · ':'error · ')+data.mode;
+  if(data.ok){
+    const p=data.patient||{};
+    setResult(true,'✓ '+esc(p.name)+' terdaftar · IHS '+esc(p.ihs_number)+
+      (data.how==='found'?' (sudah ada di SATUSEHAT)':' (baru dibuat di SATUSEHAT)')+(data.mode==='MOCK'?' · mode simulasi':'')+
+      ' — <a href="bedah.html">buat permintaan di Bedah →</a>');
+    ['#nik','#nama','#dob','#birthPlace','#phone','#address','#city'].forEach(q=>{$(q).value='';});$('#jk').value='';
+    loadList();
+  }else{
+    const bad=(data.logs||[]).find(l=>!(Number(l.status)>=200&&Number(l.status)<300));
+    setResult(false,'✗ Gagal didaftarkan: '+esc(bad?(errorText(bad.response||{})||('HTTP '+bad.status)):'coba lagi'));
+  }
+  b.style.pointerEvents='';b.style.opacity='';b.innerHTML=REG_LABEL;
+});
+
+(window.simrsUser||Promise.resolve()).then(()=>loadList());
+</script>
+</body>
+</html>
