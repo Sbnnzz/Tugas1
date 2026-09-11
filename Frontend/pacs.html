@@ -201,6 +201,12 @@ a{text-decoration:none;color:inherit}
 .dwv-spin{position:absolute;inset:0;z-index:28;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:rgba(0,0,0,.5)}
 .dwv-spin.show{display:flex}.dwv-spin .ring{width:36px;height:36px;border:3px solid var(--line);border-top-color:var(--sel);border-radius:50%;animation:spin .8s linear infinite}
 .dwv-spin small{font-family:var(--mono);font-size:11px;color:var(--txt-2)}@keyframes spin{to{transform:rotate(360deg)}}
+/* worklist tabs + sent study */
+.strip-head .wl-tab{font:inherit;letter-spacing:inherit;text-transform:inherit;color:var(--txt-3);padding:2px 8px;border-radius:5px;margin-right:4px}
+.strip-head .wl-tab b{font-family:var(--mono);margin-left:6px;color:var(--txt-2)}
+.strip-head .wl-tab:hover{color:var(--txt)}
+.strip-head .wl-tab.on{background:var(--sel-dim);color:var(--sel)}.strip-head .wl-tab.on b{color:var(--sel)}
+.sent-note{margin:6px 0 2px;padding:9px 11px;border-radius:7px;background:rgba(53,196,107,.1);border:1px solid rgba(53,196,107,.3);color:var(--green);font-size:11.5px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -501,6 +507,7 @@ function buildPayload(){
 }
 sendBtn.onclick=async()=>{
   const payload=buildPayload();
+  if(!payload.icd10||!payload.diagnosis){consoleHead.classList.add('live');consoleStatus.textContent='belum lengkap';consoleEl.innerHTML='<span class="err">Isi kode ICD-10 dan diagnosis (bacaan radiolog) dulu.</span>';return;}
   sendBtn.style.pointerEvents='none';sendBtn.style.opacity='.7';
   let data;
   try{
@@ -531,7 +538,7 @@ sendBtn.onclick=async()=>{
   const errors=(data.logs||[]).filter(l=>!(Number(l.status)>=200&&Number(l.status)<300)).length;
   log('\n'+(data.ok?'<span class="ok">✓ Study terkirim</span>':'<span class="err">✗ Pengiriman gagal</span>')+' <span class="muted">· mode '+esc(data.mode)+' · '+errors+' error</span>');
   consoleStatus.textContent=data.ok?'done · '+data.mode:'error · '+data.mode;
-  if(data.ok&&window.currentArchive)setStudyKv('Status','Terkirim');
+  if(data.ok&&window.currentArchive)markArchiveSent(window.currentArchive.id,payload,data);
   sendBtn.style.pointerEvents='';sendBtn.style.opacity='';
   sendBtn.innerHTML=data.ok?'<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> Terkirim':SEND_ICON;
   if(data.ok)setTimeout(()=>{sendBtn.innerHTML=SEND_ICON},2600);
@@ -564,48 +571,94 @@ function fillStudyInfo(s){
 }
 // The DWV module may finish loading after the archive does, so hand requests over through window.
 function showArchiveEmpty(){if(window.openViewerEmpty)window.openViewerEmpty();else window.archiveEmpty=true;}
-function openFromArchive(s){fillStudyInfo(s);if(!s.file)return;if(window.openArchiveStudy)window.openArchiveStudy(s);else window.archiveQueued=s;}
+function openFromArchive(s){archiveOpenId=s.id;applyReadState(s);fillStudyInfo(s);if(!s.file)return;if(window.openArchiveStudy)window.openArchiveStudy(s);else window.archiveQueued=s;}
+// Worklist tabs: "Belum dibaca" = the radiologist's queue (not read and sent yet), "Semua studi" =
+// everything in the archive. A sent study opens read-only, so it cannot be sent twice.
+let archiveAll=[],archiveTab='todo',archiveOpenId=null;
 async function loadArchive(){
-  let studies;
   try{
     const r=await fetch(API_BASE+'/api/studies');
     if(!r.ok)throw new Error('HTTP '+r.status);
-    studies=await r.json();
-    studies.sort((a,b)=>(a.sent?1:0)-(b.sent?1:0));  // waiting for a reading first
+    archiveAll=await r.json();
   }catch(err){
     console.warn('Archive unavailable, keeping demo worklist:',err);
     return;
   }
+  renderArchive(true);
+}
+function renderArchive(autoOpen){
+  const todo=archiveAll.filter(s=>!s.sent);
+  const list=archiveTab==='todo'?todo:todo.concat(archiveAll.filter(s=>s.sent));
   const heads=document.querySelectorAll('.strip-head > span');
-  if(heads[0])heads[0].textContent='Arsip PACS · Instalasi';
-  if(heads[1])heads[1].textContent=studies.length+' studi';
-  stripList.innerHTML='';
-  if(!studies.length){
-    stripList.innerHTML='<div class="wd" style="padding:14px;color:var(--txt-3)">Belum ada studi di arsip — upload &amp; simpan dari halaman Instalasi.</div>';
-    showArchiveEmpty();
+  if(heads[0])heads[0].innerHTML='<button class="wl-tab'+(archiveTab==='todo'?' on':'')+'" data-t="todo">Belum dibaca<b>'+todo.length+'</b></button>'+
+    '<button class="wl-tab'+(archiveTab==='all'?' on':'')+'" data-t="all">Semua studi<b>'+archiveAll.length+'</b></button>';
+  if(heads[1])heads[1].textContent=archiveTab==='todo'?'antrian bacaan radiolog':'arsip PACS';
+  document.querySelectorAll('.wl-tab').forEach(b=>{b.onclick=()=>{archiveTab=b.dataset.t;renderArchive(false);};});
+  stripList.innerHTML='';railList.innerHTML='';
+  if(!list.length){
+    stripList.innerHTML='<div class="wd" style="padding:14px;color:var(--txt-3)">'+(archiveTab==='todo'
+      ?'Semua studi sudah dibaca. Lihat tab &quot;Semua studi&quot;.'
+      :'Belum ada studi di arsip — upload &amp; simpan dari halaman Instalasi Radiografi.')+'</div>';
+    document.getElementById('seriesCount').textContent=0;
+    if(autoOpen)showArchiveEmpty();
     return;
   }
-  studies.forEach((s,i)=>{
-    const el=document.createElement('div');el.className='wcard';
+  const mark=(a,b)=>{document.querySelectorAll('.wcard').forEach(x=>x.classList.toggle('active',x===a));document.querySelectorAll('.series').forEach(x=>x.classList.toggle('active',x===b));};
+  list.forEach((s,i)=>{
+    const el=document.createElement('div');el.className='wcard'+(s.id===archiveOpenId?' active':'');
     el.innerHTML=`<div class="wcard-thumb">${scanSVG(archiveScanType(s),i+40,false)}</div>
-    <div class="wcard-info"><span class="mod-badge">${esc(s.modality||'—')}</span><div class="wt">${esc(s.description||'Studi tanpa judul')}</div><div class="wd">${esc(archiveDate(s.created))} · ${esc(s.name||'—')}</div><div class="wtag"><span class="dot" style="background:${s.sent?'var(--green)':s.file?'var(--sel)':'var(--txt-3)'}"></span>${s.sent?'Terkirim':s.file?'Baru':'Tanpa citra'}</div></div>`;
-    el.onclick=()=>{document.querySelectorAll('.wcard').forEach(x=>x.classList.remove('active'));el.classList.add('active');openFromArchive(s);};
+    <div class="wcard-info"><span class="mod-badge">${esc(s.modality||'—')}</span><div class="wt">${esc(s.description||'Studi tanpa judul')}</div><div class="wd">${esc(archiveDate(s.created))} · ${esc(s.name||'—')}</div><div class="wtag"><span class="dot" style="background:${s.sent?'var(--green)':s.file?'var(--sel)':'var(--txt-3)'}"></span>${s.sent?'Terkirim':s.file?'Menunggu bacaan':'Tanpa citra'}</div></div>`;
+    el.onclick=()=>{mark(el,s._rail);openFromArchive(s);};
     stripList.appendChild(el);
     s._card=el;
   });
-  const withFile=studies.filter(s=>s.file);
-  if(!withFile.length){showArchiveEmpty();return;}
-  railList.innerHTML='';
+  const withFile=list.filter(s=>s.file);
   withFile.forEach((s,i)=>{
-    const el=document.createElement('div');el.className='series';
+    const el=document.createElement('div');el.className='series'+(s.id===archiveOpenId?' active':'');
     el.innerHTML=`<div class="series-thumb">${scanSVG(archiveScanType(s),i+1,false)}<span class="series-badge">${esc(s.modality||'—')}</span><span class="series-count">1</span></div>
-    <div class="series-meta"><div class="st">${esc((s.description||'Studi').toUpperCase())}</div><div class="sd">${esc(archiveName(s))}</div></div>`;
-    el.onclick=()=>{document.querySelectorAll('.series').forEach(x=>x.classList.remove('active'));el.classList.add('active');openFromArchive(s);};
+    <div class="series-meta"><div class="st">${esc((s.description||'Studi').toUpperCase())}</div><div class="sd">${esc(s.name||archiveName(s))}</div></div>`;
+    el.onclick=()=>{mark(s._card,el);openFromArchive(s);};
     railList.appendChild(el);
     s._rail=el;
   });
   document.getElementById('seriesCount').textContent=withFile.length;
-  const first=withFile[0];first._card.classList.add('active');first._rail.classList.add('active');openFromArchive(first);
+  if(autoOpen){
+    const first=withFile[0];
+    if(first){mark(first._card,first._rail);openFromArchive(first);}else showArchiveEmpty();
+  }
+}
+// Reading pane for the study on screen: a sent study shows its reading and SATUSEHAT ids,
+// read-only and without "Kirim"; an unread one starts empty so no earlier reading carries over.
+function applyReadState(s){
+  const satu=document.querySelector('.pane[data-pane="satu"]'),done=!!(s&&s.sent);
+  const fields=[satu.querySelector('.icd'),satu.querySelectorAll('input')[1],satu.querySelector('textarea')];
+  const hints=['ICD-10','Diagnosis','Temuan / kesan radiolog'];
+  fields.forEach((e,i)=>{if(!e)return;e.readOnly=done;e.style.opacity=done?'.65':'';e.placeholder=hints[i];if(!done)e.value='';});
+  sendBtn.style.display=done?'none':'';
+  let note=document.getElementById('sentNote');
+  if(!note){note=document.createElement('div');note.id='sentNote';note.className='sent-note';sendBtn.parentNode.insertBefore(note,sendBtn);}
+  note.style.display=done?'':'none';
+  note.innerHTML=done?'✓ Sudah dibaca &amp; dikirim ke SATUSEHAT'+(s.reported_by?' oleh '+esc(s.reported_by):''):'';
+  ['sr','is','dr'].forEach(k=>setRes(k,done?'sent':'ready',done?'Sent':'Ready'));
+  setResRef('sr',done?'ServiceRequest · terkirim':'order/…');
+  setResRef('is',done&&s.imaging_study_id?'ImagingStudy/'+s.imaging_study_id:'study/…');
+  setResRef('dr',done&&s.diagnostic_report_id?'DiagnosticReport/'+s.diagnostic_report_id:'report/…');
+}
+// A file opened from this computer (not the archive): nothing selected, reading pane editable.
+function clearArchiveSelection(){
+  archiveOpenId=null;applyReadState(null);
+  document.querySelectorAll('.wcard,.series').forEach(x=>x.classList.remove('active'));
+}
+// After a successful send: the study leaves "Belum dibaca" and turns read-only; the image stays.
+function markArchiveSent(id,payload,data){
+  const s=archiveAll.find(x=>x.id===id);
+  if(!s)return;
+  Object.assign(s,{sent:true,icd10:payload.icd10,diagnosis:payload.diagnosis,finding:payload.finding,
+    imaging_study_id:data.imaging_study_id,diagnostic_report_id:data.diagnostic_report_id,
+    reported_by:(window.SIMRS_USER||{}).username});
+  setStudyKv('Status','Terkirim');
+  applyReadState(s);
+  renderArchive(false);
 }
 loadArchive();
 </script>
@@ -623,8 +676,8 @@ function freshViewer(){
   try{ dwvApp.abortAllLoads(); }catch(_){}
   try{ dwvApp.reset(); dwvApp.setDataViewConfigs({'*':[new ViewConfig('layerGroup0')]}); }catch(e){ console.warn('viewer reset',e); }
 }
-function showFiles(files){ loadToken++; freshViewer(); window.pendingArchive=null; dwvApp.loadFiles(files); }
-function showURLs(urls){ loadToken++; freshViewer(); window.pendingArchive=null; dwvApp.loadURLs(urls); }
+function showFiles(files){ loadToken++; freshViewer(); if(window.clearArchiveSelection)window.clearArchiveSelection(); window.pendingArchive=null; dwvApp.loadFiles(files); }
+function showURLs(urls){ loadToken++; freshViewer(); if(window.clearArchiveSelection)window.clearArchiveSelection(); window.pendingArchive=null; dwvApp.loadURLs(urls); }
 const dwvMode=$('#dwvMode'),dwvDz=$('#dwvDz'),dwvSpin=$('#dwvSpin');
 function openMode(){ dwvMode.classList.add('show'); }
 $('#openDicom').onclick=()=>$('#pacsFile').click();

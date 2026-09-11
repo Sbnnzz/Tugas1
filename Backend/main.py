@@ -168,6 +168,11 @@ async def send_study(body: dict, user: dict = Depends(auth.require_roles(*REPORT
     """Build ImagingStudy + DiagnosticReport from a study and POST both.
     body: {name, nik, modality, description, icd10, diagnosis, finding, instalasi}
     Returns a step-by-step log for the frontend API console."""
+    if body.get("archive_id"):
+        study = next((st for st in load_studies() if st["id"] == body["archive_id"]), None)
+        if study is not None and study.get("sent"):
+            # sending again would create a second set of records in SATUSEHAT
+            raise HTTPException(status_code=409, detail="Studi ini sudah dibaca dan dikirim ke SATUSEHAT")
     result = await sehat.send_study(body)
     if result.get("ok") and body.get("archive_id"):
         # keep the radiologist's reading with the archived study; the surgeon reads it in Bedah
