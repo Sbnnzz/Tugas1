@@ -15,6 +15,7 @@ terintegrasi dengan platform **SATUSEHAT** (Kemenkes) lewat standar **HL7 FHIR R
 Tugas1/
 ├─ Frontend/                 # buka di browser — tanpa build
 │   ├─ index.html            # Menu utama
+│   ├─ pendaftaran.html      # Pendaftaran pasien → SATUSEHAT (NIK → IHS Number)
 │   ├─ instalasi.html        # Instalasi Radiografi: permintaan masuk + upload citra
 │   ├─ pacs.html             # PACS Viewer (worklist + DWV real DICOM)
 │   ├─ bedah.html            # Instalasi Bedah: jadwal + laporan operasi
@@ -22,6 +23,8 @@ Tugas1/
 ├─ Backend/                  # FastAPI
 │   ├─ main.py               # routes + serve frontend
 │   ├─ satusehat.py          # OAuth2 + FHIR client (live/mock)
+│   ├─ patients.py           # master pasien (NIK, identitas, IHS Number)
+│   ├─ nifti.py              # NIfTI → irisan DICOM untuk viewer
 │   ├─ config.py             # baca .env
 │   ├─ requirements.txt
 │   └─ .env                  # creds SANDBOX (JANGAN commit — sudah gitignore)
@@ -64,7 +67,7 @@ Saat pertama kali backend jalan, akun demo dibuat otomatis:
 | `admin` | `admin123` | Admin | semua |
 | `radiografer` | `radiografer123` | Radiografer | Instalasi Radiografi: kerjakan permintaan masuk, upload citra, kirim ke radiolog (tidak bisa isi bacaan) |
 | `radiolog` | `radiolog123` | Radiolog | PACS: baca, isi bacaan, kirim ke SATUSEHAT |
-| `bedah` | `bedah123` | Dokter Bedah | Bedah: minta pemeriksaan radiologi, lihat hasil, jadwal & laporan operasi, kirim Procedure |
+| `bedah` | `bedah123` | Dokter Bedah | Pendaftaran pasien; Bedah: minta pemeriksaan radiologi, lihat hasil, jadwal & laporan operasi, kirim Procedure |
 
 Password demo ini hanya untuk sandbox/tugas. Kelola akun dari folder `Backend/`:
 ```bash
@@ -77,10 +80,20 @@ Teman satu wifi login ke server yang sama (`http://<IP-laptop>:8000`) dengan aku
 ## Alur & data demo
 
 ```
+Pendaftaran ──pasien (NIK → IHS)──► SATUSEHAT
+     │
+     ▼
 Dokter Bedah ──permintaan──► Radiografer ──upload citra──► Radiolog ──bacaan──► SATUSEHAT
       ▲                                                                 │
       └──────────── lihat hasil, lalu jadwal & laporan operasi ◄───────┘
 ```
+
+Pasien didaftarkan dulu di **Pendaftaran**: backend mencari NIK di SATUSEHAT (pasien dummy
+sandbox sudah ada → IHS Number langsung ditemukan), dan membuat Patient baru bila belum ada.
+Identitas lengkap disimpan di SIMRS, karena SATUSEHAT hanya mengembalikan IHS Number dan nama
+tersamar. Di Bedah, dokter memilih pasien dari dropdown pasien terdaftar; permintaan radiologi
+hanya bisa dibuat untuk pasien terdaftar. Daftar pasien dummy sandbox ada di halaman Pendaftaran
+(bagian "Pasien uji coba SATUSEHAT Sandbox").
 
 Isi data demo (X-ray, CT, MRI untuk pasien dummy SATUSEHAT) dari folder `Backend/`:
 ```bash
@@ -91,6 +104,18 @@ Hasilnya 3 studi menunggu bacaan radiolog (PACS) dan 3 permintaan menunggu radio
 `Backend/data/demo_films/` (nama & NIK pasien sudah tertulis di dalam berkas).
 Sumber citra: `Backend/seed_samples/SOURCES.md`.
 
+## Format citra
+
+Instalasi Radiografi dan PACS menerima **DICOM** (`.dcm`, `.ima`, `.dic`, `.img`, atau tanpa
+ekstensi) dan **NIfTI** (`.nii`, `.nii.gz`). NIfTI dikonversi otomatis ke irisan DICOM oleh backend
+(nibabel + pydicom) sehingga bisa di-scroll di PACS. PNG/JPG **tidak diterima** — isi berkas dicek,
+bukan hanya namanya. Contoh NIfTI untuk dicoba: `Backend/seed_samples/mri_brain_axial.nii.gz`.
+Volume NIfTI besar (mis. CT 512×512×444) ditampilkan dengan resolusi dikurangi (maks. ±20 juta
+voxel, mis. 256×256×222) supaya browser tetap ringan; berkas aslinya tidak diubah. Volume dengan
+nilai Hounsfield otomatis ditandai CT dengan window jaringan lunak.
+
+Setelah `git pull`, jalankan lagi `pip install -r requirements.txt` (butuh `nibabel` dan `numpy`).
+
 ## Endpoint utama (backend)
 
 | Method | Path | Fungsi |
@@ -98,9 +123,12 @@ Sumber citra: `Backend/seed_samples/SOURCES.md`.
 | GET  | `/api/health` | status + mode (LIVE/MOCK) |
 | POST | `/api/auth/login` · `/api/auth/logout` | masuk / keluar (cookie sesi) |
 | GET  | `/api/auth/me` | akun yang sedang login + peran |
+| GET/POST | `/api/patients` | pasien terdaftar / daftarkan pasien (cari NIK di SATUSEHAT, buat Patient bila belum ada) |
 | GET/POST | `/api/operations` | jadwal & laporan operasi (Dokter Bedah) |
 | POST | `/api/satusehat/send-procedure` | kirim Encounter + Procedure (ICD-9-CM) |
 | GET/POST | `/api/orders` | permintaan radiologi (dokter → radiografer → radiolog) |
+| GET  | `/api/studies/{id}/slices` | citra satu studi arsip sebagai irisan DICOM (NIfTI dikonversi) |
+| POST | `/api/normalize-series` | berkas multi-irisan / NIfTI dari PACS → satu seri yang bisa di-scroll |
 | POST | `/api/satusehat/token` | ambil access token OAuth2 |
 | GET  | `/api/satusehat/patient?nik=` | cari pasien by NIK → IHS |
 | POST | `/api/satusehat/send-study` | build + kirim ImagingStudy + DiagnosticReport |

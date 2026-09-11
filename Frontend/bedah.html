@@ -155,6 +155,16 @@ a{text-decoration:none;color:inherit}
 .rq-row{cursor:pointer;transition:border-color .12s}.rq-row:hover{border-color:var(--accent)}
 .rq-row.active{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
 .muted-s{font-size:10.5px;color:var(--txt-3)}
+/* technical details (collapsed) + plain result line */
+.tech{margin-top:12px;border:1px solid var(--line);border-radius:9px;background:var(--bg-panel)}
+.tech>summary{cursor:pointer;list-style:none;padding:8px 12px;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--txt-3)}
+.tech>summary::-webkit-details-marker{display:none}
+.tech>summary::before{content:'\25B8  '}.tech[open]>summary::before{content:'\25BE  '}
+.tech[open]>summary{border-bottom:1px solid var(--line)}
+.tech>*:not(summary){margin:10px}
+.result-line{margin-top:10px;font-size:12.5px;line-height:1.5}
+.result-line:empty{display:none}
+.result-line.ok{color:var(--green)}.result-line.err{color:var(--red)}.result-line.info{color:var(--txt-2)}
 </style>
 </head>
 <body>
@@ -168,6 +178,7 @@ a{text-decoration:none;color:inherit}
   <div class="env-badge"><i class="dot"></i><span>SANDBOX</span></div>
   <nav class="topnav">
     <a href="index.html">Menu</a>
+    <a href="pendaftaran.html">Pendaftaran</a>
     <a href="instalasi.html">Instalasi Radiografi</a>
     <a href="pacs.html">PACS Viewer</a>
     <a href="bedah.html" class="active">Bedah</a>
@@ -184,17 +195,17 @@ a{text-decoration:none;color:inherit}
 
 
   <div class="card">
-    <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div><b>Data Pasien</b><small>FHIR Patient</small></div>
+    <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div><b>Data Pasien</b><small>pasien terdaftar · <a href="pendaftaran.html" style="color:var(--accent)">+ daftarkan pasien baru</a></small></div>
     <div class="card-body">
-      <div class="nik-row">
-        <div class="field"><label>NIK (KTP)</label><input class="mono" id="nik" placeholder="16 digit NIK" value="9271060312000001" /></div>
-        <button class="btn btn-ghost" id="cekBtn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Cek SATUSEHAT</button>
+      <div class="field"><label>Pilih Pasien</label><select id="patientSel"><option value="">Memuat pasien terdaftar…</option></select></div>
+      <div class="ihs-badge" id="ihsBadge"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg><span>IHS Number (SATUSEHAT):</span><b id="ihsVal">—</b></div>
+      <div class="field-row" style="margin-top:13px">
+        <div class="field"><label>NIK (KTP)</label><input class="mono" id="nik" readonly placeholder="—" /></div>
+        <div class="field" style="flex:1.4"><label>Nama Lengkap</label><input id="nama" readonly placeholder="—" /></div>
       </div>
-      <div class="ihs-badge" id="ihsBadge"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg><span>IHS Number ditemukan:</span><b id="ihsVal">—</b></div>
-      <div class="field-row" style="margin-top:13px"><div class="field"><label>Nama Lengkap</label><input id="nama" value="Ardianto Putra" /></div></div>
       <div class="field-row">
-        <div class="field"><label>Jenis Kelamin</label><select id="jk"><option>Laki-laki</option><option>Perempuan</option></select></div>
-        <div class="field"><label>Tanggal Lahir</label><input class="mono" id="dob" value="1992-01-09" /></div>
+        <div class="field"><label>Jenis Kelamin</label><input id="jk" readonly placeholder="—" /></div>
+        <div class="field"><label>Tanggal Lahir</label><input class="mono" id="dob" readonly placeholder="—" /></div>
       </div>
     </div>
   </div>
@@ -236,7 +247,7 @@ a{text-decoration:none;color:inherit}
     <div class="grid">
       <div class="col">
         <div class="card">
-          <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg></div><b>Jadwal Operasi</b><small>FHIR Encounter</small></div>
+          <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg></div><b>Jadwal Operasi</b><small>kamar &amp; waktu</small></div>
           <div class="card-body">
             <div class="field-row">
               <div class="field"><label>Mulai Operasi</label><input class="mono" type="datetime-local" id="opStart" /></div>
@@ -251,7 +262,7 @@ a{text-decoration:none;color:inherit}
           </div>
         </div>
         <div class="card">
-          <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M9 13h6M9 17h4"/></svg></div><b>Laporan Operasi</b><small>FHIR Procedure</small></div>
+          <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M9 13h6M9 17h4"/></svg></div><b>Laporan Operasi</b><small>tindakan operasi</small></div>
           <div class="card-body">
             <div class="field-row">
               <div class="field" style="flex:.8"><label>ICD-10 Pra-Operasi</label><input class="mono" id="preCode" value="K35.8" /></div>
@@ -277,10 +288,14 @@ a{text-decoration:none;color:inherit}
         </div>
       </div>
       <div class="col">
-        <div class="console">
-          <div class="console-head" id="consoleHead"><span><i class="led"></i>FHIR R4 · Sandbox</span><span class="mono" style="font-size:9px;color:var(--txt-3)" id="cStatus">siap</span></div>
-          <div class="console-body" id="console"><span class="muted"># Encounter (kamar operasi) → Procedure (ICD-9-CM)</span></div>
-        </div>
+        <div class="result-line" id="resultLine"></div>
+        <details class="tech">
+          <summary>Detail teknis</summary>
+          <div class="console">
+            <div class="console-head" id="consoleHead"><span><i class="led"></i>FHIR R4 · Sandbox</span><span class="mono" style="font-size:9px;color:var(--txt-3)" id="cStatus">siap</span></div>
+            <div class="console-body" id="console"><span class="muted"># Encounter (kamar operasi) → Procedure (ICD-9-CM)</span></div>
+          </div>
+        </details>
         <div class="card">
           <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div><b>Riwayat Operasi</b><small><span id="opCount">—</span> · <a href="bedah.html" id="newOp" style="color:var(--accent)">+ laporan baru</a></small></div>
           <div class="card-body" id="opList"><div class="rad-empty">Memuat…</div></div>
@@ -301,7 +316,7 @@ const PROC={'47.09':'Other appendectomy','47.01':'Laparoscopic appendectomy','51
   '53.00':'Unilateral repair of inguinal hernia, not otherwise specified','54.11':'Exploratory laparotomy',
   '74.1':'Low cervical cesarean section','32.41':'Thoracoscopic lobectomy of lung'};
 const FORM_FIELDS=['#nik','#nama','#jk','#dob','#opStart','#opEnd','#room','#surgeon','#anesthesiologist','#anesthesia',
-  '#preCode','#preText','#proc','#postDx','#findings','#complications','#cekBtn'];
+  '#preCode','#preText','#proc','#postDx','#findings','#complications','#patientSel'];
 let opId=null;
 
 function errorText(r){try{const i=r.issue&&r.issue[0];return (i&&((i.details&&i.details.text)||i.diagnostics))||(r.fault&&r.fault.faultstring)||r.detail||JSON.stringify(r).slice(0,220);}catch(_){return '';}}
@@ -358,8 +373,7 @@ function renderOrders(){
 // put a request's patient into the patient card (not while a sent, locked operation is open)
 function usePatient(p){
   if($('#nik').disabled)return;
-  $('#nik').value=p.nik||'';$('#nama').value=p.name||'';if(p.gender)$('#jk').value=p.gender;$('#dob').value=p.birthDate||'';
-  $('#ihsBadge').classList.remove('show');
+  showPatient(p);
 }
 // finished request -> Operasi tab, with the radiologist's reading as the pre-operative diagnosis
 function toOperation(o){
@@ -383,6 +397,7 @@ $('#rqBtn').addEventListener('click',async()=>{
     exam:{modality:$('#rqModality').value,description:$('#rqExam').value.trim()},
     indication:{icd10:$('#rqIcd').value.trim(),text:$('#rqReason').value.trim()},
     priority:$('#rqPriority').value,note:$('#rqNote').value.trim()};
+  if(!body.patient.nik){b.textContent='Pilih pasien terdaftar dulu';setTimeout(()=>{b.innerHTML=label;},3000);return;}
   b.style.pointerEvents='none';
   try{
     const r=await fetch(API_BASE+'/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -396,22 +411,24 @@ $('#rqBtn').addEventListener('click',async()=>{
 });
 
 
-// NIK lookup: real SATUSEHAT Patient search through the backend
-$('#cekBtn').addEventListener('click',async()=>{
-  const b=$('#cekBtn'),label=b.innerHTML,nik=$('#nik').value.trim();
-  b.style.pointerEvents='none';b.textContent='Mencari…';
-  try{
-    const r=await fetch(API_BASE+'/api/satusehat/patient?nik='+encodeURIComponent(nik));
-    const d=r.ok?await r.json():{status:r.status,response:{}};
-    const code=Number(d.status)||0,entry=((d.response&&d.response.entry)||[])[0];
-    if(code>=200&&code<300&&entry){$('#ihsVal').textContent=entry.resource.id;$('#ihsBadge').classList.add('show');b.innerHTML=CHECK+'Ditemukan';markStep(0);}
-    else{$('#ihsBadge').classList.remove('show');b.textContent=code>=200&&code<300?'Tidak ditemukan':'Gagal ('+code+')';}
-  }catch(err){b.textContent='Backend tidak terhubung';}
-  b.style.pointerEvents='';
-  setTimeout(()=>{b.innerHTML=label;},3000);
-  loadRadiology(nik);
-});
-$('#nik').addEventListener('change',()=>{$('#ihsBadge').classList.remove('show');loadRadiology($('#nik').value.trim());});
+// Registered patients (Pendaftaran): the doctor picks one; the identity fields are read-only and
+// the IHS number comes from the registration in SATUSEHAT.
+let patientList=[];
+async function loadPatients(){
+  const sel=$('#patientSel');
+  try{const r=await fetch(API_BASE+'/api/patients');if(!r.ok)throw new Error('HTTP '+r.status);patientList=await r.json();}
+  catch(err){sel.innerHTML='<option value="">Daftar pasien tidak dapat dimuat</option>';return;}
+  sel.innerHTML='<option value="">'+(patientList.length?'— pilih pasien terdaftar ('+patientList.length+') —':'Belum ada pasien terdaftar · daftarkan di Pendaftaran')+'</option>'+
+    patientList.map(p=>'<option value="'+esc(p.nik)+'">'+esc(p.name)+' · '+esc(p.nik)+'</option>').join('');
+  sel.value=patientList.some(p=>p.nik===$('#nik').value)?$('#nik').value:'';
+}
+function showPatient(p){
+  const reg=patientList.find(x=>x.nik===p.nik)||{},ihs=p.ihs_number||p.ihs||reg.ihs_number||'';
+  $('#nik').value=p.nik||'';$('#nama').value=p.name||'';$('#jk').value=p.gender||'';$('#dob').value=p.birthDate||'';
+  $('#ihsVal').textContent=ihs;$('#ihsBadge').classList.toggle('show',!!ihs);
+  $('#patientSel').value=reg.nik?reg.nik:'';
+}
+$('#patientSel').addEventListener('change',e=>showPatient(patientList.find(x=>x.nik===e.target.value)||{}));
 
 function formData(){
   const proc=$('#proc');
@@ -432,16 +449,17 @@ function lock(sent){
 function fillForm(op){
   const d=op.data||{},p=d.patient||{},s=d.schedule||{},rep=d.report||{};
   const set=(q,v)=>{if(v!==undefined&&v!==null&&v!=='')$(q).value=v;};
-  set('#nik',p.nik);set('#nama',p.name);set('#jk',p.gender);set('#dob',p.birthDate);
+  showPatient(p);
   set('#opStart',s.start);set('#opEnd',s.end);set('#room',s.room);set('#surgeon',s.surgeon);
   set('#anesthesiologist',s.anesthesiologist);set('#anesthesia',s.anesthesia);
   set('#preCode',rep.pre_dx_code);set('#preText',rep.pre_dx_text);set('#proc',rep.proc_code);
   set('#postDx',rep.post_dx);set('#findings',rep.findings);set('#complications',rep.complications);
   opId=op.id;$('#opVal').textContent=op.id;lock(op.status==='sent');
-  $('#ihsBadge').classList.remove('show');loadRadiology(p.nik||'');
+  loadRadiology(p.nik||'');
   consoleEl.innerHTML=op.status==='sent'
     ?'<span class="muted"># sudah terkirim</span>\n<span class="key">Encounter</span>: <span class="str">"'+esc(op.encounter_id)+'"</span>\n<span class="key">Procedure</span>: <span class="str">"'+esc(op.procedure_id)+'"</span>'
     :'<span class="muted"># belum dikirim ke SATUSEHAT</span>';
+  setResultText(op.status==='sent'?true:null,op.status==='sent'?'✓ Sudah terkirim ke SATUSEHAT':'');
 }
 
 // saved operations
@@ -466,6 +484,7 @@ async function loadOps(){
 
 async function saveOp(){
   const f=formData();
+  if(!f.patient.nik)throw new Error('Pilih pasien terdaftar dulu');
   if(!f.report.proc_code)throw new Error('Pilih tindakan (ICD-9-CM)');
   if(f.schedule.start&&f.schedule.end&&f.schedule.end<=f.schedule.start)throw new Error('Jam selesai harus setelah jam mulai');
   const r=await fetch(API_BASE+'/api/operations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(f)});
@@ -496,7 +515,7 @@ $('#sendOpBtn').addEventListener('click',async()=>{
     const d=await r.json().catch(()=>({}));
     data=r.ok?d:{ok:false,mode:'—',logs:[{step:'akses',status:r.status,request:{method:'POST',url},response:{issue:[{details:{text:d.detail||('HTTP '+r.status)}}]}}]};
   }catch(err){
-    log('<span class="err">'+esc(err.message)+'</span>');cStatus.textContent='error';
+    log('<span class="err">'+esc(err.message)+'</span>');cStatus.textContent='error';setResultText(false,'✗ '+err.message);
     b.style.pointerEvents='';b.style.opacity='';return;
   }
   log('<span class="muted"># mode '+esc(data.mode)+'</span>');
@@ -517,6 +536,7 @@ $('#sendOpBtn').addEventListener('click',async()=>{
     markStep(4);lock(true);
   }
   log('\n'+(data.ok?'<span class="ok">✓ Laporan operasi terkirim</span>':'<span class="err">✗ Pengiriman gagal</span>')+' <span class="muted">· mode '+esc(data.mode)+' · '+errors+' error</span>');
+  showResult(data);
   cStatus.textContent=data.ok?'done · '+data.mode:'error · '+data.mode;
   b.style.pointerEvents='';b.style.opacity='';
   loadOps();
@@ -524,9 +544,17 @@ $('#sendOpBtn').addEventListener('click',async()=>{
 
 (window.simrsUser||Promise.resolve()).then(u=>{
   if(!$('#surgeon').value)$('#surgeon').value=u&&u.role==='dokter_bedah'?u.full_name:'dr. Bima Santoso, Sp.B';
+  loadPatients();
   loadRadiology($('#nik').value.trim());
   loadOps();
 });
+// Plain result line next to "Kirim"; the technical exchange stays under "Detail teknis".
+function setResultText(ok,text){const el=document.getElementById('resultLine');if(!el)return;el.className='result-line'+(ok===true?' ok':ok===false?' err':' info');el.textContent=text||'';}
+function showResult(data){
+  const bad=(data.logs||[]).find(l=>!(Number(l.status)>=200&&Number(l.status)<300));
+  setResultText(!!data.ok,data.ok?'✓ Terkirim ke SATUSEHAT'+(data.mode==='MOCK'?' (mode simulasi)':'')
+    :'✗ Gagal dikirim: '+(bad?(errorText(bad.response||{})||('HTTP '+bad.status)):'coba lagi'));
+}
 </script>
 </body>
 </html>

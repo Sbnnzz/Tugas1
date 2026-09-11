@@ -213,6 +213,16 @@ a{text-decoration:none;color:inherit}
 .strip-head .wl-tab:hover{color:var(--txt)}
 .strip-head .wl-tab.on{background:var(--sel-dim);color:var(--sel)}.strip-head .wl-tab.on b{color:var(--sel)}
 .sent-note{margin:6px 0 2px;padding:9px 11px;border-radius:7px;background:rgba(53,196,107,.1);border:1px solid rgba(53,196,107,.3);color:var(--green);font-size:11.5px;line-height:1.5}
+/* technical details (collapsed) + plain result line */
+.tech{margin-top:12px;border:1px solid var(--line);border-radius:9px;background:var(--bg-panel)}
+.tech>summary{cursor:pointer;list-style:none;padding:8px 12px;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--txt-3)}
+.tech>summary::-webkit-details-marker{display:none}
+.tech>summary::before{content:'\25B8  '}.tech[open]>summary::before{content:'\25BE  '}
+.tech[open]>summary{border-bottom:1px solid var(--line)}
+.tech>*:not(summary){margin:10px}
+.result-line{margin-top:10px;font-size:12.5px;line-height:1.5}
+.result-line:empty{display:none}
+.result-line.ok{color:var(--green)}.result-line.err{color:var(--red)}.result-line.info{color:var(--txt-2)}
 </style>
 </head>
 <body>
@@ -225,7 +235,7 @@ a{text-decoration:none;color:inherit}
     </a>
     <div class="brand-sep"></div>
     <div class="env-badge"><i class="dot"></i><span>SANDBOX</span></div>
-    <nav class="topnav"><a href="index.html">Menu</a><a href="instalasi.html">Instalasi Radiografi</a><a href="pacs.html" class="active">PACS Viewer</a><a href="bedah.html">Bedah</a></nav>
+    <nav class="topnav"><a href="index.html">Menu</a><a href="pendaftaran.html">Pendaftaran</a><a href="instalasi.html">Instalasi Radiografi</a><a href="pacs.html" class="active">PACS Viewer</a><a href="bedah.html">Bedah</a></nav>
     <div class="brand-spacer"></div>
     <div class="conn"><i class="led"></i><small>SATUSEHAT <b>Terhubung</b> · FHIR R4</small></div>
     <div class="brand-user"><div class="avatar">RA</div><div class="who"><b>dr. Rahmat Adiputra, Sp.Rad</b><small>Radiolog · RSUD Dr. Soetomo</small></div></div>
@@ -248,7 +258,7 @@ a{text-decoration:none;color:inherit}
   <div class="toolbar">
     <button class="load-btn" id="openDicom"><svg viewBox="0 0 24 24"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Buka DICOM</button>
     <button class="load-btn" id="openFolder" style="background:var(--bg-panel);border-color:var(--line);color:var(--txt-2)"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Folder</button>
-    <input type="file" id="pacsFile" accept=".dcm,.ima,.dic,.img,application/dicom" multiple style="display:none" />
+    <input type="file" id="pacsFile" accept=".dcm,.ima,.dic,.img,.nii,.nii.gz,application/dicom" multiple style="display:none" />
     <input type="file" id="pacsFolder" webkitdirectory multiple style="display:none" />
     <div class="tsep"></div>
     <div class="tool-group">
@@ -324,20 +334,24 @@ a{text-decoration:none;color:inherit}
           </div>
         </div>
         <div class="pane" data-pane="satu">
-          <div><div class="section-h">Resource FHIR</div>
-            <div class="res-row"><div class="ricon"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg></div><div class="rinfo"><b>ServiceRequest</b><small>order/…</small></div><span class="res-status ready" data-res="sr">Ready</span></div>
-            <div class="res-row"><div class="ricon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg></div><div class="rinfo"><b>ImagingStudy</b><small>study/…</small></div><span class="res-status ready" data-res="is">Ready</span></div>
-            <div class="res-row"><div class="ricon"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg></div><div class="rinfo"><b>DiagnosticReport</b><small>report/…</small></div><span class="res-status ready" data-res="dr">Ready</span></div>
-          </div>
           <div><div class="section-h">Bacaan Radiologi</div>
             <div class="field-row"><div class="field" style="flex:.9"><label>Kode ICD-10</label><input class="icd" value="K35.8" /></div><div class="field" style="flex:1.4"><label>Diagnosis</label><input value="Appendicitis, akut" /></div></div>
             <div class="field"><label>Temuan</label><textarea rows="3">Penebalan dinding apendiks dengan fat stranding periapendikular. Kesan appendicitis akut.</textarea></div>
             <button class="btn btn-primary" id="sendBtn"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Kirim ke SATUSEHAT</button>
+            <div class="result-line" id="resultLine"></div>
           </div>
-          <div><div class="section-h">API Console</div>
-            <div class="console"><div class="console-head" id="consoleHead"><span><i class="led"></i>FHIR R4 · Sandbox</span><span class="mono" style="font-size:9px;color:var(--txt-3)" id="consoleStatus">idle</span></div>
-              <div class="console-body" id="console"><span class="muted"># Menunggu aksi… tekan "Kirim ke SATUSEHAT"</span></div></div>
-          </div>
+          <details class="tech">
+            <summary>Detail teknis</summary>
+            <div><div class="section-h">Resource FHIR</div>
+              <div class="res-row"><div class="ricon"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg></div><div class="rinfo"><b>ServiceRequest</b><small>order/…</small></div><span class="res-status ready" data-res="sr">Ready</span></div>
+              <div class="res-row"><div class="ricon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg></div><div class="rinfo"><b>ImagingStudy</b><small>study/…</small></div><span class="res-status ready" data-res="is">Ready</span></div>
+              <div class="res-row"><div class="ricon"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg></div><div class="rinfo"><b>DiagnosticReport</b><small>report/…</small></div><span class="res-status ready" data-res="dr">Ready</span></div>
+            </div>
+            <div><div class="section-h">API Console</div>
+              <div class="console"><div class="console-head" id="consoleHead"><span><i class="led"></i>FHIR R4 · Sandbox</span><span class="mono" style="font-size:9px;color:var(--txt-3)" id="consoleStatus">idle</span></div>
+                <div class="console-body" id="console"><span class="muted"># Menunggu aksi… tekan "Kirim ke SATUSEHAT"</span></div></div>
+            </div>
+          </details>
         </div>
       </div>
     </aside>
@@ -494,7 +508,7 @@ function setRes(res,cls,txt){const e=document.querySelector('.res-status[data-re
 async function mockSend(icd,dx){
   consoleEl.innerHTML='<span class="muted"># api-satusehat-stg.dto.kemkes.go.id · FHIR R4</span>';consoleHead.classList.add('live');consoleStatus.textContent='running…';sendBtn.style.pointerEvents='none';sendBtn.style.opacity='.7';
   const log=h=>{consoleEl.innerHTML+='\n'+h;consoleEl.scrollTop=consoleEl.scrollHeight};
-  log('<span class="muted"># backend tidak terhubung · simulasi</span>');
+  log('<span class="muted"># backend tidak terhubung · simulasi</span>');setResultText(false,'✗ Tidak terkirim — server belum berjalan (hanya simulasi)');
   await wait(320);log('<span class="method">POST</span> <span class="url">/oauth2/v1/accesstoken</span>');
   await wait(480);log('<span class="ok">200 OK</span> <span class="muted">{ access_token:"ey…", expires_in:"3599" }</span>');
   await wait(360);setRes('is','sending','Sending');log('\n<span class="method">POST</span> <span class="url">/fhir-r4/v1/ImagingStudy</span>');
@@ -531,7 +545,7 @@ function buildPayload(){
 }
 sendBtn.onclick=async()=>{
   const payload=buildPayload();
-  if(!payload.icd10||!payload.diagnosis){consoleHead.classList.add('live');consoleStatus.textContent='belum lengkap';consoleEl.innerHTML='<span class="err">Isi kode ICD-10 dan diagnosis (bacaan radiolog) dulu.</span>';return;}
+  if(!payload.icd10||!payload.diagnosis){consoleHead.classList.add('live');consoleStatus.textContent='belum lengkap';consoleEl.innerHTML='<span class="err">Isi kode ICD-10 dan diagnosis (bacaan radiolog) dulu.</span>';setResultText(false,'Isi kode ICD-10 dan diagnosis (bacaan radiolog) dulu.');return;}
   sendBtn.style.pointerEvents='none';sendBtn.style.opacity='.7';
   let data;
   try{
@@ -561,6 +575,7 @@ sendBtn.onclick=async()=>{
   if(data.diagnostic_report_id)setResRef('dr','DiagnosticReport/'+data.diagnostic_report_id);
   const errors=(data.logs||[]).filter(l=>!(Number(l.status)>=200&&Number(l.status)<300)).length;
   log('\n'+(data.ok?'<span class="ok">✓ Study terkirim</span>':'<span class="err">✗ Pengiriman gagal</span>')+' <span class="muted">· mode '+esc(data.mode)+' · '+errors+' error</span>');
+  showResult(data);
   consoleStatus.textContent=data.ok?'done · '+data.mode:'error · '+data.mode;
   if(data.ok&&window.currentArchive)markArchiveSent(window.currentArchive.id,payload,data);
   sendBtn.style.pointerEvents='';sendBtn.style.opacity='';
@@ -658,7 +673,7 @@ function applyReadState(s){
   const fields=[satu.querySelector('.icd'),satu.querySelectorAll('input')[1],satu.querySelector('textarea')];
   const hints=['ICD-10','Diagnosis','Temuan / kesan radiolog'];
   fields.forEach((e,i)=>{if(!e)return;e.readOnly=done;e.style.opacity=done?'.65':'';e.placeholder=hints[i];if(!done)e.value='';});
-  sendBtn.style.display=done?'none':'';
+  sendBtn.style.display=done?'none':'';setResultText(null,'');
   let note=document.getElementById('sentNote');
   if(!note){note=document.createElement('div');note.id='sentNote';note.className='sent-note';sendBtn.parentNode.insertBefore(note,sendBtn);}
   note.style.display=done?'':'none';
@@ -685,6 +700,13 @@ function markArchiveSent(id,payload,data){
   renderArchive(false);
 }
 loadArchive();
+// Plain result line next to "Kirim"; the technical exchange stays under "Detail teknis".
+function setResultText(ok,text){const el=document.getElementById('resultLine');if(!el)return;el.className='result-line'+(ok===true?' ok':ok===false?' err':' info');el.textContent=text||'';}
+function showResult(data){
+  const bad=(data.logs||[]).find(l=>!(Number(l.status)>=200&&Number(l.status)<300));
+  setResultText(!!data.ok,data.ok?'✓ Terkirim ke SATUSEHAT'+(data.mode==='MOCK'?' (mode simulasi)':'')
+    :'✗ Gagal dikirim: '+(bad?(errorText(bad.response||{})||('HTTP '+bad.status)):'coba lagi'));
+}
 </script>
 <script type="module">
 import { App, AppOptions, ViewConfig, WindowLevel } from 'https://cdn.jsdelivr.net/npm/dwv@0.37.0-beta.12/+esm';
@@ -709,7 +731,7 @@ $('#openDicom').onclick=()=>$('#pacsFile').click();
 $('#dzPick').onclick=()=>$('#pacsFile').click();
 $('#dzSample').onclick=()=>{ openMode(); dwvSpin.classList.add('show'); showURLs(['sample-chest.dcm']); };
 function asDicom(list){ return [...list].map(f=>{ try{ return /\.dcm$/i.test(f.name)?f:new File([f], f.name.replace(/\.[^.]*$/,'')+'.dcm', {type:'application/dicom'}); }catch(_){ return f; } }); }
-function _isDicomFile(f){ return /\.(dcm|ima|dic|dcm30|img)$/i.test(f.name)||!/\.[a-z0-9]{1,6}$/i.test(f.name)||f.type==='application/dicom'; }
+function _isDicomFile(f){ return /\.(dcm|ima|dic|dcm30|img|nii|nii\.gz)$/i.test(f.name)||!/\.[a-z0-9]{1,6}$/i.test(f.name)||f.type==='application/dicom'; }
 // Multi-slice upload: the backend unifies the slices' FrameOfReferenceUID (pydicom) so DWV can stack
 // them. The normalized slices are fetched with this tab's login and shown as one scrollable volume.
 async function loadSeriesViaBackend(files,mine){
@@ -728,13 +750,14 @@ async function loadSeriesViaBackend(files,mine){
     return true;
   }catch(err){ console.warn('normalize-series failed, direct load:',err); return false; }
 }
+const isNifti=f=>/\.nii(\.gz)?$/i.test(f.name);   // DWV cannot read NIfTI: the backend converts it
 async function smartLoad(list){
   const files=[...list].filter(_isDicomFile);
   if(!files.length) return;
   openMode(); dwvSpin.classList.add('show');
   const mine=++loadToken;
   let ok=false;
-  if(files.length>1) ok=await loadSeriesViaBackend(files,mine);   // multi-slice → normalize for scroll
+  if(files.length>1||files.some(isNifti)) ok=await loadSeriesViaBackend(files,mine);   // multi-slice → normalize for scroll
   if(!ok&&mine===loadToken) showFiles(asDicom(files));             // single file, or backend unreachable
 }
 $('#pacsFile').addEventListener('change',e=>{ if(e.target.files.length) smartLoad(e.target.files); });
@@ -807,14 +830,19 @@ window.openArchiveStudy=async(study)=>{
   openMode(); dwvSpin.classList.add('show');
   const token=++loadToken;
   try{
-    const r=await fetch(API_BASE+'/api/studies/'+encodeURIComponent(study.id)+'/file');
+    // the study's DICOM image(s); a stored NIfTI arrives already converted to DICOM slices
+    const r=await fetch(API_BASE+'/api/studies/'+encodeURIComponent(study.id)+'/slices');
     if(!r.ok)throw new Error('HTTP '+r.status);
-    const blob=await r.blob();
-    const name=study.file.replace(/^[0-9a-f]{12}_/,'');
+    const list=await r.json();
+    const files=await Promise.all(list.urls.map(async(u,i)=>{
+      const s=await fetch(API_BASE+u);
+      if(!s.ok)throw new Error('HTTP '+s.status);
+      return new File([await s.blob()], String(i+1).padStart(4,'0')+'.dcm', {type:'application/dicom'});
+    }));
     if(token!==loadToken)return;   // a newer click is already loading; drop this one
     freshViewer();
     window.pendingArchive=study;
-    dwvApp.loadFiles([new File([blob], String(name).replace(/\.[^.]*$/,'')+'.dcm', {type:'application/dicom'})]);
+    dwvApp.loadFiles(files);
   }catch(e){
     dwvSpin.classList.remove('show');
     console.error('archive load',e);

@@ -27,7 +27,9 @@ from pydantic import BaseModel
 import auth
 import config
 import operations
+import nifti
 import orders
+import patients
 from satusehat import client as sehat
 
 app = FastAPI(title="SATUSEHAT PACS Hub API", version="1.0")
@@ -54,6 +56,7 @@ os.makedirs(config.UPLOAD_DIR, exist_ok=True)
 auth.init_db()
 operations.init_db()
 orders.init_db()
+patients.init_db()
 
 # Who may call what. Pages hide what a role cannot use; these checks are the real guard.
 ADMIN = ("admin",)
@@ -63,6 +66,7 @@ ARCHIVE_READ = ("radiografer", "radiolog", "dokter_bedah", "admin")
 READING_FIELDS = ("icd10", "diagnosis", "finding")
 BEDAH = ("dokter_bedah", "admin")                           # surgery schedule + operation report
 ORDERERS = ("dokter_bedah", "admin")                        # request radiology exams
+REGISTRARS = ("dokter_bedah", "admin")                      # register patients (+ SATUSEHAT)
 EXAM_MODALITIES = ("DX", "CT", "MR", "US")
 
 
@@ -177,6 +181,9 @@ async def send_study(body: dict, user: dict = Depends(auth.require_roles(*REPORT
         if study is not None and study.get("sent"):
             # sending again would create a second set of records in SATUSEHAT
             raise HTTPException(status_code=409, detail="Studi ini sudah dibaca dan dikirim ke SATUSEHAT")
+    registered = patients.get_patient(body.get("nik"))
+    if registered:
+        body["ihs"] = registered["ihs_number"]  # the patient's own SATUSEHAT record
     result = await sehat.send_study(body)
     if result.get("ok") and body.get("archive_id"):
         # keep the radiologist's reading with the archived study; the surgeon reads it in Bedah
@@ -188,6 +195,46 @@ async def send_study(body: dict, user: dict = Depends(auth.require_roles(*REPORT
         })
         if study and study.get("order_id"):
             orders.set_reported(study["order_id"])
+    return result
+
+
+# ---------- patient registry (pendaftaran pasien) ----------
+@app.get("/api/patients")
+def list_patients(user: dict = Depends(auth.require_roles(*ARCHIVE_READ))):
+    """Registered patients, by name."""
+    return patients.list_patients()
+
+
+@app.post("/api/patients")
+async def register_patient(body: dict, user: dict = Depends(auth.require_roles(*REGISTRARS))):
+    """Register a patient: find (or create) them in SATUSEHAT by NIK, then keep them here.
+    body: {nik, name, gender, birthDate, phone?, address?, city?, birthPlace?}
+    Returns {ok, mode, logs, how: found | created, patient}."""
+    p = {key: str(body.get(key) or "").strip()
+         for key in ("nik", "name", "gender", "birthDate", "phone", "address", "city", "birthPlace")}
+    if not (p["nik"].isdigit() and len(p["nik"]) == 16):
+        raise HTTPException(status_code=400, detail="NIK harus 16 digit angka")
+    if not p["name"]:
+        raise HTTPException(status_code=400, detail="Nama pasien wajib diisi")
+    if p["gender"] not in patients.GENDERS:
+        raise HTTPException(status_code=400, detail="Jenis kelamin harus Laki-laki atau Perempuan")
+    try:
+        born = datetime.date.fromisoformat(p["birthDate"])
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Tanggal lahir harus berformat YYYY-MM-DD")
+    if born > datetime.date.today():
+        raise HTTPException(status_code=400, detail="Tanggal lahir tidak boleh di masa depan")
+    if patients.get_patient(p["nik"]):
+        raise HTTPException(status_code=409, detail="Pasien dengan NIK ini sudah terdaftar")
+    result = await sehat.register_patient(p)
+    result["patient"] = None
+    if result["ok"]:
+        data = {key: p[key] for key in ("name", "gender", "birthDate", "phone", "address", "city", "birthPlace")}
+        try:
+            result["patient"] = patients.add_patient(p["nik"], result["ihs_number"], result["how"], data,
+                                                     user["username"])
+        except patients.AlreadyRegistered:
+            raise HTTPException(status_code=409, detail="Pasien dengan NIK ini sudah terdaftar")
     return result
 
 
@@ -208,14 +255,17 @@ def list_orders(status: str = "", nik: str = "", user: dict = Depends(auth.requi
 
 @app.post("/api/orders")
 def create_order(body: dict, user: dict = Depends(auth.require_roles(*ORDERERS))):
-    """A doctor requests an exam. body: {patient{nik,name,gender,birthDate}, exam{modality,description},
-    indication{icd10,text}, priority, note}"""
-    patient, exam = body.get("patient") or {}, body.get("exam") or {}
-    if not str(patient.get("nik", "")).strip() or not str(exam.get("description", "")).strip():
+    """A doctor requests an exam for a registered patient. body: {patient{nik}, exam{modality,description},
+    indication{icd10,text}, priority, note}. The patient's identity is taken from the registry."""
+    nik, exam = str((body.get("patient") or {}).get("nik", "")).strip(), body.get("exam") or {}
+    if not nik or not str(exam.get("description", "")).strip():
         raise HTTPException(status_code=400, detail="NIK pasien dan jenis pemeriksaan wajib diisi")
+    registered = patients.get_patient(nik)
+    if registered is None:
+        raise HTTPException(status_code=400, detail="Pasien belum terdaftar. Daftarkan pasien terlebih dulu")
     if exam.get("modality") not in EXAM_MODALITIES:
         raise HTTPException(status_code=400, detail="Modality harus salah satu dari " + ", ".join(EXAM_MODALITIES))
-    data = {"patient": patient, "exam": exam, "indication": body.get("indication") or {},
+    data = {"patient": patients.order_patient(registered), "exam": exam, "indication": body.get("indication") or {},
             "priority": body.get("priority") or "Biasa", "note": body.get("note") or "",
             "requester": user["full_name"]}
     return orders.create_order(data, user["username"])
@@ -245,6 +295,9 @@ async def send_procedure(body: dict, user: dict = Depends(auth.require_roles(*BE
         raise HTTPException(status_code=404, detail="Operasi belum disimpan")
     if op["status"] == "sent":
         raise HTTPException(status_code=409, detail="Operasi sudah dikirim ke SATUSEHAT")
+    registered = patients.get_patient((op["data"].get("patient") or {}).get("nik"))
+    if registered:
+        op["data"].setdefault("patient", {})["ihs"] = registered["ihs_number"]
     result = await sehat.send_procedure(op["data"])
     if result["ok"]:
         operations.mark_sent(op["id"], result["encounter_id"], result["procedure_id"])
@@ -289,10 +342,14 @@ async def add_study(file: UploadFile = File(None), meta: str = Form("{}"),
     sid = uuid.uuid4().hex[:12]
     filename = None
     if file is not None:
+        raw = await file.read()
+        if not (nifti.is_dicom(raw) or nifti.is_nifti(raw)):
+            raise HTTPException(status_code=400,
+                                detail="Hanya berkas DICOM (.dcm, .ima) atau NIfTI (.nii, .nii.gz) yang diterima")
         safe = os.path.basename(file.filename or "study.dcm")
         filename = f"{sid}_{safe}"
         with open(os.path.join(config.UPLOAD_DIR, filename), "wb") as f:
-            f.write(await file.read())
+            f.write(raw)
     study = {
         "id": sid,
         "created": datetime.datetime.now().isoformat(timespec="seconds"),
@@ -340,6 +397,12 @@ async def normalize_series(files: List[UploadFile] = File(...),
     parsed = []
     for uf in files:
         raw = await uf.read()
+        if nifti.is_nifti(raw):
+            try:
+                parsed.extend(nifti.nifti_to_datasets(raw))  # a NIfTI volume -> DICOM slices
+            except Exception:
+                pass  # unreadable NIfTI: skip it
+            continue
         try:
             parsed.append(pydicom.dcmread(io.BytesIO(raw)))
         except Exception:
@@ -359,6 +422,30 @@ async def normalize_series(files: List[UploadFile] = File(...),
         ds.save_as(os.path.join(out, name))
         urls.append(f"/api/series/{sid}/{name}")
     return {"series_id": sid, "count": len(urls), "urls": urls}
+
+
+@app.get("/api/studies/{sid}/slices")
+def study_slices(sid: str, user: dict = Depends(auth.require_roles(*REPORTERS))):
+    """URLs of the DICOM images for one archived study. A NIfTI study is converted once into
+    DICOM slices (cached under data/series) so the viewer can show it as a volume."""
+    study = next((s for s in load_studies() if s["id"] == sid), None)
+    if not study or not study.get("file"):
+        raise HTTPException(status_code=404, detail="file not found")
+    path = os.path.join(config.UPLOAD_DIR, study["file"])
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="file missing on disk")
+    with open(path, "rb") as f:
+        raw = f.read()
+    if not nifti.is_nifti(raw):
+        return {"count": 1, "urls": [f"/api/studies/{sid}/file"]}
+    key = "nifti-" + os.path.basename(sid)
+    out = os.path.join(SERIES_DIR, key)
+    if not (os.path.isdir(out) and os.listdir(out)):
+        os.makedirs(out, exist_ok=True)
+        for i, ds in enumerate(nifti.nifti_to_datasets(raw, study), 1):
+            ds.save_as(os.path.join(out, f"{i:04d}.dcm"))
+    names = sorted(os.listdir(out))
+    return {"count": len(names), "urls": [f"/api/series/{key}/{n}" for n in names]}
 
 
 @app.get("/api/series/{sid}/{name}")

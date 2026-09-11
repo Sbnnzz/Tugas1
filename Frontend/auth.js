@@ -13,7 +13,8 @@
     'index.html':null,
     'instalasi.html':['radiografer','admin'],
     'pacs.html':['radiolog','admin'],
-    'bedah.html':['dokter_bedah','admin']
+    'bedah.html':['dokter_bedah','admin'],
+    'pendaftaran.html':['dokter_bedah','admin']
   };
   const HOME={radiografer:'instalasi.html',radiolog:'pacs.html',dokter_bedah:'bedah.html',admin:'index.html'};
   const CAN={report:['radiolog','admin'],archiveWrite:['radiografer','admin']};

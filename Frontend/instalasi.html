@@ -149,6 +149,18 @@ a{text-decoration:none;color:inherit}
 .wz-done{margin-top:12px;padding:12px;border-radius:9px;background:rgba(53,196,107,.09);border:1px solid rgba(53,196,107,.3);color:var(--green);font-size:12.5px;line-height:1.6}
 .wz-done .btn{margin-top:8px}
 .stepper .step{cursor:pointer}
+/* technical details (collapsed) + plain result line */
+.tech{margin-top:12px;border:1px solid var(--line);border-radius:9px;background:var(--bg-panel)}
+.tech>summary{cursor:pointer;list-style:none;padding:8px 12px;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--txt-3)}
+.tech>summary::-webkit-details-marker{display:none}
+.tech>summary::before{content:'\25B8  '}.tech[open]>summary::before{content:'\25BE  '}
+.tech[open]>summary{border-bottom:1px solid var(--line)}
+.tech>*:not(summary){margin:10px}
+.result-line{margin-top:10px;font-size:12.5px;line-height:1.5}
+.result-line:empty{display:none}
+.result-line.ok{color:var(--green)}.result-line.err{color:var(--red)}.result-line.info{color:var(--txt-2)}
+.wz-step[data-step="3"] .grid{grid-template-columns:1fr}
+.dropzone small.file-warn{color:var(--red)}
 </style>
 </head>
 <body>
@@ -162,6 +174,7 @@ a{text-decoration:none;color:inherit}
   <div class="env-badge"><i class="dot"></i><span>SANDBOX</span></div>
   <nav class="topnav">
     <a href="index.html">Menu</a>
+    <a href="pendaftaran.html">Pendaftaran</a>
     <a href="instalasi.html" class="active">Instalasi Radiografi</a>
     <a href="pacs.html">PACS Viewer</a>
     <a href="bedah.html">Bedah</a>
@@ -199,7 +212,7 @@ a{text-decoration:none;color:inherit}
       <div class="grid">
         <div class="col">
           <div class="card">
-            <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div><b>Data Pasien</b><small>FHIR Patient</small></div>
+            <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div><b>Data Pasien</b><small>identitas pasien</small></div>
             <div class="card-body">
               <div class="nik-row">
                 <div class="field"><label>NIK (KTP)</label><input class="mono" id="nik" placeholder="16 digit NIK" value="9271060312000001" /></div>
@@ -220,7 +233,7 @@ a{text-decoration:none;color:inherit}
         </div>
         <div class="col">
           <div class="card">
-            <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><path d="M9 12h6M9 16h4"/></svg></div><b>Permintaan Pemeriksaan</b><small>FHIR ServiceRequest</small></div>
+            <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><path d="M9 12h6M9 16h4"/></svg></div><b>Permintaan Pemeriksaan</b><small>dari dokter perujuk</small></div>
             <div class="card-body">
               <div class="field-row">
                 <div class="field"><label>Dokter Perujuk</label><input id="doctor" value="dr. Sari Wulandari, Sp.PD" /></div>
@@ -242,9 +255,9 @@ a{text-decoration:none;color:inherit}
             <svg viewBox="0 0 24 24"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
             <b>Seret berkas ke sini atau klik untuk pilih</b>
             <small>DICOM Series akan diarsipkan ke Central PACS</small>
-            <div class="fmts"><span>.DCM</span><span>.PNG</span><span>.JPG</span></div>
+            <div class="fmts"><span>.DCM</span><span>.IMA</span><span>.NII</span><span>.NII.GZ</span></div>
           </div>
-          <input type="file" id="fileInput" accept=".dcm,.ima,.dic,.img,.png,.jpg,.jpeg" style="display:none" />
+          <input type="file" id="fileInput" accept=".dcm,.ima,.dic,.img,.nii,.nii.gz,.gz" style="display:none" />
           <div class="preview" id="preview">
             <div class="thumb" id="previewThumb"></div>
             <div class="pinfo"><b id="fileName">chest_ct_abdomen.dcm</b><small id="fileMeta">512 × 512 · 132 slices · 24.8 MB</small>
@@ -259,9 +272,12 @@ a{text-decoration:none;color:inherit}
           <div class="card" id="wzSummaryCard">
             <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div><b>Ringkasan</b><small>periksa sebelum kirim</small></div>
             <div class="card-body" id="wzSummaryBody"></div>
+            <div class="card-body" style="padding-top:0"><div class="actions">
+              <button class="btn btn-ghost" id="saveBtn"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan &amp; kirim ke Radiolog</button>
+            </div></div>
           </div>
-          <div class="card">
-            <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M9 13h6M9 17h4"/></svg></div><b>Bacaan Radiologi</b><small>FHIR DiagnosticReport</small></div>
+          <div class="card" id="readCard">
+            <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M9 13h6M9 17h4"/></svg></div><b>Bacaan Radiologi</b><small>hasil bacaan</small></div>
             <div class="card-body">
               <div class="field-row">
                 <div class="field" style="flex:.8"><label>Kode ICD-10</label><input class="mono" id="icd" value="K35.8" /></div>
@@ -269,17 +285,20 @@ a{text-decoration:none;color:inherit}
               </div>
               <div class="field"><label>Temuan / Kesan</label><textarea id="finding" rows="2">Tampak penebalan dinding apendiks disertai fat stranding periapendikular. Kesan: appendicitis akut.</textarea></div>
               <div class="actions">
-                <button class="btn btn-ghost" id="saveBtn"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan &amp; kirim ke Radiolog</button>
                 <button class="btn btn-primary" id="sendBtn"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Kirim ke SATUSEHAT</button>
               </div>
             </div>
           </div>
         </div>
         <div class="col">
-          <div class="console">
-            <div class="console-head" id="consoleHead"><span><i class="led"></i>FHIR R4 · Sandbox</span><span class="mono" style="font-size:9px;color:var(--txt-3)" id="cStatus">preview otomatis</span></div>
-            <div class="console-body" id="console"></div>
-          </div>
+          <div class="result-line" id="resultLine"></div>
+          <details class="tech">
+            <summary>Detail teknis</summary>
+            <div class="console">
+              <div class="console-head" id="consoleHead"><span><i class="led"></i>FHIR R4 · Sandbox</span><span class="mono" style="font-size:9px;color:var(--txt-3)" id="cStatus">preview otomatis</span></div>
+              <div class="console-body" id="console"></div>
+            </div>
+          </details>
         </div>
       </div>
     </section>
@@ -428,16 +447,30 @@ async function inspectDicom(file){
 function showFile(name){
   $('#previewThumb').innerHTML=scanSVG(Date.now());
   $('#fileName').textContent=name||'chest_ct_abdomen.dcm';
-  if(pickedFile){$('#fileMeta').textContent=(pickedFile.size/1048576).toFixed(2)+' MB · '+(pickedFile.name.split('.').pop()||'').toUpperCase();$('#modBadge').textContent=$('#modality').value.split(' ')[0];}
+  if(pickedFile){$('#fileMeta').textContent=(pickedFile.size/1048576).toFixed(2)+' MB · '+(/\.nii(\.gz)?$/i.test(pickedFile.name)?'NIfTI':(pickedFile.name.split('.').pop()||'').toUpperCase());$('#modBadge').textContent=$('#modality').value.split(' ')[0];}
   if(pickedFile)inspectDicom(pickedFile);
   pv.classList.add('show');
   wzRender();
 }
 dz.addEventListener('click',()=>fi.click());
-fi.addEventListener('change',e=>{if(e.target.files[0]){pickedFile=e.target.files[0];showFile(pickedFile.name)}});
+// only medical images: DICOM (CT, MR, X-ray ...) or NIfTI; PNG/JPG cannot be sent to SATUSEHAT
+const MEDICAL_FILE=/\.(dcm|dicom|ima|dic|img|nii|nii\.gz)$/i;
+function takeFile(f){
+  if(!f)return;
+  if(!MEDICAL_FILE.test(f.name)&&/\.[a-z0-9]{1,5}$/i.test(f.name)){
+    pickedFile=null;fi.value='';pv.classList.remove('show');
+    const note=dz.querySelector('small'),was=note.dataset.text||note.textContent;note.dataset.text=was;
+    note.textContent='Berkas "'+f.name+'" ditolak \u2014 hanya DICOM (.dcm, .ima) atau NIfTI (.nii, .nii.gz).';note.classList.add('file-warn');
+    setTimeout(()=>{note.textContent=was;note.classList.remove('file-warn');},5000);
+    if(typeof wzRender==='function')wzRender();
+    return;
+  }
+  pickedFile=f;showFile(f.name);
+}
+fi.addEventListener('change',e=>{if(e.target.files[0])takeFile(e.target.files[0]);});
 ['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag')}));
 ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag')}));
-dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)pickedFile=f;showFile(f?f.name:'')});
+dz.addEventListener('drop',e=>{takeFile(e.dataTransfer.files[0]);});
 
 // save: local PACS archive through the backend, simulated when it is unreachable
 function mockSave(){const b=$('#saveBtn');b.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Tersimpan di Instalasi DB';setTimeout(()=>{b.innerHTML='<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan ke Instalasi DB'},2200)}
@@ -469,7 +502,8 @@ $('#saveBtn').addEventListener('click',async()=>{
   }
   b.style.pointerEvents='';b.style.opacity='';
   if(!r.ok){
-    b.innerHTML='Gagal simpan ('+r.status+')';
+    const d=await r.json().catch(()=>({}));
+    b.textContent='Gagal simpan: '+(d.detail||r.status);
     setTimeout(()=>{b.innerHTML=SAVE_LABEL},3000);
     return;
   }
@@ -488,7 +522,7 @@ async function mockSend(icd,dx){
   cHead.classList.add('live');cStatus.textContent='running…';
   consoleEl.innerHTML='<span class="muted"># POST → api-satusehat-stg.dto.kemkes.go.id</span>';
   const log=h=>{consoleEl.innerHTML+='\n'+h;consoleEl.scrollTop=consoleEl.scrollHeight};
-  log('<span class="muted"># backend tidak terhubung · simulasi</span>');
+  log('<span class="muted"># backend tidak terhubung · simulasi</span>');setResultText(false,'✗ Tidak terkirim — server belum berjalan (hanya simulasi)');
   await wait(300);log('<span class="method">POST</span> <span class="url">/oauth2/v1/accesstoken</span>');
   await wait(500);log('<span class="ok">200 OK</span> <span class="muted">{ access_token:"ey…", expires_in:"3599" }</span>');
   await wait(350);log('\n<span class="method">POST</span> <span class="url">/fhir-r4/v1/ImagingStudy</span>');
@@ -550,19 +584,18 @@ $('#sendBtn').addEventListener('click',async()=>{
     log('<span class="key">DiagnosticReport</span>: <span class="str">"'+esc(data.diagnostic_report_id)+'"</span>');
   }
   log('\n'+(data.ok?'<span class="ok">✓ Studi terkirim</span>':'<span class="err">✗ Pengiriman gagal</span>')+' <span class="muted">· mode '+esc(data.mode??'')+' · '+errors+' error</span>');
+  showResult(data);
   cStatus.textContent=data.ok?'done · '+data.mode:'error · '+data.mode;
   if(data.ok){}
   b.style.pointerEvents='';b.style.opacity='';
   b.innerHTML=data.ok?'<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Terkirim ke SATUSEHAT':SEND_LABEL;
   if(data.ok)setTimeout(()=>{b.innerHTML=SEND_LABEL},2800);
 });
-// Role: a radiographer registers and uploads; the reading is written and sent by the radiologist in PACS.
+// Role: a radiographer uploads and passes the study on; the reading is written and sent by the
+// radiologist in PACS, so the Bacaan card is not shown to them at all.
 (window.simrsUser||Promise.resolve()).then(()=>{
   if(simrsCan('report'))return;
-  ['#icd','#dx','#finding'].forEach(q=>{const e=$(q);e.readOnly=true;e.style.opacity='.55';e.title='Diisi Radiolog di PACS';});
-  $('#sendBtn').style.display='none';
-  const note=$('#icd').closest('.card').querySelector('.card-head small');
-  if(note)note.textContent='diisi Radiolog di PACS';
+  $('#readCard').style.display='none';
 });
 // Incoming radiology requests: the radiographer picks one and the form is filled from it.
 // Patient and exam come from the request (read-only); the uploaded image must match what was ordered.
@@ -647,6 +680,13 @@ $('#wzBack').addEventListener('click',()=>wzGo(wzStep-1));
 $('#wzNext').addEventListener('click',()=>wzGo(wzStep+1));
 document.querySelectorAll('.stepper .step').forEach((s,i)=>s.addEventListener('click',()=>wzGo(i)));
 wzRender();
+// Plain result line next to "Kirim"; the technical exchange stays under "Detail teknis".
+function setResultText(ok,text){const el=document.getElementById('resultLine');if(!el)return;el.className='result-line'+(ok===true?' ok':ok===false?' err':' info');el.textContent=text||'';}
+function showResult(data){
+  const bad=(data.logs||[]).find(l=>!(Number(l.status)>=200&&Number(l.status)<300));
+  setResultText(!!data.ok,data.ok?'✓ Terkirim ke SATUSEHAT'+(data.mode==='MOCK'?' (mode simulasi)':'')
+    :'✗ Gagal dikirim: '+(bad?(errorText(bad.response||{})||('HTTP '+bad.status)):'coba lagi'));
+}
 </script>
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 </body>

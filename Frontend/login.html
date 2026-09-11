@@ -132,7 +132,7 @@ a{text-decoration:none;color:inherit}
 .login-card{width:100%;max-width:380px}
 .login-msg{min-height:18px;font-size:12px;color:var(--red);margin:-2px 0 12px}
 .login-as p{font-size:13px;color:var(--txt-2);line-height:1.6;margin-bottom:14px}.login-as b{color:var(--txt)}.login-as small{color:var(--txt-3)}
-.login-foot{margin-top:14px;font-size:10.5px;color:var(--txt-3);text-align:center;font-family:var(--mono)}
+.login-foot{margin-top:14px;font-size:10.5px;color:var(--txt-3);text-align:center}
 </style>
 </head>
 <body>
@@ -205,8 +205,8 @@ function showContinue(user,thisTab){
   if(r&&r.ok)showContinue(await r.json(),false);
 })();
 fetch(API_BASE+'/api/health').then(r=>r.json())
-  .then(h=>{$('#loginFoot').textContent='backend '+h.mode+' · SATUSEHAT sandbox';})
-  .catch(()=>{$('#loginFoot').textContent='backend offline — jalankan uvicorn, buka lewat http://localhost:8000';});
+  .then(h=>{$('#loginFoot').textContent=h.mode==='LIVE'?'Terhubung ke SATUSEHAT (sandbox)':'Mode simulasi — SATUSEHAT tidak dihubungi';})
+  .catch(()=>{$('#loginFoot').textContent='Server belum berjalan — nyalakan server lalu buka lewat http://localhost:8000';});
 
 $('#loginForm').addEventListener('submit',async e=>{
   e.preventDefault();
