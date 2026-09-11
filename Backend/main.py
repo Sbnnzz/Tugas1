@@ -10,10 +10,14 @@ the whole app:   uvicorn main:app --reload --port 8000 --host 0.0.0.0
 Then open http://localhost:8000/   (API lives under /api/*).
 """
 import os
+import io
 import json
 import uuid
 import datetime
+from typing import List
 
+import pydicom
+from pydicom.uid import generate_uid
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -134,6 +138,52 @@ def study_file(sid: str):
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="file missing on disk")
     return FileResponse(path, media_type="application/dicom", filename=study["file"])
+
+
+# ---------- DICOM series normalization (pydicom) ----------
+# Some datasets give each slice a different FrameOfReferenceUID, which stops the
+# viewer (DWV) from stacking them into one scrollable volume. We unify the FoR
+# UID across the uploaded slices (nothing else is touched), sort by instance
+# number, and serve them back so they stack + scroll.
+SERIES_DIR = os.path.join(config.DATA_DIR, "series")
+
+
+@app.post("/api/normalize-series")
+async def normalize_series(files: List[UploadFile] = File(...)):
+    sid = uuid.uuid4().hex[:12]
+    out = os.path.join(SERIES_DIR, sid)
+    os.makedirs(out, exist_ok=True)
+    for_uid = generate_uid()
+    parsed = []
+    for uf in files:
+        raw = await uf.read()
+        try:
+            parsed.append(pydicom.dcmread(io.BytesIO(raw)))
+        except Exception:
+            continue  # skip non-DICOM / unreadable files
+
+    def _order(ds):
+        try:
+            return int(getattr(ds, "InstanceNumber", 0) or 0)
+        except (TypeError, ValueError):
+            return 0
+    parsed.sort(key=_order)
+
+    urls = []
+    for i, ds in enumerate(parsed, 1):
+        ds.FrameOfReferenceUID = for_uid          # the only change: unify FoR
+        name = f"{i:04d}.dcm"
+        ds.save_as(os.path.join(out, name))
+        urls.append(f"/api/series/{sid}/{name}")
+    return {"series_id": sid, "count": len(urls), "urls": urls}
+
+
+@app.get("/api/series/{sid}/{name}")
+def series_file(sid: str, name: str):
+    path = os.path.join(SERIES_DIR, os.path.basename(sid), os.path.basename(name))
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="slice not found")
+    return FileResponse(path, media_type="application/dicom")
 
 
 # ---------- serve the frontend (must be mounted LAST) ----------

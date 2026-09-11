@@ -618,11 +618,32 @@ $('#openDicom').onclick=()=>$('#pacsFile').click();
 $('#dzPick').onclick=()=>$('#pacsFile').click();
 $('#dzSample').onclick=()=>{ openMode(); dwvSpin.classList.add('show'); dwvApp.loadURLs(['sample-chest.dcm']); };
 function asDicom(list){ return [...list].map(f=>{ try{ return /\.dcm$/i.test(f.name)?f:new File([f], f.name.replace(/\.[^.]*$/,'')+'.dcm', {type:'application/dicom'}); }catch(_){ return f; } }); }
-$('#pacsFile').addEventListener('change',e=>{ if(e.target.files.length){ openMode(); dwvSpin.classList.add('show'); dwvApp.loadFiles(asDicom(e.target.files));} });
+function _isDicomFile(f){ return /\.(dcm|ima|dic|dcm30|img)$/i.test(f.name)||!/\.[a-z0-9]{1,6}$/i.test(f.name)||f.type==='application/dicom'; }
+async function loadSeriesViaBackend(files){
+  try{
+    const fd=new FormData(); files.forEach(f=>fd.append('files', f, f.name));
+    const r=await fetch(API_BASE+'/api/normalize-series',{method:'POST',body:fd});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    if(!data.urls||!data.urls.length) throw new Error('empty');
+    dwvApp.loadURLs(data.urls.map(u=>API_BASE+u));   // normalized series → stacks & scrolls
+    return true;
+  }catch(err){ console.warn('normalize-series failed, direct load:',err); return false; }
+}
+async function smartLoad(list){
+  const files=[...list].filter(_isDicomFile);
+  if(!files.length) return;
+  openMode(); dwvSpin.classList.add('show');
+  let ok=false;
+  if(files.length>1) ok=await loadSeriesViaBackend(files);   // multi-slice → normalize for scroll
+  if(!ok) dwvApp.loadFiles(asDicom(files));                  // single file, or backend unreachable
+  setTimeout(()=>{try{dwvApp.setTool('Scroll');}catch(_){}} ,400);
+}
+$('#pacsFile').addEventListener('change',e=>{ if(e.target.files.length) smartLoad(e.target.files); });
 const viewer=document.querySelector('.viewer');
 ['dragover','dragenter'].forEach(ev=>viewer.addEventListener(ev,e=>{e.preventDefault();openMode();dwvDz.classList.add('drag');}));
 viewer.addEventListener('dragleave',e=>{e.preventDefault();dwvDz.classList.remove('drag');});
-viewer.addEventListener('drop',e=>{e.preventDefault();dwvDz.classList.remove('drag');openMode();if(e.dataTransfer.files.length){dwvSpin.classList.add('show');dwvApp.loadFiles(asDicom(e.dataTransfer.files));}});
+viewer.addEventListener('drop',e=>{e.preventDefault();dwvDz.classList.remove('drag');if(e.dataTransfer.files.length) smartLoad(e.dataTransfer.files);});
 function tag(m,t){try{return m[t]&&m[t].value?m[t].value[0]:'';}catch(_){return '';}}
 dwvApp&&dwvApp.addEventListener('load',ev=>{
   dwvDz.classList.add('hide'); dwvSpin.classList.remove('show');
@@ -646,7 +667,7 @@ function getVC(){ try{ return dwvApp.getStageController().getActiveLayerGroup().
 $('#wlPreset').addEventListener('change',e=>{ const v=e.target.value; if(!v)return; const p=v.split(',').map(Number); const vc=getVC(); if(vc){ try{ vc.setWindowLevel(new WindowLevel(p[0],p[1])); $('#wlL').textContent=p[0]; $('#wlW').textContent=p[1]; }catch(err){ console.warn('preset',err); } } });
 // folder / multi-slice series
 $('#openFolder').onclick=()=>$('#pacsFolder').click();
-$('#pacsFolder').addEventListener('change',e=>{ const files=[...e.target.files].filter(f=>/\.(dcm|ima|dic|dcm30|img)$/i.test(f.name)||!/\.[a-z0-9]{1,6}$/i.test(f.name)||f.type==='application/dicom'); if(files.length){ openMode(); dwvSpin.classList.add('show'); dwvApp.loadFiles(asDicom(files)); dwvApp.setTool && setTimeout(()=>{try{dwvApp.setTool('Scroll');}catch(_){}} ,300); } });
+$('#pacsFolder').addEventListener('change',e=>{ if(e.target.files.length) smartLoad(e.target.files); });
 // Open a study from the local PACS archive in DWV, and prefill the SATUSEHAT tab with its saved reading.
 window.openArchiveStudy=async(study)=>{
   if(!dwvApp||!study.file)return;
