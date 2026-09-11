@@ -131,6 +131,7 @@ a{text-decoration:none;color:inherit}
 .login-wrap{min-height:calc(100vh - var(--h-brand));display:grid;place-items:center;padding:24px}
 .login-card{width:100%;max-width:380px}
 .login-msg{min-height:18px;font-size:12px;color:var(--red);margin:-2px 0 12px}
+.login-as p{font-size:13px;color:var(--txt-2);line-height:1.6;margin-bottom:14px}.login-as b{color:var(--txt)}.login-as small{color:var(--txt-3)}
 .login-foot{margin-top:14px;font-size:10.5px;color:var(--txt-3);text-align:center;font-family:var(--mono)}
 </style>
 </head>
@@ -149,6 +150,11 @@ a{text-decoration:none;color:inherit}
   <form class="card login-card" id="loginForm">
     <div class="card-head"><b>Masuk</b><small>SIMRS · PACS Hub</small></div>
     <div class="card-body">
+      <div class="login-as" id="loginAs" style="display:none">
+        <p>Tab ini bisa lanjut sebagai <b id="asName"></b><br><small id="asRole"></small></p>
+        <button class="btn btn-primary btn-block" type="button" id="asContinue">Lanjut sebagai <span id="asUser"></span></button>
+        <button class="btn btn-ghost btn-block" type="button" id="asSwitch" style="margin-top:9px">Masuk dengan akun lain</button>
+      </div>
       <div class="field"><label for="username">Username</label><input id="username" name="username" autocomplete="username" required autofocus /></div>
       <div class="field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required /></div>
       <div class="login-msg" id="loginMsg"></div>
@@ -160,14 +166,44 @@ a{text-decoration:none;color:inherit}
 
 <script>
 const API_BASE=location.protocol.startsWith('http')?location.origin:'http://localhost:8000';
-const HOME={radiografer:'instalasi.html',radiolog:'pacs.html',dokter_bedah:'index.html',admin:'index.html'};
+const HOME={radiografer:'instalasi.html',radiolog:'pacs.html',dokter_bedah:'bedah.html',admin:'index.html'};
 const next=new URLSearchParams(location.search).get('next')||'';
 // Only return to a plain page name from this site, never to an outside URL.
 const target=user=>/^[a-z]+\.html(#[a-z]*)?$/i.test(next)?next:(HOME[user.role]||'index.html');
 const $=q=>document.querySelector(q);
 
-// already logged in: go straight on
-fetch(API_BASE+'/api/auth/me').then(r=>r.ok?r.json():null).then(u=>{if(u)location.replace(target(u));}).catch(()=>{});
+const TAB_KEY='simrs_tab_token';
+// Each tab has its own login: keep it for this tab, then go on.
+function enter(user){sessionStorage.setItem(TAB_KEY,user.token);location.replace(target(user));}
+function formVisible(on){
+  document.querySelectorAll('#loginForm .field,#loginBtn').forEach(e=>{e.style.display=on?'':'none';});
+  $('#loginAs').style.display=on?'none':'';
+  if(on)$('#username').focus();
+}
+function showContinue(user,thisTab){
+  $('#asName').textContent=user.full_name;
+  $('#asRole').textContent=user.role_label+(thisTab?' · sudah masuk di tab ini':' · akun terakhir di browser ini');
+  $('#asUser').textContent=user.username;
+  formVisible(false);
+  $('#asContinue').onclick=async()=>{
+    if(thisTab){location.replace(target(user));return;}
+    const r=await fetch(API_BASE+'/api/auth/tab-session',{method:'POST'}).catch(()=>null);
+    const d=r?await r.json().catch(()=>({})):{};
+    if(r&&r.ok)enter(d);else{formVisible(true);$('#loginMsg').textContent=d.detail||'Silakan masuk lagi';}
+  };
+  $('#asSwitch').onclick=()=>{sessionStorage.removeItem(TAB_KEY);formVisible(true);};
+}
+// Already logged in, in this tab or in this browser? Offer to continue instead of jumping away.
+(async()=>{
+  const mine=sessionStorage.getItem(TAB_KEY);
+  if(mine){
+    const r=await fetch(API_BASE+'/api/auth/me',{headers:{Authorization:'Bearer '+mine}}).catch(()=>null);
+    if(r&&r.ok){showContinue(await r.json(),true);return;}
+    sessionStorage.removeItem(TAB_KEY);
+  }
+  const r=await fetch(API_BASE+'/api/auth/me').catch(()=>null);   // cookie: the account last used in this browser
+  if(r&&r.ok)showContinue(await r.json(),false);
+})();
 fetch(API_BASE+'/api/health').then(r=>r.json())
   .then(h=>{$('#loginFoot').textContent='backend '+h.mode+' · SATUSEHAT sandbox';})
   .catch(()=>{$('#loginFoot').textContent='backend offline — jalankan uvicorn, buka lewat http://localhost:8000';});
@@ -181,7 +217,7 @@ $('#loginForm').addEventListener('submit',async e=>{
       body:JSON.stringify({username:$('#username').value,password:$('#password').value})});
     const d=await r.json().catch(()=>({}));
     if(!r.ok){msg.textContent=d.detail||('Gagal masuk ('+r.status+')');return;}
-    location.replace(target(d));
+    enter(d);
   }catch(err){
     msg.textContent='Backend tidak terhubung';
   }finally{

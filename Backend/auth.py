@@ -146,9 +146,18 @@ def session_user(token):
     return _public(row) if row else None
 
 
+def request_token(request: Request):
+    """The session of this request: the tab's own token (Authorization: Bearer ...) if the page
+    sent one, otherwise the browser's cookie. Lets each browser tab stay logged in as its own user."""
+    header = request.headers.get("authorization", "")
+    if header.lower().startswith("bearer "):
+        return header[7:].strip()
+    return request.cookies.get(SESSION_COOKIE, "")
+
+
 def current_user(request: Request):
     """FastAPI dependency: the logged-in user, or 401."""
-    user = session_user(request.cookies.get(SESSION_COOKIE, ""))
+    user = session_user(request_token(request))
     if user is None:
         raise HTTPException(status_code=401, detail="Belum login atau sesi habis")
     return user

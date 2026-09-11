@@ -100,15 +100,28 @@ def login(body: LoginBody, response: Response):
     user = auth.authenticate(body.username.strip(), body.password)
     if user is None:
         raise HTTPException(status_code=401, detail="Username atau password salah")
-    response.set_cookie(auth.SESSION_COOKIE, auth.create_session(user["username"]),
-                        max_age=auth.SESSION_TTL, httponly=True, samesite="lax")
-    return user
+    token = auth.create_session(user["username"])
+    # cookie = this browser's default login; the token = this tab's own login (kept in sessionStorage)
+    response.set_cookie(auth.SESSION_COOKIE, token, max_age=auth.SESSION_TTL, httponly=True, samesite="lax")
+    return {**user, "token": token}
+
+
+@app.post("/api/auth/tab-session")
+def tab_session(request: Request):
+    """A separate login for one browser tab, as the account this browser is logged in with."""
+    user = auth.session_user(request.cookies.get(auth.SESSION_COOKIE, ""))
+    if user is None:
+        raise HTTPException(status_code=401, detail="Belum login di browser ini")
+    return {**user, "token": auth.create_session(user["username"])}
 
 
 @app.post("/api/auth/logout")
 def logout(request: Request, response: Response):
-    auth.end_session(request.cookies.get(auth.SESSION_COOKIE, ""))
-    response.delete_cookie(auth.SESSION_COOKIE)
+    """Ends only this tab's login; other tabs keep theirs."""
+    token = auth.request_token(request)
+    auth.end_session(token)
+    if request.cookies.get(auth.SESSION_COOKIE, "") == token:
+        response.delete_cookie(auth.SESSION_COOKIE)
     return {"ok": True}
 
 
