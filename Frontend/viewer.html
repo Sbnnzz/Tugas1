@@ -163,7 +163,7 @@ a{text-decoration:none;color:inherit}
 
   <div class="toolbar">
     <button class="load-btn pri" id="pickBtn"><svg viewBox="0 0 24 24"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Buka DICOM</button>
-    <input type="file" id="fileInput" accept=".dcm,application/dicom" multiple style="display:none" />
+    <input type="file" id="fileInput" accept=".dcm,.ima,.dic,.img,application/dicom" multiple style="display:none" />
     <button class="load-btn" id="sampleXray">X-Ray contoh</button>
     <button class="load-btn" id="sampleCt">CT contoh</button>
     <div class="tsep"></div>
@@ -302,7 +302,8 @@ function addSeries(mod, desc, id){
 }
 
 // loaders
-function loadFiles(files){ if(app && files && files.length) app.loadFiles(files); }
+function asDicom(list){ return [...list].map(f=>{ try{ return /\.dcm$/i.test(f.name)?f:new File([f], f.name.replace(/\.[^.]*$/,'')+'.dcm', {type:'application/dicom'}); }catch(_){ return f; } }); }
+function loadFiles(files){ if(app && files && files.length) app.loadFiles(asDicom(files)); }
 function loadURL(url){ if(app) { spinner.classList.add('show'); app.loadURLs([url]); } }
 $('#fileInput').addEventListener('change', e=> loadFiles(e.target.files));
 $('#pickBtn').addEventListener('click', ()=> $('#fileInput').click());
