@@ -244,7 +244,7 @@ a{text-decoration:none;color:inherit}
             <small>DICOM Series akan diarsipkan ke Central PACS</small>
             <div class="fmts"><span>.DCM</span><span>.PNG</span><span>.JPG</span></div>
           </div>
-          <input type="file" id="fileInput" accept=".dcm,.png,.jpg,.jpeg" style="display:none" />
+          <input type="file" id="fileInput" accept=".dcm,.ima,.dic,.img,.png,.jpg,.jpeg" style="display:none" />
           <div class="preview" id="preview">
             <div class="thumb" id="previewThumb"></div>
             <div class="pinfo"><b id="fileName">chest_ct_abdomen.dcm</b><small id="fileMeta">512 × 512 · 132 slices · 24.8 MB</small>
@@ -293,13 +293,15 @@ a{text-decoration:none;color:inherit}
 
 <script>
 function scanSVG(seed){
-  const id='g'+seed+Math.floor(Math.random()*9999);
-  return `<svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs>
-    <radialGradient id="s${id}" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#565e66"/><stop offset="55%" stop-color="#333a41"/><stop offset="82%" stop-color="#171b1f"/><stop offset="100%" stop-color="#04050700"/></radialGradient>
-    <filter id="n${id}"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2"/><feColorMatrix type="saturate" values="0"/></filter></defs>
-    <rect width="400" height="400" fill="#050608"/><ellipse cx="200" cy="200" rx="150" ry="130" fill="url(#s${id})"/>
-    <ellipse cx="160" cy="180" rx="45" ry="40" fill="#3d454c"/><ellipse cx="255" cy="190" rx="38" ry="34" fill="#454d54"/>
-    <ellipse cx="200" cy="285" rx="16" ry="13" fill="#eef2f5" opacity=".9"/><rect width="400" height="400" filter="url(#n${id})" opacity="0.05"/></svg>`;
+  const id='g'+((seed||0)|0)+Math.floor(Math.random()*9999);
+  let ln=''; for(let y=10;y<400;y+=13){ ln+='<line x1="0" y1="'+y+'" x2="400" y2="'+y+'"/>'; }
+  return '<svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">'
+    +'<defs><radialGradient id="bg'+id+'" cx="50%" cy="44%" r="80%"><stop offset="0%" stop-color="#0d151d"/><stop offset="68%" stop-color="#080c12"/><stop offset="100%" stop-color="#04060a"/></radialGradient></defs>'
+    +'<rect width="400" height="400" fill="url(#bg'+id+')"/>'
+    +'<g stroke="#131c25" stroke-width="1" opacity="0.55">'+ln+'</g>'
+    +'<g stroke="#33434f" stroke-width="2.5" fill="none" opacity="0.7" stroke-linecap="round"><path d="M20 46V20h26"/><path d="M380 46V20h-26"/><path d="M20 354v26h26"/><path d="M380 354v26h-26"/></g>'
+    +'<g opacity="0.18" stroke="#6a7b89" fill="none" stroke-width="2.5"><circle cx="200" cy="200" r="46"/><path d="M200 138v26M200 236v26M138 200h26M236 200h26"/></g>'
+    +'</svg>';
 }
 const $=s=>document.querySelector(s);
 const consoleEl=$('#console'),cHead=$('#consoleHead'),cStatus=$('#cStatus');

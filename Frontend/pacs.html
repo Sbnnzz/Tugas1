@@ -190,8 +190,14 @@ a{text-decoration:none;color:inherit}
 .load-btn:hover{filter:brightness(1.12)}.load-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .dwv-mode{position:absolute;inset:0;z-index:20;background:#000;display:none}
 .dwv-mode.show{display:block}
-#layerGroup0{position:absolute;inset:0;width:100%;height:100%}
-#layerGroup0 canvas{position:absolute}
+.mpr-grid{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;background:var(--line-soft)}
+.mpr-grid.single{grid-template-columns:1fr;grid-template-rows:1fr}
+.mpr-grid.single #cell1,.mpr-grid.single #cell2,.mpr-grid.single #cell3{display:none}
+.mpr-cell{position:relative;background:#000;overflow:hidden}
+.mpr-cell .lg{position:absolute;inset:0;width:100%;height:100%}
+.mpr-cell .lg canvas{position:absolute}
+.mpr-lbl{position:absolute;top:6px;left:8px;font-family:Arial,'Helvetica Neue',sans-serif;font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--sel);opacity:.85;z-index:6;pointer-events:none;text-shadow:0 1px 2px #000}
+.mpr-grid.single .mpr-lbl{display:none}
 .dwv-close{position:absolute;top:10px;right:10px;z-index:30;display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:6px;background:rgba(18,24,32,.92);border:1px solid var(--line);color:var(--txt-2);font-size:12px;font-weight:600;cursor:pointer}
 .dwv-close:hover{color:var(--txt);border-color:#33414e}.dwv-close svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
 .dwv-dz{position:absolute;inset:0;z-index:25;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(5,7,9,.86);border:2px dashed var(--line)}
@@ -242,7 +248,7 @@ a{text-decoration:none;color:inherit}
   <div class="toolbar">
     <button class="load-btn" id="openDicom"><svg viewBox="0 0 24 24"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Buka DICOM</button>
     <button class="load-btn" id="openFolder" style="background:var(--bg-panel);border-color:var(--line);color:var(--txt-2)"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Folder</button>
-    <input type="file" id="pacsFile" accept=".dcm,application/dicom" multiple style="display:none" />
+    <input type="file" id="pacsFile" accept=".dcm,.ima,.dic,.img,application/dicom" multiple style="display:none" />
     <input type="file" id="pacsFolder" webkitdirectory multiple style="display:none" />
     <div class="tsep"></div>
     <div class="tool-group">
@@ -272,7 +278,12 @@ a{text-decoration:none;color:inherit}
     <main class="viewer">
       <div class="vgrid layout-4" id="vgrid"></div>
       <div class="dwv-mode show" id="dwvMode">
-        <div id="layerGroup0"></div>
+        <div class="mpr-grid single" id="mprGrid">
+          <div class="mpr-cell" id="cell0"><div class="lg" id="layerGroup0"></div><span class="mpr-lbl">AXIAL</span></div>
+          <div class="mpr-cell" id="cell1"><div class="lg" id="layerGroup1"></div><span class="mpr-lbl">CORONAL</span></div>
+          <div class="mpr-cell" id="cell2"><div class="lg" id="layerGroup2"></div><span class="mpr-lbl">SAGITTAL</span></div>
+          <div class="mpr-cell" id="cell3"><div class="lg" id="layerGroup3"></div><span class="mpr-lbl">—</span></div>
+        </div>
         <div class="ovl tl" id="dwvTL"></div>
         <div class="ovl tr" id="dwvTR"></div>
         <div class="ovl br"><span class="a">SATUSEHAT PACS · DWV live</span><br><span class="k">RSUD Dr. Soetomo</span></div>
@@ -339,8 +350,21 @@ a{text-decoration:none;color:inherit}
 </div>
 
 <script>
-/* ---- realistic grayscale scan generator (CT/MRI look) ---- */
+/* ---- professional empty-viewport placeholder (clean film look, no cartoon anatomy) ---- */
+function _filmPlaceholder(seed){
+  const id='p'+((seed||Math.floor(Math.random()*9999))|0);
+  let ln=''; for(let y=10;y<400;y+=13){ ln+='<line x1="0" y1="'+y+'" x2="400" y2="'+y+'"/>'; }
+  return '<svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">'
+    +'<defs><radialGradient id="bg'+id+'" cx="50%" cy="44%" r="80%"><stop offset="0%" stop-color="#0d151d"/><stop offset="68%" stop-color="#080c12"/><stop offset="100%" stop-color="#04060a"/></radialGradient></defs>'
+    +'<rect width="400" height="400" fill="url(#bg'+id+')"/>'
+    +'<g stroke="#131c25" stroke-width="1" opacity="0.55">'+ln+'</g>'
+    +'<g stroke="#33434f" stroke-width="2.5" fill="none" opacity="0.7" stroke-linecap="round"><path d="M20 46V20h26"/><path d="M380 46V20h-26"/><path d="M20 354v26h26"/><path d="M380 354v26h-26"/></g>'
+    +'<g opacity="0.18" stroke="#6a7b89" fill="none" stroke-width="2.5"><circle cx="200" cy="200" r="46"/><path d="M200 138v26M200 236v26M138 200h26M236 200h26"/></g>'
+    +'</svg>';
+}
 function scanSVG(type, seed, detail){
+  return _filmPlaceholder(seed);
+  /* legacy cartoon anatomy generator below — kept but unused */
   const s = (seed||Math.floor(Math.random()*9999))|0;
   const warp='w'+s, tex='t'+s, vig='v'+s, soft='s'+s;
   const warpF = detail ? `filter="url(#${warp})"` : '';
@@ -666,7 +690,7 @@ loadArchive();
 import { App, AppOptions, ViewConfig, WindowLevel } from 'https://cdn.jsdelivr.net/npm/dwv@0.37.0-beta.12/+esm';
 const $=s=>document.querySelector(s);
 let dwvApp;
-try{ const vc=new ViewConfig('layerGroup0'); const opt=new AppOptions({'*':[vc]}); opt.tools={Scroll:{},WindowLevel:{},ZoomAndPan:{}}; dwvApp=new App(); dwvApp.init(opt); }
+try{ const vAx=new ViewConfig('layerGroup0'); const opt=new AppOptions({'*':[vAx]}); opt.tools={Scroll:{},WindowLevel:{},ZoomAndPan:{}}; dwvApp=new App(); dwvApp.init(opt); }
 catch(e){ console.error('DWV init',e); }
 // One study on screen at a time. DWV draws a second dataset loaded into the same view as a
 // coloured overlay (rainbow colour map), so clear the viewer before every load, and let only
@@ -674,7 +698,8 @@ catch(e){ console.error('DWV init',e); }
 let loadToken=0;
 function freshViewer(){
   try{ dwvApp.abortAllLoads(); }catch(_){}
-  try{ dwvApp.reset(); dwvApp.setDataViewConfigs({'*':[new ViewConfig('layerGroup0')]}); }catch(e){ console.warn('viewer reset',e); }
+  try{ dwvApp.reset(); dwvApp.getStageController().setDataViewConfigs({'*':[new ViewConfig('layerGroup0')]}); }catch(e){ console.warn('viewer reset',e); }
+  const grid=document.getElementById('mprGrid'); if(grid)grid.classList.add('single');
 }
 function showFiles(files){ loadToken++; freshViewer(); if(window.clearArchiveSelection)window.clearArchiveSelection(); window.pendingArchive=null; dwvApp.loadFiles(files); }
 function showURLs(urls){ loadToken++; freshViewer(); if(window.clearArchiveSelection)window.clearArchiveSelection(); window.pendingArchive=null; dwvApp.loadURLs(urls); }
@@ -683,11 +708,40 @@ function openMode(){ dwvMode.classList.add('show'); }
 $('#openDicom').onclick=()=>$('#pacsFile').click();
 $('#dzPick').onclick=()=>$('#pacsFile').click();
 $('#dzSample').onclick=()=>{ openMode(); dwvSpin.classList.add('show'); showURLs(['sample-chest.dcm']); };
-$('#pacsFile').addEventListener('change',e=>{ if(e.target.files.length){ openMode(); dwvSpin.classList.add('show'); showFiles(e.target.files);} });
+function asDicom(list){ return [...list].map(f=>{ try{ return /\.dcm$/i.test(f.name)?f:new File([f], f.name.replace(/\.[^.]*$/,'')+'.dcm', {type:'application/dicom'}); }catch(_){ return f; } }); }
+function _isDicomFile(f){ return /\.(dcm|ima|dic|dcm30|img)$/i.test(f.name)||!/\.[a-z0-9]{1,6}$/i.test(f.name)||f.type==='application/dicom'; }
+// Multi-slice upload: the backend unifies the slices' FrameOfReferenceUID (pydicom) so DWV can stack
+// them. The normalized slices are fetched with this tab's login and shown as one scrollable volume.
+async function loadSeriesViaBackend(files,mine){
+  try{
+    const fd=new FormData(); files.forEach(f=>fd.append('files', f, f.name));
+    const r=await fetch(API_BASE+'/api/normalize-series',{method:'POST',body:fd});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    if(!data.urls||!data.urls.length) throw new Error('empty');
+    const slices=await Promise.all(data.urls.map(async(u,i)=>{
+      const s=await fetch(API_BASE+u);
+      if(!s.ok) throw new Error('HTTP '+s.status);
+      return new File([await s.blob()], String(i+1).padStart(4,'0')+'.dcm', {type:'application/dicom'});
+    }));
+    if(mine===loadToken) showFiles(slices);   // unless something newer was opened meanwhile
+    return true;
+  }catch(err){ console.warn('normalize-series failed, direct load:',err); return false; }
+}
+async function smartLoad(list){
+  const files=[...list].filter(_isDicomFile);
+  if(!files.length) return;
+  openMode(); dwvSpin.classList.add('show');
+  const mine=++loadToken;
+  let ok=false;
+  if(files.length>1) ok=await loadSeriesViaBackend(files,mine);   // multi-slice → normalize for scroll
+  if(!ok&&mine===loadToken) showFiles(asDicom(files));             // single file, or backend unreachable
+}
+$('#pacsFile').addEventListener('change',e=>{ if(e.target.files.length) smartLoad(e.target.files); });
 const viewer=document.querySelector('.viewer');
 ['dragover','dragenter'].forEach(ev=>viewer.addEventListener(ev,e=>{e.preventDefault();openMode();dwvDz.classList.add('drag');}));
 viewer.addEventListener('dragleave',e=>{e.preventDefault();dwvDz.classList.remove('drag');});
-viewer.addEventListener('drop',e=>{e.preventDefault();dwvDz.classList.remove('drag');openMode();if(e.dataTransfer.files.length){dwvSpin.classList.add('show');showFiles(e.dataTransfer.files);}});
+viewer.addEventListener('drop',e=>{e.preventDefault();dwvDz.classList.remove('drag');if(e.dataTransfer.files.length) smartLoad(e.dataTransfer.files);});
 function tag(m,t){try{return m[t]&&m[t].value?m[t].value[0]:'';}catch(_){return '';}}
 dwvApp&&dwvApp.addEventListener('load',ev=>{
   dwvDz.classList.add('hide'); dwvSpin.classList.remove('show');
@@ -702,9 +756,36 @@ dwvApp&&dwvApp.addEventListener('load',ev=>{
     dwvApp.setTool('WindowLevel');document.querySelectorAll('.tool[data-tool]').forEach(x=>x.classList.toggle('active',x.dataset.tool==='wl'));
   }catch(_){}
 });
+// after the WHOLE load finishes: pick layout (MPR for volumes, single for 2D)
+dwvApp&&dwvApp.addEventListener('loadend',()=>{
+  try{
+    const stg=dwvApp.getStageController();
+    const vc=stg.getActiveLayerGroup().getActiveViewLayer().getViewController();
+    const n=vc.getImageSize().get(vc.getScrollDimIndex());
+    const grid=document.getElementById('mprGrid');
+    const ids=dwvApp.getDataController().getDataIds();
+    if(n>1){                                       // volume → axial / coronal / sagittal MPR
+      grid.classList.remove('single');
+      requestAnimationFrame(()=>{ try{           // wait a frame so the un-hidden cells have size
+        const ax=new ViewConfig('layerGroup0'); ax.orientation='axial';
+        const co=new ViewConfig('layerGroup1'); co.orientation='coronal';
+        const sa=new ViewConfig('layerGroup2'); sa.orientation='sagittal';
+        stg.setDataViewConfigs({'*':[ax,co,sa]});
+        ids.forEach(id=>stg.render(id));
+        setActiveTool('scroll');
+      }catch(e){ console.warn('MPR render',e); } });
+    } else {                                       // single image → one native view
+      grid.classList.add('single');
+      stg.setDataViewConfigs({'*':[new ViewConfig('layerGroup0')]});
+      ids.forEach(id=>stg.render(id));
+      setActiveTool('wl');   // a single image has nothing to scroll
+    }
+  }catch(err){ console.warn('MPR layoutend',err); }
+});
 dwvApp&&dwvApp.addEventListener('wlchange',ev=>{try{const v=ev.detail.value;if(v){$('#wlL').textContent=Math.round(v[0]);$('#wlW').textContent=Math.round(v[1]);}}catch(_){}});
 dwvApp&&dwvApp.addEventListener('loaderror',()=>{dwvSpin.classList.remove('show');});
 const toolMap={wl:'WindowLevel',zoom:'ZoomAndPan',pan:'ZoomAndPan',scroll:'Scroll'};
+function setActiveTool(key){ try{ dwvApp.setTool(toolMap[key]); }catch(_){} document.querySelectorAll('.tool[data-tool]').forEach(x=>x.classList.toggle('active',x.dataset.tool===key)); }
 document.querySelectorAll('.tool[data-tool]').forEach(b=>b.addEventListener('click',()=>{ if(dwvMode.classList.contains('show')&&dwvApp){const t=toolMap[b.dataset.tool];if(t)try{dwvApp.setTool(t);}catch(_){}}}));
 $('#resetView').addEventListener('click',()=>{ if(!dwvApp)return; try{ dwvApp.resetDisplay(); }catch(_){ try{ dwvApp.resetLayout(); }catch(e){ console.warn('reset failed',e); } } });
 // W/L presets ("other windows")
@@ -712,7 +793,7 @@ function getVC(){ try{ return dwvApp.getStageController().getActiveLayerGroup().
 $('#wlPreset').addEventListener('change',e=>{ const v=e.target.value; if(!v)return; const p=v.split(',').map(Number); const vc=getVC(); if(vc){ try{ vc.setWindowLevel(new WindowLevel(p[0],p[1])); $('#wlL').textContent=p[0]; $('#wlW').textContent=p[1]; }catch(err){ console.warn('preset',err); } } });
 // folder / multi-slice series
 $('#openFolder').onclick=()=>$('#pacsFolder').click();
-$('#pacsFolder').addEventListener('change',e=>{ const files=[...e.target.files].filter(f=>/\.dcm$/i.test(f.name)||f.type==='application/dicom'); if(files.length){ openMode(); dwvSpin.classList.add('show'); showFiles(files); dwvApp.setTool && setTimeout(()=>{try{dwvApp.setTool('Scroll');}catch(_){}} ,300); } });
+$('#pacsFolder').addEventListener('change',e=>{ if(e.target.files.length) smartLoad(e.target.files); });
 // Open a study from the local PACS archive in DWV, and prefill the SATUSEHAT tab with its saved reading.
 window.openArchiveStudy=async(study)=>{
   if(!dwvApp||!study.file)return;
@@ -733,7 +814,7 @@ window.openArchiveStudy=async(study)=>{
     if(token!==loadToken)return;   // a newer click is already loading; drop this one
     freshViewer();
     window.pendingArchive=study;
-    dwvApp.loadFiles([new File([blob],name,{type:blob.type||'application/dicom'})]);
+    dwvApp.loadFiles([new File([blob], String(name).replace(/\.[^.]*$/,'')+'.dcm', {type:'application/dicom'})]);
   }catch(e){
     dwvSpin.classList.remove('show');
     console.error('archive load',e);

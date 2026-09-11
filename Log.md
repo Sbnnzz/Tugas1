@@ -1,94 +1,83 @@
-# SIMRS × SATUSEHAT — Dev Log
+# SIMRS × SATUSEHAT PACS Hub — Dev Log & Current State
 
-**Project:** Tugas1 — SIMRS (mockup PACS / Radiology Information System) integrated with SATUSEHAT
-**Repo:** https://github.com/Sbnnzz/Tugas1
-**Deadline:** besok, sebelum kelas
+**Repo:** https://github.com/Sbnnzz/Tugas1 (branch: `main`)
+**What it is:** SIMRS mockup PACS / Instalasi Radiologi integrated with **SATUSEHAT**
+(Kemenkes) via **HL7 FHIR R4**, environment **Sandbox**.
 
 ---
 
-## Konsep
-
-Mini **PACS / Instalasi Radiologi** yang melapor imaging study ke SATUSEHAT.
-App menyimpan datanya sendiri (instalasi DB lokal); SATUSEHAT = tujuan sync (bukan sumber data).
-
-## Core Flow (the target)
+## Architecture (final)
 
 ```
-form + upload  →  save to local instalasi DB  →  [Kirim ke SATUSEHAT]  →  push DiagnosticReport + ImagingStudy  →  show JSON proof
+Tugas1/
+├─ Frontend/                 # HTML/CSS/JS, no build. DICOM viewing via DWV (CDN).
+│   ├─ index.html            # Main menu
+│   ├─ instalasi.html        # Input pemeriksaan + upload + real NIK lookup + Kirim
+│   ├─ pacs.html             # PACS viewer: grid + real DWV DICOM (scroll, W/L, MPR)
+│   └─ sample-chest.dcm, sample-ct.dcm   # single-slice demo files
+├─ Backend/                  # FastAPI
+│   ├─ main.py               # routes + serves Frontend + /api/normalize-series
+│   ├─ satusehat.py          # OAuth2 + full FHIR radiology chain (live/mock)
+│   ├─ config.py             # reads .env → MODE LIVE/MOCK
+│   ├─ requirements.txt       # fastapi, uvicorn, httpx, python-dotenv, python-multipart, pydicom
+│   └─ .env                  # SANDBOX creds — GITIGNORED, never commit
+├─ reference/react-aistudio/ # original Google AI Studio React app (ARCHIVE, unused)
+├─ README.md, TODO.md, Log.md
 ```
 
-Langkah detail:
-1. **Input form** — demografi (NIK, nama, gender, tgl lahir) + dokter + diagnosis (ICD-10) + asal RS
-2. **Upload** citra (DICOM / X-ray)
-3. **View / slice** citra
-4. **Save** ke local instalasi DB (PACS lokal)
-5. **Kirim ke SATUSEHAT** — push `ImagingStudy` + `DiagnosticReport`
-6. **JSON console** — tampilkan request/response mentah = bukti integrasi
+## Run
+```bash
+cd Backend
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000 --host 0.0.0.0
+```
+→ open http://localhost:8000  (API at /api/*, LAN-accessible). `.env` empty = MOCK mode.
 
 ---
 
-## Tech stack (locked)
+## ✅ What works (all verified)
 
-- **Frontend:** HTML / CSS / JS + `mockstore.js` (local instalasi DB via localStorage)
-- **Backend:** FastAPI (Python) = jembatan SATUSEHAT (OAuth2 + FHIR calls)
-- **Run:** localhost / LAN via uvicorn
-- Struktur folder sudah dibuat: `Backend/` (config.py, main.py, satusehat.py), `Frontend/` (app.js, index.html, mockstore.js, styles.css)
+- **Frontend**: 4 pages, clean clinical dark UI (Siemens/Philips-style), cross-linked nav.
+  Cartoon scan placeholders replaced with professional empty-viewport look.
+- **Real DICOM viewer (DWV)** in pacs.html + viewer.html:
+  - Open `.dcm` / `.ima` / `.dic` / extensionless DICOM (relabels to .dcm for DWV)
+  - Window/Level (drag + presets: Abdomen/Lung/Bone/Brain/Mediastinum/Soft)
+  - Zoom/Pan, tools wired to DWV
+  - **Multi-slice scroll** (mouse wheel) for series
+  - **MPR** — volumes auto-switch to 2×2 axial/coronal/sagittal; single images = 1 view
+- **Backend (FastAPI)**:
+  - SATUSEHAT bridge: OAuth2 + **full radiology chain** Patient→Encounter→ServiceRequest
+    (ACSN)→ImagingStudy→Observation→DiagnosticReport, LOINC + ICD-10 + DICOM UIDs.
+    Live (creds in .env) or realistic MOCK.
+  - **`POST /api/normalize-series`** (pydicom): unifies FrameOfReferenceUID across uploaded
+    slices so quirky datasets (e.g. Siemens .IMA with per-slice FoR) stack into a scrollable
+    volume. Frontend routes folder/multi uploads through it.
+  - Local PACS archive: `/api/studies` (upload/list), `/api/studies/{id}/file`.
+- **Frontend↔backend wired**: "Kirim ke SATUSEHAT" (all 3 pages) POSTs to `/api/satusehat/send-study`,
+  renders real request/response in the API console, falls back to mock animation if backend down.
 
-## Build order
+## Key technical solutions
+- DICOM non-.dcm (Siemens .IMA): relabel File→.dcm before DWV (frontend `asDicom`).
+- Slices not stacking = **different FrameOfReferenceUID per slice** → pydicom unifies it (backend normalize).
+- MPR: DWV `setDataViewConfigs` with axial/coronal/sagittal orientations, applied on `loadend`
+  (not `load`, which fires early), inside `requestAnimationFrame` so cells are sized first.
 
-1. **App dulu** — SIMRS/PACS jalan standalone (form, upload, view, save ke mock DB). Tanpa API.
-2. **API belakangan** — wire SATUSEHAT sebagai layer tipis di atas (tombol "Kirim ke SATUSEHAT").
+## ⚠️ Known non-blocking issues
+- MPR layout swap logs 2 non-fatal DWV console errors (`getEventType`, transient
+  `zero sized container layerGroup1`) — everything still renders correctly. Cosmetic; could be polished.
+- Folder/multi-slice scroll + MPR **require the backend running** (normalization is server-side).
+  Single files work frontend-only.
+- Multi-study accumulation: loading a 2nd study without closing keeps the 1st in the app (open one at a time).
 
-Catatan: saat bikin form, pastikan sudah menangkap field yang SATUSEHAT butuh (NIK, nama, gender, tgl lahir, kode ICD-10) supaya wiring akhir gampang.
+## What's left / notes for the team
+- Fill `Backend/.env` with real sandbox creds → flips MOCK→LIVE; do one **LIVE smoke test** (watch for 422s).
+- Optional: mask the full bearer token before returning it to the browser (satusehat.py — low risk on sandbox).
+- Optional polish: eliminate the 2 MPR console errors; clear previous study on new load.
+- Demo: samples are single-slice (no scroll/MPR) — load a real multi-slice series (e.g. an MRI folder) to show scroll + MPR.
+- Sample MATLAB MRI data is NOT in the repo (not ours to redistribute) — load it locally at demo time.
 
----
-
-## SATUSEHAT — fakta penting
-
-- **Auth:** OAuth2 `client_credentials` → dapat Bearer token → dipasang di tiap FHIR call.
-- **Sandbox endpoints:**
-  - OAuth: `https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1`
-  - FHIR:  `https://api-satusehat-stg.dto.kemkes.go.id/fhir-r4/v1`
-- **Creds:** sudah punya (Sandbox). Semua (Org ID, Client ID, Client Secret) disimpan di `Backend/.env` (gitignored — JANGAN commit / JANGAN tulis di file yang ke-push).
-- **Sandbox = playground terisolasi.** Data test tidak menyentuh produksi. Aman kirim data "sampah".
-
-### Resource radiologi (peta ke flow)
-- `ServiceRequest` — order pemeriksaan (mis. chest X-ray, modality DX)
-- `ImagingStudy` — metadata studi citra (referensi ServiceRequest)
-- `DiagnosticReport` — bacaan radiolog + temuan + ICD-10
-
-> Penting: **pixel citra tidak dikirim ke SATUSEHAT.** Citra tetap di PACS lokal; SATUSEHAT hanya simpan metadata + report + referensi ke lokasi citra. (Ini justru bikin demo lebih otentik.)
-
----
-
-## Keputusan DICOM / viewer
-
-| Opsi | Upload | "Slice" | Tooling | Effort |
-|---|---|---|---|---|
-| A | PNG/JPEG X-ray | tampil saja (2D) | `<img>` | 🟢 low |
-| B | `.dcm` X-ray tunggal | render dcm→PNG | `pydicom` + Pillow (Python) | 🟡 med |
-| C | seri CT/MRI (`.dcm` stack) | **slider scroll antar slice** | Cornerstone.js | 🔴 high |
-
-- **C# fo-dicom → TIDAK** (stack Python/JS, jangan campur .NET).
-- X-ray = citra 2D tunggal → tidak ada "slice". Slider slice = fitur CT/MRI (Opsi C).
-- Rekomendasi deadline: **Opsi A** dulu; upgrade ke B/C kalau ada waktu.
-
-## DECIDED ✅
-
-- **Opsi A (X-ray PNG/JPEG) dulu** — tampil citra 2D, no slicing. Prioritas utama.
-- **CT/MRI (Opsi C, slider antar-slice) = stretch goal** kalau masih ada waktu.
-- Konteks: low-stakes, "vibecode" — dosen (dokter) cuma minta dibikin. Fokus: jalan + kelihatan nyambung ke SATUSEHAT.
-
----
-
-## Aturan kerja
-
-- Claude **tidak menulis kode app** sampai diperintah "build".
-- `.env` tidak pernah di-commit (sudah di `.gitignore`, verified aman).
-- Bangun **real integration + mock fallback** (bukan fake murni) — sama effort-nya, jauh lebih aman & bulletproof buat demo.
-
----
-
-## Riwayat / catatan
-
-- Repo dibuat via GitHub Desktop, `.gitignore` Python, `.env` aman (ignored, not tracked). Sudah di-publish & dibagikan ke grup.
+## Git / handoff
+- History was rewritten once (removed messy/offensive commits) — anyone with an old clone must **re-clone**.
+- Friends work on feature branches → merge to `main` (Task 2 and Task 3 merged this way).
+- `.env` is gitignored (verified). `Backend/data/` (archive + normalized series) gitignored.
+- See `TODO.md` for the Claude-Code-ready task handoff.
