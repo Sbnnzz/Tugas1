@@ -343,8 +343,21 @@ a{text-decoration:none;color:inherit}
 </div>
 
 <script>
-/* ---- realistic grayscale scan generator (CT/MRI look) ---- */
+/* ---- professional empty-viewport placeholder (clean film look, no cartoon anatomy) ---- */
+function _filmPlaceholder(seed){
+  const id='p'+((seed||Math.floor(Math.random()*9999))|0);
+  let ln=''; for(let y=10;y<400;y+=13){ ln+='<line x1="0" y1="'+y+'" x2="400" y2="'+y+'"/>'; }
+  return '<svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">'
+    +'<defs><radialGradient id="bg'+id+'" cx="50%" cy="44%" r="80%"><stop offset="0%" stop-color="#0d151d"/><stop offset="68%" stop-color="#080c12"/><stop offset="100%" stop-color="#04060a"/></radialGradient></defs>'
+    +'<rect width="400" height="400" fill="url(#bg'+id+')"/>'
+    +'<g stroke="#131c25" stroke-width="1" opacity="0.55">'+ln+'</g>'
+    +'<g stroke="#33434f" stroke-width="2.5" fill="none" opacity="0.7" stroke-linecap="round"><path d="M20 46V20h26"/><path d="M380 46V20h-26"/><path d="M20 354v26h26"/><path d="M380 354v26h-26"/></g>'
+    +'<g opacity="0.18" stroke="#6a7b89" fill="none" stroke-width="2.5"><circle cx="200" cy="200" r="46"/><path d="M200 138v26M200 236v26M138 200h26M236 200h26"/></g>'
+    +'</svg>';
+}
 function scanSVG(type, seed, detail){
+  return _filmPlaceholder(seed);
+  /* legacy cartoon anatomy generator below — kept but unused */
   const s = (seed||Math.floor(Math.random()*9999))|0;
   const warp='w'+s, tex='t'+s, vig='v'+s, soft='s'+s;
   const warpF = detail ? `filter="url(#${warp})"` : '';
