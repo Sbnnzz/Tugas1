@@ -142,6 +142,7 @@ a{text-decoration:none;color:inherit}
     <a href="index.html">Menu</a>
     <a href="instalasi.html" class="active">Instalasi</a>
     <a href="pacs.html">PACS Viewer</a>
+    <a href="viewer.html">Live Viewer</a>
   </nav>
   <div class="brand-spacer"></div>
   <div class="unit-sel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5c6875" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M4 10h16"/></svg><select id="unit"><option>Instalasi Radiologi</option><option>Instalasi Bedah</option></select></div>
@@ -151,7 +152,7 @@ a{text-decoration:none;color:inherit}
 <div class="wrap">
   <div class="page-head">
     <div><h1>Pendaftaran Pemeriksaan</h1><p id="unitSub">Instalasi Radiologi · RSUD Dr. Soetomo</p></div>
-    <div class="accession">Accession · <b>RAD-2025-004822</b></div>
+    <div class="accession">No. Arsip · <b id="accVal">belum disimpan</b></div>
   </div>
 
   <!-- STEPPER -->
@@ -194,11 +195,11 @@ a{text-decoration:none;color:inherit}
         <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><path d="M9 12h6M9 16h4"/></svg></div><b>Permintaan Pemeriksaan</b><small>FHIR ServiceRequest</small></div>
         <div class="card-body">
           <div class="field-row">
-            <div class="field"><label>Dokter Perujuk</label><input value="dr. Sari Wulandari, Sp.PD" /></div>
+            <div class="field"><label>Dokter Perujuk</label><input id="doctor" value="dr. Sari Wulandari, Sp.PD" /></div>
             <div class="field" style="flex:.7"><label>Modality</label><select id="modality"><option>CT</option><option>DX (X-Ray)</option><option>MR</option><option>US</option></select></div>
           </div>
           <div class="field"><label>Jenis Pemeriksaan</label><input id="exam" value="CT Abdomen dengan Kontras" /></div>
-          <div class="field"><label>Diagnosa Klinis / Indikasi</label><input value="Nyeri perut kanan bawah, suspek appendicitis" /></div>
+          <div class="field"><label>Diagnosa Klinis / Indikasi</label><input id="clinical" value="Nyeri perut kanan bawah, suspek appendicitis" /></div>
           <div class="field"><label>Instalasi Asal</label><select><option>Instalasi Radiologi · RSUD Dr. Soetomo</option><option>Instalasi Radiologi · RS Universitas Airlangga</option><option>Instalasi Bedah · RSUD Dr. Soetomo</option></select></div>
         </div>
       </div>
@@ -349,6 +350,7 @@ $('#saveBtn').addEventListener('click',async()=>{
     name:$('#nama').value.trim(),nik:$('#nik').value.trim(),gender:$('#jk').value,birthDate:$('#dob').value.trim(),
     modality:$('#modality').value.split(' ')[0],description:$('#exam').value.trim(),
     icd10:$('#icd').value.trim(),diagnosis:$('#dx').value.trim(),finding:$('#finding').value.trim(),
+    doctor:$('#doctor').value.trim(),clinical:$('#clinical').value.trim(),
     instalasi:$('#unit').value
   };
   const fd=new FormData();
@@ -370,6 +372,7 @@ $('#saveBtn').addEventListener('click',async()=>{
     return;
   }
   const study=await r.json();
+  $('#accVal').textContent=study.id;
   b.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Tersimpan · '+esc(study.id)+(study.file?'':' (tanpa citra)');
   setTimeout(()=>{b.innerHTML=SAVE_LABEL},3000);
 });
