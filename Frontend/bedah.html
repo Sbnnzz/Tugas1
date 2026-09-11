@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="auth.js"></script>
+<title>Instalasi Bedah · SATUSEHAT PACS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg-void:#06080a;--bg-app:#0b0f14;--bg-elev:#10151b;--bg-panel:#131a22;--bg-panel-2:#182029;--bg-hover:#1d2731;
+  --line:#232d38;--line-soft:#1a222b;--txt:#dfe7ee;--txt-2:#93a1af;--txt-3:#5c6875;
+  --accent:#29c6c2;--accent-2:#1aa8a4;--accent-dim:rgba(41,198,194,.13);
+  --amber:#f2a63b;--amber-dim:rgba(242,166,59,.13);--green:#35c46b;--red:#e5484d;--blue:#4a90e2;--purple:#9d7bff;
+  --shadow:0 8px 30px rgba(0,0,0,.45);--radius:6px;--mono:'JetBrains Mono','Consolas',monospace;--h-brand:44px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg-void);color:var(--txt);font-size:13px;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1000px 500px at 85% -5%,rgba(41,198,194,.05),transparent)}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+a{text-decoration:none;color:inherit}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-track{background:var(--bg-void)}::-webkit-scrollbar-thumb{background:#28323d;border-radius:5px;border:2px solid var(--bg-void)}
+.mono{font-family:var(--mono)}
+
+/* brand */
+.brand{height:var(--h-brand);display:flex;align-items:center;gap:14px;padding:0 16px;background:linear-gradient(180deg,#0e141a,#0a0e13);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.logo{display:flex;align-items:center;gap:9px}
+.logo-mark{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;box-shadow:0 0 0 1px rgba(41,198,194,.3),0 2px 10px rgba(41,198,194,.3)}
+.logo-mark svg{width:16px;height:16px;stroke:#04211f;stroke-width:2.2;fill:none}
+.logo-name{font-weight:700;font-size:13.5px}.logo-name b{color:var(--accent)}
+.logo-sub{font-size:9px;letter-spacing:.14em;color:var(--txt-3);text-transform:uppercase;font-weight:600;margin-top:1px}
+.brand-sep{width:1px;height:22px;background:var(--line)}
+.env-badge{display:flex;align-items:center;gap:6px;padding:3px 9px;border-radius:20px;background:var(--amber-dim);border:1px solid rgba(242,166,59,.3)}
+.env-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.env-badge span{font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--amber)}
+.topnav{display:flex;gap:2px;margin-left:6px}
+.topnav a{padding:6px 13px;border-radius:6px;font-size:12px;font-weight:600;color:var(--txt-2);transition:.12s}
+.topnav a:hover{background:var(--bg-hover);color:var(--txt)}.topnav a.active{background:var(--accent-dim);color:var(--accent)}
+.brand-spacer{flex:1}
+.unit-sel{display:flex;align-items:center;gap:8px;padding:5px 12px;border-radius:var(--radius);background:var(--bg-panel);border:1px solid var(--line);font-size:12px}
+.unit-sel select{background:none;border:none;color:var(--txt);font-family:inherit;font-weight:600;font-size:12px;outline:none;cursor:pointer}
+.avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2c3a47,#1c2732);border:1px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--txt-2)}
+
+.wrap{max-width:1240px;margin:0 auto;padding:24px 26px 60px}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+.page-head h1{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.page-head p{font-size:13px;color:var(--txt-2);margin-top:4px}
+.page-head .accession{font-family:var(--mono);font-size:12px;color:var(--txt-3);background:var(--bg-panel);border:1px solid var(--line);padding:7px 12px;border-radius:8px}
+.page-head .accession b{color:var(--accent)}
+
+/* stepper */
+.stepper{display:flex;align-items:center;gap:0;margin-bottom:24px;background:var(--bg-elev);border:1px solid var(--line);border-radius:12px;padding:6px}
+.step{flex:1;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;position:relative}
+.step.active{background:var(--accent-dim)}
+.step .num{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;font-family:var(--mono);background:var(--bg-panel);color:var(--txt-3);border:1px solid var(--line);flex-shrink:0}
+.step.active .num{background:var(--accent);color:#042321;border-color:var(--accent)}
+.step.done .num{background:rgba(53,196,107,.2);color:var(--green);border-color:rgba(53,196,107,.4)}
+.step b{font-size:12px;font-weight:600}.step.active b{color:var(--accent)}.step:not(.active) b{color:var(--txt-2)}
+.step small{display:block;font-size:9.5px;color:var(--txt-3)}
+.step-arrow{color:var(--txt-3);opacity:.4;padding:0 2px}.step-arrow svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* layout */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.col{display:flex;flex-direction:column;gap:16px}
+.card{background:var(--bg-elev);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card-head{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line-soft)}
+.card-head .hicon{width:26px;height:26px;border-radius:7px;background:var(--accent-dim);display:grid;place-items:center}
+.card-head .hicon svg{width:15px;height:15px;stroke:var(--accent);fill:none;stroke-width:1.8}
+.card-head b{font-size:13px;font-weight:600}
+.card-head small{margin-left:auto;font-size:10px;color:var(--txt-3);font-family:var(--mono)}
+.card-body{padding:16px}
+
+/* fields */
+.field{margin-bottom:13px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--txt-3);font-weight:600;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;background:var(--bg-panel);border:1px solid var(--line);border-radius:7px;padding:9px 11px;color:var(--txt);font-family:inherit;font-size:13px;outline:none;transition:border-color .12s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.field .mono{font-family:var(--mono)}
+.field textarea{resize:vertical;line-height:1.5}
+.field-row{display:flex;gap:11px}.field-row .field{flex:1}
+.nik-row{display:flex;gap:8px;align-items:flex-end}
+.nik-row .field{flex:1;margin-bottom:0}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;border-radius:7px;font-size:12.5px;font-weight:600;transition:filter .12s,transform .06s,background .12s;white-space:nowrap}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+.btn-ghost{background:var(--bg-panel);border:1px solid var(--line);color:var(--txt-2)}
+.btn-ghost:hover{background:var(--bg-hover);color:var(--txt)}
+.btn-primary{background:linear-gradient(180deg,var(--accent),var(--accent-2));color:#042321;box-shadow:0 3px 12px rgba(41,198,194,.28)}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-block{width:100%;padding:12px}
+.ihs-badge{display:none;align-items:center;gap:8px;margin-top:11px;padding:9px 12px;background:rgba(53,196,107,.09);border:1px solid rgba(53,196,107,.3);border-radius:8px;font-size:12px}
+.ihs-badge.show{display:flex}
+.ihs-badge svg{width:15px;height:15px;stroke:var(--green);fill:none;stroke-width:2.4}
+.ihs-badge b{font-family:var(--mono);color:var(--green)}
+.ihs-badge span{color:var(--txt-2)}
+
+/* upload dropzone */
+.dropzone{border:1.5px dashed var(--line);border-radius:10px;padding:26px 18px;text-align:center;transition:.15s;cursor:pointer;background:var(--bg-panel)}
+.dropzone:hover,.dropzone.drag{border-color:var(--accent);background:var(--accent-dim)}
+.dropzone svg{width:34px;height:34px;stroke:var(--accent);fill:none;stroke-width:1.5;margin-bottom:10px}
+.dropzone b{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+.dropzone small{font-size:11px;color:var(--txt-3)}
+.dropzone .fmts{margin-top:10px;display:flex;gap:6px;justify-content:center}
+.dropzone .fmts span{font-family:var(--mono);font-size:9px;font-weight:600;padding:2px 7px;border-radius:4px;background:var(--bg-void);color:var(--txt-2);border:1px solid var(--line)}
+.preview{display:none;gap:13px;align-items:center;padding:12px;background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;margin-top:12px}
+.preview.show{display:flex}
+.preview .thumb{width:74px;height:74px;border-radius:8px;overflow:hidden;background:#05070a;flex-shrink:0;border:1px solid var(--line)}
+.preview .thumb svg{width:100%;height:100%;display:block}
+.preview .pinfo{flex:1;min-width:0}
+.preview .pinfo b{font-size:12.5px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.preview .pinfo small{font-size:10.5px;color:var(--txt-3);font-family:var(--mono);display:block;margin-top:3px}
+.preview .pmeta{display:flex;gap:6px;margin-top:7px}
+.preview .pmeta span{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:4px;background:var(--accent-dim);color:var(--accent)}
+
+/* live FHIR console */
+.console{background:#05080b;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.console-head{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--bg-panel);border-bottom:1px solid var(--line)}
+.console-head span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2);font-weight:600;display:flex;align-items:center;gap:8px}
+.console-head .led{width:6px;height:6px;border-radius:50%;background:var(--txt-3)}
+.console-head.live .led{background:var(--green);box-shadow:0 0 6px var(--green)}
+.console-body{max-height:280px;overflow:auto;padding:12px 13px;font-family:var(--mono);font-size:11px;line-height:1.65;white-space:pre-wrap;word-break:break-word;color:#8fa3b3}
+.console-body .key{color:#7fb2e8}.console-body .str{color:#c3e88d}.console-body .method{color:var(--accent);font-weight:600}.console-body .url{color:var(--txt-2)}.console-body .ok{color:var(--green)}.console-body .muted{color:var(--txt-3)}.console-body .err{color:var(--red)}.console-body .amber{color:var(--amber)}
+.actions{display:flex;gap:11px;margin-top:2px}
+.actions .btn{flex:1}
+
+@media(max-width:920px){.grid{grid-template-columns:1fr}.stepper{overflow-x:auto}.page-head{flex-direction:column;align-items:flex-start;gap:10px}}
+/* bedah */
+.rad-empty{font-size:12px;color:var(--txt-3)}
+.rad-item{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg-panel);margin-bottom:9px}
+.rad-item:last-child{margin-bottom:0}
+.rad-item .rt{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600}
+.rad-item .rt span{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:4px;background:var(--accent-dim);color:var(--accent)}
+.rad-item .rd{font-size:10.5px;color:var(--txt-3);font-family:var(--mono);margin-top:3px}
+.rad-item .rr{font-size:12px;color:var(--txt-2);margin-top:6px;line-height:1.5}
+.op-item{cursor:pointer;transition:border-color .12s}.op-item:hover{border-color:var(--accent)}
+.op-item.active{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.tag{margin-left:auto;font-style:normal;font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:10px}
+.tag.sent{background:rgba(53,196,107,.15);color:var(--green)}
+.tag.scheduled{background:var(--amber-dim);color:var(--amber)}
+.field input:disabled,.field select:disabled,.field textarea:disabled{opacity:.6}
+/* tabs + request list */
+.tabs{display:flex;gap:4px;margin:18px 0 16px;border-bottom:1px solid var(--line)}
+.tab-btn{padding:10px 16px;font-size:13px;font-weight:600;color:var(--txt-2);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab-btn small{font-weight:400;font-size:10.5px;color:var(--txt-3);margin-left:7px}
+.tab-btn:hover{color:var(--txt)}.tab-btn.on{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-pane{display:none}.tab-pane.active{display:block}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chip{padding:5px 10px;border-radius:14px;border:1px solid var(--line);background:var(--bg-panel);font-size:11.5px;color:var(--txt-2)}
+.chip b{font-family:var(--mono);margin-left:3px;color:var(--txt)}
+.chip.on{border-color:var(--accent);background:var(--accent-dim);color:var(--accent)}
+.rq-row{cursor:pointer;transition:border-color .12s}.rq-row:hover{border-color:var(--accent)}
+.rq-row.active{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.muted-s{font-size:10.5px;color:var(--txt-3)}
+</style>
+</head>
+<body>
+
+<header class="brand">
+  <a href="index.html" class="logo">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18" stroke-linecap="round"/><path d="M7 7l10 10M17 7L7 17" opacity=".4" stroke-linecap="round"/></svg></div>
+    <div><div class="logo-name">SATUSEHAT <b>PACS</b> Hub</div><div class="logo-sub">Instalasi Bedah Sentral</div></div>
+  </a>
+  <div class="brand-sep"></div>
+  <div class="env-badge"><i class="dot"></i><span>SANDBOX</span></div>
+  <nav class="topnav">
+    <a href="index.html">Menu</a>
+    <a href="instalasi.html">Instalasi Radiografi</a>
+    <a href="pacs.html">PACS Viewer</a>
+    <a href="bedah.html" class="active">Bedah</a>
+  </nav>
+  <div class="brand-spacer"></div>
+  <div class="avatar">—</div>
+</header>
+
+<div class="wrap">
+  <div class="page-head">
+    <div><h1>Laporan Operasi</h1><p>Instalasi Bedah Sentral · RSUD Dr. Soetomo</p></div>
+    <div class="accession">No. Operasi · <b id="opVal">belum disimpan</b></div>
+  </div>
+
+
+  <div class="card">
+    <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div><b>Data Pasien</b><small>FHIR Patient</small></div>
+    <div class="card-body">
+      <div class="nik-row">
+        <div class="field"><label>NIK (KTP)</label><input class="mono" id="nik" placeholder="16 digit NIK" value="9271060312000001" /></div>
+        <button class="btn btn-ghost" id="cekBtn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Cek SATUSEHAT</button>
+      </div>
+      <div class="ihs-badge" id="ihsBadge"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg><span>IHS Number ditemukan:</span><b id="ihsVal">—</b></div>
+      <div class="field-row" style="margin-top:13px"><div class="field"><label>Nama Lengkap</label><input id="nama" value="Ardianto Putra" /></div></div>
+      <div class="field-row">
+        <div class="field"><label>Jenis Kelamin</label><select id="jk"><option>Laki-laki</option><option>Perempuan</option></select></div>
+        <div class="field"><label>Tanggal Lahir</label><input class="mono" id="dob" value="1992-01-09" /></div>
+      </div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn on" data-tab="radiologi">Radiologi<small>permintaan &amp; hasil</small></button>
+    <button class="tab-btn" data-tab="operasi">Operasi<small>jadwal &amp; laporan</small></button>
+  </div>
+  <section class="tab-pane active" data-tab="radiologi">
+    <div class="grid">
+      <div class="col">
+        <div class="card" id="orderCard">
+          <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/><circle cx="8.5" cy="10" r="1.5"/></svg></div><b>Permintaan Radiologi</b><small>ke Instalasi Radiologi</small></div>
+          <div class="card-body">
+            <div class="field-row">
+              <div class="field" style="flex:.7"><label>Modality</label><select id="rqModality"><option value="DX">DX (X-Ray)</option><option value="CT" selected>CT</option><option value="MR">MR</option><option value="US">US</option></select></div>
+              <div class="field"><label>Jenis Pemeriksaan</label><input id="rqExam" value="CT Abdomen dengan Kontras" /></div>
+            </div>
+            <div class="field-row">
+              <div class="field" style="flex:.7"><label>ICD-10 Indikasi</label><input class="mono" id="rqIcd" value="K35.8" /></div>
+              <div class="field"><label>Indikasi Klinis</label><input id="rqReason" value="Nyeri perut kanan bawah, suspek apendisitis" /></div>
+            </div>
+            <div class="field-row">
+              <div class="field" style="flex:.7"><label>Prioritas</label><select id="rqPriority"><option>Biasa</option><option>CITO</option></select></div>
+              <div class="field"><label>Catatan untuk Radiologi</label><input id="rqNote" placeholder="opsional" /></div>
+            </div>
+            <div class="actions"><button class="btn btn-primary" id="rqBtn"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Kirim Permintaan ke Radiologi</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" id="rqListCard">
+          <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div><b>Daftar Permintaan Radiologi</b><small>semua pasien</small></div>
+          <div class="card-body"><div class="chips" id="rqFilters"></div><div id="radList"><div class="rad-empty">Memuat…</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="tab-pane" data-tab="operasi">
+    <div class="grid">
+      <div class="col">
+        <div class="card">
+          <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg></div><b>Jadwal Operasi</b><small>FHIR Encounter</small></div>
+          <div class="card-body">
+            <div class="field-row">
+              <div class="field"><label>Mulai Operasi</label><input class="mono" type="datetime-local" id="opStart" /></div>
+              <div class="field"><label>Selesai Operasi</label><input class="mono" type="datetime-local" id="opEnd" /></div>
+            </div>
+            <div class="field"><label>Kamar Operasi</label><select id="room"><option value="OK-01">OK-01 · Kamar Operasi 1</option></select></div>
+            <div class="field-row">
+              <div class="field"><label>Dokter Bedah (Operator)</label><input id="surgeon" /></div>
+              <div class="field"><label>Dokter Anestesi</label><input id="anesthesiologist" value="dr. Lestari Wibowo, Sp.An" /></div>
+            </div>
+            <div class="field"><label>Jenis Anestesi</label><select id="anesthesia"><option>Anestesi Umum</option><option>Anestesi Spinal</option><option>Anestesi Lokal</option></select></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M9 13h6M9 17h4"/></svg></div><b>Laporan Operasi</b><small>FHIR Procedure</small></div>
+          <div class="card-body">
+            <div class="field-row">
+              <div class="field" style="flex:.8"><label>ICD-10 Pra-Operasi</label><input class="mono" id="preCode" value="K35.8" /></div>
+              <div class="field" style="flex:1.4"><label>Diagnosis Pra-Operasi</label><input id="preText" value="Acute appendicitis, other and unspecified" /></div>
+            </div>
+            <div class="field"><label>Tindakan (ICD-9-CM)</label><select id="proc">
+              <option value="47.09">47.09 · Apendektomi (terbuka)</option>
+              <option value="47.01">47.01 · Apendektomi laparoskopik</option>
+              <option value="51.23">51.23 · Kolesistektomi laparoskopik</option>
+              <option value="53.00">53.00 · Herniorafi inguinal unilateral</option>
+              <option value="54.11">54.11 · Laparotomi eksplorasi</option>
+              <option value="74.1">74.1 · Seksio sesarea</option>
+              <option value="32.41">32.41 · Lobektomi paru torakoskopik</option>
+            </select></div>
+            <div class="field"><label>Diagnosis Pasca-Operasi</label><input id="postDx" value="Apendisitis akut, tidak perforasi" /></div>
+            <div class="field"><label>Temuan Operasi</label><textarea id="findings" rows="3">Apendiks hiperemis dan edema, panjang ±8 cm, tidak perforasi. Tidak tampak abses. Apendiks dipotong, puntung dijahit.</textarea></div>
+            <div class="field"><label>Komplikasi</label><input id="complications" value="Tidak ada" /></div>
+            <div class="actions">
+              <button class="btn btn-ghost" id="saveOpBtn"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan Laporan</button>
+              <button class="btn btn-primary" id="sendOpBtn"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Kirim ke SATUSEHAT</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="console">
+          <div class="console-head" id="consoleHead"><span><i class="led"></i>FHIR R4 · Sandbox</span><span class="mono" style="font-size:9px;color:var(--txt-3)" id="cStatus">siap</span></div>
+          <div class="console-body" id="console"><span class="muted"># Encounter (kamar operasi) → Procedure (ICD-9-CM)</span></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div><b>Riwayat Operasi</b><small><span id="opCount">—</span> · <a href="bedah.html" id="newOp" style="color:var(--accent)">+ laporan baru</a></small></div>
+          <div class="card-body" id="opList"><div class="rad-empty">Memuat…</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const $=q=>document.querySelector(q);
+const API_BASE=location.protocol.startsWith('http')?location.origin:'http://localhost:8000';
+const esc=v=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const consoleEl=$('#console'),cHead=$('#consoleHead'),cStatus=$('#cStatus');
+const CHECK='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>';
+// Official ICD-9-CM display names sent to SATUSEHAT (the dropdown shows Indonesian labels).
+const PROC={'47.09':'Other appendectomy','47.01':'Laparoscopic appendectomy','51.23':'Laparoscopic cholecystectomy',
+  '53.00':'Unilateral repair of inguinal hernia, not otherwise specified','54.11':'Exploratory laparotomy',
+  '74.1':'Low cervical cesarean section','32.41':'Thoracoscopic lobectomy of lung'};
+const FORM_FIELDS=['#nik','#nama','#jk','#dob','#opStart','#opEnd','#room','#surgeon','#anesthesiologist','#anesthesia',
+  '#preCode','#preText','#proc','#postDx','#findings','#complications','#cekBtn'];
+let opId=null;
+
+function errorText(r){try{const i=r.issue&&r.issue[0];return (i&&((i.details&&i.details.text)||i.diagnostics))||(r.fault&&r.fault.faultstring)||r.detail||JSON.stringify(r).slice(0,220);}catch(_){return '';}}
+function localInput(d){const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
+function fmtDate(v){const d=new Date(v);return !v||isNaN(d)?'—':d.toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+function markStep(i){const s=document.querySelectorAll('.step')[i];if(s)s.classList.add('done');}
+function log(h){consoleEl.innerHTML+='\n'+h;consoleEl.scrollTop=consoleEl.scrollHeight;}
+
+// defaults: operation today 09:00-10:15
+(function(){const s=new Date();s.setHours(9,0,0,0);const e=new Date(s.getTime()+75*60000);$('#opStart').value=localInput(s);$('#opEnd').value=localInput(e);})();
+
+// All radiology requests (every patient) with a status filter. Clicking a row opens it: the
+// patient is filled in above, and a finished request shows the radiologist's reading.
+const RQ_STATUS={requested:['Menunggu radiografer','scheduled'],imaged:['Menunggu radiolog','scheduled'],reported:['Selesai','sent']};
+const RQ_FILTERS=[['all','Semua'],['requested','Menunggu radiografer'],['imaged','Menunggu radiolog'],['reported','Selesai']];
+let rqAll=[],rqFilter='all',rqOpen=null;
+async function loadRadiology(){
+  try{const r=await fetch(API_BASE+'/api/orders');if(!r.ok)throw new Error('HTTP '+r.status);rqAll=await r.json();}
+  catch(err){$('#radList').innerHTML='<div class="rad-empty">Permintaan radiologi tidak dapat dimuat.</div>';return;}
+  renderOrders();
+}
+function renderOrders(){
+  $('#rqFilters').innerHTML=RQ_FILTERS.map(([k,label])=>{
+    const n=k==='all'?rqAll.length:rqAll.filter(o=>o.status===k).length;
+    return '<button class="chip'+(rqFilter===k?' on':'')+'" data-f="'+k+'">'+esc(label)+' <b>'+n+'</b></button>';
+  }).join('');
+  $('#rqFilters').querySelectorAll('.chip').forEach(c=>{c.onclick=()=>{rqFilter=c.dataset.f;renderOrders();};});
+  const list=rqFilter==='all'?rqAll:rqAll.filter(o=>o.status===rqFilter);
+  const box=$('#radList');
+  if(!list.length){box.innerHTML='<div class="rad-empty">Tidak ada permintaan di sini.</div>';return;}
+  box.innerHTML='';
+  list.forEach(o=>{
+    const d=o.data||{},p=d.patient||{},ex=d.exam||{},st=RQ_STATUS[o.status]||[o.status,'scheduled'],s=o.study;
+    const el=document.createElement('div');el.className='rad-item rq-row'+(rqOpen===o.id?' active':'');
+    let html='<div class="rt"><span>'+esc(ex.modality||'—')+'</span>'+esc(ex.description||'Pemeriksaan')+' · '+esc(p.name||'—')+
+      (d.priority==='CITO'?' <span style="background:var(--red);color:#fff">CITO</span>':'')+
+      '<i class="tag '+st[1]+'">'+st[0]+'</i></div>'+
+      '<div class="rd">'+esc(o.id)+' · '+esc(fmtDate(o.created))+' · '+esc(d.requester||o.created_by)+'</div>';
+    if(rqOpen===o.id){
+      html+=s&&s.icd10
+        ?'<div class="rr"><b>'+esc(s.icd10)+'</b> '+esc(s.diagnosis||'')+(s.finding?'<br>'+esc(s.finding):'')+
+          '<br><span class="muted-s">dibaca oleh '+esc(s.reported_by||'radiolog')+'</span></div>'+
+          '<div class="actions" style="margin-top:9px"><button class="btn btn-ghost" data-op="1">Lanjut ke Operasi →</button></div>'
+        :'<div class="rr">'+(o.status==='requested'?'Menunggu pemeriksaan oleh radiografer.':'Citra sudah diambil, menunggu bacaan radiolog.')+'</div>';
+    }
+    el.innerHTML=html;
+    el.onclick=e=>{
+      if(e.target.closest('[data-op]')){toOperation(o);return;}
+      rqOpen=rqOpen===o.id?null:o.id;usePatient(p);renderOrders();
+    };
+    box.appendChild(el);
+  });
+}
+// put a request's patient into the patient card (not while a sent, locked operation is open)
+function usePatient(p){
+  if($('#nik').disabled)return;
+  $('#nik').value=p.nik||'';$('#nama').value=p.name||'';if(p.gender)$('#jk').value=p.gender;$('#dob').value=p.birthDate||'';
+  $('#ihsBadge').classList.remove('show');
+}
+// finished request -> Operasi tab, with the radiologist's reading as the pre-operative diagnosis
+function toOperation(o){
+  const s=o.study||{};
+  usePatient((o.data||{}).patient||{});
+  if(s.icd10&&!$('#preCode').disabled){$('#preCode').value=s.icd10;$('#preText').value=s.diagnosis||'';}
+  showTab('operasi');
+}
+// two tabs: Radiologi (requests + results) and Operasi (schedule + report)
+function showTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.dataset.tab===name));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+
+// a new radiology request for this patient; the radiographer sees it in Instalasi
+$('#rqBtn').addEventListener('click',async()=>{
+  const b=$('#rqBtn'),label=b.innerHTML;
+  const body={patient:{nik:$('#nik').value.trim(),name:$('#nama').value.trim(),gender:$('#jk').value,birthDate:$('#dob').value.trim()},
+    exam:{modality:$('#rqModality').value,description:$('#rqExam').value.trim()},
+    indication:{icd10:$('#rqIcd').value.trim(),text:$('#rqReason').value.trim()},
+    priority:$('#rqPriority').value,note:$('#rqNote').value.trim()};
+  b.style.pointerEvents='none';
+  try{
+    const r=await fetch(API_BASE+'/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(d.detail||('HTTP '+r.status));
+    b.innerHTML=CHECK+'Terkirim · '+esc(d.id);
+    loadRadiology(body.patient.nik);
+  }catch(err){b.textContent='Gagal: '+err.message;}
+  b.style.pointerEvents='';
+  setTimeout(()=>{b.innerHTML=label;},3000);
+});
+
+
+// NIK lookup: real SATUSEHAT Patient search through the backend
+$('#cekBtn').addEventListener('click',async()=>{
+  const b=$('#cekBtn'),label=b.innerHTML,nik=$('#nik').value.trim();
+  b.style.pointerEvents='none';b.textContent='Mencari…';
+  try{
+    const r=await fetch(API_BASE+'/api/satusehat/patient?nik='+encodeURIComponent(nik));
+    const d=r.ok?await r.json():{status:r.status,response:{}};
+    const code=Number(d.status)||0,entry=((d.response&&d.response.entry)||[])[0];
+    if(code>=200&&code<300&&entry){$('#ihsVal').textContent=entry.resource.id;$('#ihsBadge').classList.add('show');b.innerHTML=CHECK+'Ditemukan';markStep(0);}
+    else{$('#ihsBadge').classList.remove('show');b.textContent=code>=200&&code<300?'Tidak ditemukan':'Gagal ('+code+')';}
+  }catch(err){b.textContent='Backend tidak terhubung';}
+  b.style.pointerEvents='';
+  setTimeout(()=>{b.innerHTML=label;},3000);
+  loadRadiology(nik);
+});
+$('#nik').addEventListener('change',()=>{$('#ihsBadge').classList.remove('show');loadRadiology($('#nik').value.trim());});
+
+function formData(){
+  const proc=$('#proc');
+  return {
+    id:opId,
+    patient:{nik:$('#nik').value.trim(),name:$('#nama').value.trim(),gender:$('#jk').value,birthDate:$('#dob').value.trim()},
+    schedule:{start:$('#opStart').value,end:$('#opEnd').value,room:$('#room').value,surgeon:$('#surgeon').value.trim(),
+      anesthesiologist:$('#anesthesiologist').value.trim(),anesthesia:$('#anesthesia').value},
+    report:{pre_dx_code:$('#preCode').value.trim(),pre_dx_text:$('#preText').value.trim(),
+      proc_code:proc.value,proc_text:PROC[proc.value]||'',proc_label:proc.selectedOptions[0].textContent,
+      post_dx:$('#postDx').value.trim(),findings:$('#findings').value.trim(),complications:$('#complications').value.trim()}
+  };
+}
+function lock(sent){
+  FORM_FIELDS.forEach(q=>{$(q).disabled=sent;});
+  $('#saveOpBtn').style.display=sent?'none':'';$('#sendOpBtn').style.display=sent?'none':'';
+}
+function fillForm(op){
+  const d=op.data||{},p=d.patient||{},s=d.schedule||{},rep=d.report||{};
+  const set=(q,v)=>{if(v!==undefined&&v!==null&&v!=='')$(q).value=v;};
+  set('#nik',p.nik);set('#nama',p.name);set('#jk',p.gender);set('#dob',p.birthDate);
+  set('#opStart',s.start);set('#opEnd',s.end);set('#room',s.room);set('#surgeon',s.surgeon);
+  set('#anesthesiologist',s.anesthesiologist);set('#anesthesia',s.anesthesia);
+  set('#preCode',rep.pre_dx_code);set('#preText',rep.pre_dx_text);set('#proc',rep.proc_code);
+  set('#postDx',rep.post_dx);set('#findings',rep.findings);set('#complications',rep.complications);
+  opId=op.id;$('#opVal').textContent=op.id;lock(op.status==='sent');
+  $('#ihsBadge').classList.remove('show');loadRadiology(p.nik||'');
+  consoleEl.innerHTML=op.status==='sent'
+    ?'<span class="muted"># sudah terkirim</span>\n<span class="key">Encounter</span>: <span class="str">"'+esc(op.encounter_id)+'"</span>\n<span class="key">Procedure</span>: <span class="str">"'+esc(op.procedure_id)+'"</span>'
+    :'<span class="muted"># belum dikirim ke SATUSEHAT</span>';
+}
+
+// saved operations
+async function loadOps(){
+  const box=$('#opList');
+  let list;
+  try{const r=await fetch(API_BASE+'/api/operations');if(!r.ok)throw new Error('HTTP '+r.status);list=await r.json();}
+  catch(err){box.innerHTML='<div class="rad-empty">Riwayat tidak dapat dimuat.</div>';return;}
+  $('#opCount').textContent=list.length+' operasi';
+  if(!list.length){box.innerHTML='<div class="rad-empty">Belum ada laporan operasi.</div>';return;}
+  box.innerHTML='';
+  list.forEach(op=>{
+    const d=op.data||{},p=d.patient||{},s=d.schedule||{},rep=d.report||{};
+    const el=document.createElement('div');el.className='rad-item op-item'+(op.id===opId?' active':'');
+    el.innerHTML='<div class="rt"><span>'+esc(rep.proc_code||'—')+'</span>'+esc((rep.proc_label||'Operasi').replace(/^[\d.]+ · /,''))+
+      '<i class="tag '+(op.status==='sent'?'sent':'scheduled')+'">'+(op.status==='sent'?'Terkirim':'Dijadwalkan')+'</i></div>'+
+      '<div class="rd">'+esc(op.id)+' · '+esc(fmtDate(s.start))+' · '+esc(p.name||'—')+'</div>';
+    el.onclick=()=>{fillForm(op);showTab('operasi');document.querySelectorAll('.op-item').forEach(x=>x.classList.toggle('active',x===el));};
+    box.appendChild(el);
+  });
+}
+
+async function saveOp(){
+  const f=formData();
+  if(!f.report.proc_code)throw new Error('Pilih tindakan (ICD-9-CM)');
+  if(f.schedule.start&&f.schedule.end&&f.schedule.end<=f.schedule.start)throw new Error('Jam selesai harus setelah jam mulai');
+  const r=await fetch(API_BASE+'/api/operations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(f)});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(d.detail||('HTTP '+r.status));
+  opId=d.id;$('#opVal').textContent=d.id;markStep(2);markStep(3);
+  loadOps();
+  return d;
+}
+$('#saveOpBtn').addEventListener('click',async()=>{
+  const b=$('#saveOpBtn'),label=b.innerHTML;
+  b.style.pointerEvents='none';
+  try{await saveOp();b.innerHTML=CHECK+'Tersimpan · '+esc(opId);}catch(err){b.textContent='Gagal: '+err.message;}
+  b.style.pointerEvents='';
+  setTimeout(()=>{b.innerHTML=label;},3000);
+});
+
+// send: save what is on screen, then Encounter -> Procedure through the backend
+$('#sendOpBtn').addEventListener('click',async()=>{
+  const b=$('#sendOpBtn'),url=API_BASE+'/api/satusehat/send-procedure';
+  b.style.pointerEvents='none';b.style.opacity='.7';
+  cHead.classList.add('live');cStatus.textContent='running…';
+  consoleEl.innerHTML='<span class="muted"># '+esc(url)+'</span>';
+  let data;
+  try{
+    await saveOp();
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({operation_id:opId})});
+    const d=await r.json().catch(()=>({}));
+    data=r.ok?d:{ok:false,mode:'—',logs:[{step:'akses',status:r.status,request:{method:'POST',url},response:{issue:[{details:{text:d.detail||('HTTP '+r.status)}}]}}]};
+  }catch(err){
+    log('<span class="err">'+esc(err.message)+'</span>');cStatus.textContent='error';
+    b.style.pointerEvents='';b.style.opacity='';return;
+  }
+  log('<span class="muted"># mode '+esc(data.mode)+'</span>');
+  for(const step of data.logs||[]){
+    const req=step.request||{},res=step.response||{},code=Number(step.status)||0,ok=code>=200&&code<300;
+    log('\n<span class="method">'+esc(req.method)+'</span> <span class="url">'+esc(req.url)+'</span>'+(req.cached?' <span class="muted">(cached)</span>':''));
+    let line='<span class="'+(ok?'ok':'err')+'">'+code+' '+(ok?(code===201?'Created':'OK'):'Error')+'</span>';
+    if(ok&&res.id)line+=' <span class="key">id</span>:<span class="str">"'+esc(res.id)+'"</span>';
+    else if(ok&&step.step==='token')line+=' <span class="muted">{ access_token:"'+esc(String(res.access_token||'').slice(0,12))+'…" }</span>';
+    else if(ok&&res.resourceType==='Bundle')line+=' <span class="muted">ditemukan '+esc(res.total??0)+'</span>';
+    else if(!ok)line+=' <span class="muted">'+esc(errorText(res))+'</span>';
+    log(line);
+  }
+  const errors=(data.logs||[]).filter(l=>!(Number(l.status)>=200&&Number(l.status)<300)).length;
+  if(data.ok){
+    log('\n<span class="key">Encounter</span>: <span class="str">"'+esc(data.encounter_id)+'"</span>');
+    log('<span class="key">Procedure</span>: <span class="str">"'+esc(data.procedure_id)+'"</span>');
+    markStep(4);lock(true);
+  }
+  log('\n'+(data.ok?'<span class="ok">✓ Laporan operasi terkirim</span>':'<span class="err">✗ Pengiriman gagal</span>')+' <span class="muted">· mode '+esc(data.mode)+' · '+errors+' error</span>');
+  cStatus.textContent=data.ok?'done · '+data.mode:'error · '+data.mode;
+  b.style.pointerEvents='';b.style.opacity='';
+  loadOps();
+});
+
+(window.simrsUser||Promise.resolve()).then(u=>{
+  if(!$('#surgeon').value)$('#surgeon').value=u&&u.role==='dokter_bedah'?u.full_name:'dr. Bima Santoso, Sp.B';
+  loadRadiology($('#nik').value.trim());
+  loadOps();
+});
+</script>
+</body>
+</html>

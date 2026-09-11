@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="auth.js"></script>
 <title>SATUSEHAT PACS Hub · Menu</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -136,11 +137,12 @@ a{text-decoration:none;color:inherit}
   <div class="env-badge"><i class="dot"></i><span>SANDBOX</span></div>
   <nav class="topnav">
     <a href="index.html" class="active">Menu</a>
-    <a href="instalasi.html">Instalasi</a>
+    <a href="instalasi.html">Instalasi Radiografi</a>
     <a href="pacs.html">PACS Viewer</a>
+    <a href="bedah.html">Bedah</a>
   </nav>
   <div class="brand-spacer"></div>
-  <div class="conn"><i class="led"></i><small>SATUSEHAT <b>Terhubung</b></small></div>
+  <div class="conn" id="conn"><i class="led"></i><small id="connText">SATUSEHAT <b>memeriksa…</b></small></div>
   <div class="avatar">RA</div>
 </header>
 
@@ -185,10 +187,10 @@ a{text-decoration:none;color:inherit}
 
   <!-- STATS -->
   <section class="stats">
-    <div class="stat"><div class="st-label"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg>Studi Hari Ini</div><div class="st-num">24</div><div class="st-sub"><b>+6</b> vs kemarin</div></div>
-    <div class="stat"><div class="st-label"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Terkirim SATUSEHAT</div><div class="st-num">312</div><div class="st-sub"><b>100%</b> sukses</div></div>
+    <div class="stat"><div class="st-label"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg>Studi Hari Ini</div><div class="st-num" id="statToday">—</div><div class="st-sub">disimpan ke arsip</div></div>
+    <div class="stat"><div class="st-label"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Mode SATUSEHAT</div><div class="st-num" id="statMode">—</div><div class="st-sub" id="statModeSub">memeriksa…</div></div>
     <div class="stat"><div class="st-label"><svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><circle cx="4" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="20" cy="14" r="2"/></svg>Instalasi Terhubung</div><div class="st-num">3</div><div class="st-sub">Rad · Bedah · Arsip</div></div>
-    <div class="stat"><div class="st-label"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Menunggu Baca</div><div class="st-num">5</div><div class="st-sub">antrian radiolog</div></div>
+    <div class="stat"><div class="st-label"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Arsip PACS</div><div class="st-num" id="statArchive">—</div><div class="st-sub" id="statArchiveSub">studi tersimpan</div></div>
   </section>
 
   <!-- MODULES -->
@@ -196,21 +198,21 @@ a{text-decoration:none;color:inherit}
   <section class="modules">
     <a class="mod" href="instalasi.html" style="--brd:rgba(41,198,194,.4);--glow:rgba(41,198,194,.14);--ic:#29c6c2;--ic-bg:rgba(41,198,194,.13);--ic-brd:rgba(41,198,194,.25)">
       <div class="mod-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18M8 14h4"/></svg></div>
-      <h3>Instalasi Radiologi</h3>
-      <p>Input pemeriksaan, registrasi pasien via NIK, upload citra DICOM/PNG, dan bacaan radiolog dengan kode ICD-10.</p>
-      <div class="mod-foot"><span class="mod-stat"><b>18</b> studi aktif</span><span class="mod-go">Buka <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      <h3>Instalasi Radiografi</h3>
+      <p>Kerjakan permintaan dari dokter: pilih permintaan masuk, upload citra DICOM, lalu kirim ke radiolog.</p>
+      <div class="mod-foot"><span class="mod-stat"><b>Langkah 2</b> permintaan masuk · upload</span><span class="mod-go">Buka <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
     </a>
-    <a class="mod" href="instalasi.html#bedah" style="--brd:rgba(157,123,255,.4);--glow:rgba(157,123,255,.14);--ic:#9d7bff;--ic-bg:rgba(157,123,255,.13);--ic-brd:rgba(157,123,255,.25)">
+    <a class="mod" href="bedah.html" style="--brd:rgba(157,123,255,.4);--glow:rgba(157,123,255,.14);--ic:#9d7bff;--ic-bg:rgba(157,123,255,.13);--ic-brd:rgba(157,123,255,.25)">
       <div class="mod-icon"><svg viewBox="0 0 24 24"><path d="M14.5 3.5l6 6L9 21H3v-6z"/><path d="M12 6l6 6"/></svg></div>
       <h3>Instalasi Bedah</h3>
-      <p>Laporan operasi, citra intra-operatif, dan prosedur yang dilaporkan sebagai Procedure & DiagnosticReport ke SATUSEHAT.</p>
-      <div class="mod-foot"><span class="mod-stat"><b>6</b> laporan hari ini</span><span class="mod-go">Buka <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      <p>Jadwal &amp; laporan operasi, lengkap dengan hasil radiologi pasien — dikirim sebagai Encounter + Procedure (ICD-9-CM) ke SATUSEHAT.</p>
+      <div class="mod-foot"><span class="mod-stat"><b>Langkah 1 &amp; 4</b> minta radiologi · operasi</span><span class="mod-go">Buka <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
     </a>
     <a class="mod" href="pacs.html" style="--brd:rgba(74,144,226,.4);--glow:rgba(74,144,226,.14);--ic:#4a90e2;--ic-bg:rgba(74,144,226,.13);--ic-brd:rgba(74,144,226,.25)">
       <div class="mod-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
       <h3>PACS Viewer</h3>
-      <p>Central DICOM Archive — telaah citra multi-panel, window/level, anotasi, dan kirim ImagingStudy + DiagnosticReport ke SATUSEHAT.</p>
-      <div class="mod-foot"><span class="mod-stat"><b>512</b> citra arsip</span><span class="mod-go">Buka <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      <p>Worklist dari arsip lokal — buka citra DICOM asli, isi bacaan, lalu kirim ServiceRequest, ImagingStudy &amp; DiagnosticReport ke SATUSEHAT.</p>
+      <div class="mod-foot"><span class="mod-stat"><b>Langkah 3</b> · <span id="modArchive">—</span> studi di arsip</span><span class="mod-go">Buka <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
     </a>
   </section>
 
@@ -218,18 +220,15 @@ a{text-decoration:none;color:inherit}
   <section class="bottom">
     <div class="card">
       <div class="card-head"><span>Aktivitas Terakhir</span><a href="pacs.html">Lihat semua</a></div>
-      <div class="act"><div class="act-ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg></div><div class="act-main"><b>CT ABDOMEN — Budi Sutrisno</b><small>Radiologi · Acc RAD-2025-004821</small></div><span class="act-tag sent">Terkirim</span></div>
-      <div class="act"><div class="act-ic"><svg viewBox="0 0 24 24"><path d="M14.5 3.5l6 6L9 21H3v-6z"/></svg></div><div class="act-main"><b>Laporan Op — Siti Aminah</b><small>Bedah · Appendektomi</small></div><span class="act-tag new">Baru</span></div>
-      <div class="act"><div class="act-ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg></div><div class="act-main"><b>X-RAY THORAX — Agus Salim</b><small>Radiologi · Acc RAD-2025-004819</small></div><span class="act-tag wait">Menunggu</span></div>
-      <div class="act"><div class="act-ic"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></div><div class="act-main"><b>CT THORAX — Budi Sutrisno</b><small>Arsip · ImagingStudy dikirim</small></div><span class="act-tag sent">Terkirim</span></div>
+      <div id="actList"><div class="act"><div class="act-main"><b>Memuat aktivitas…</b><small>arsip lokal</small></div></div></div>
     </div>
     <div class="card">
       <div class="card-head"><span>Integrasi SATUSEHAT</span><a href="pacs.html">Konsol</a></div>
       <div class="integ">
-        <div class="integ-row"><div class="l"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg><div><b>ServiceRequest</b><small>order pemeriksaan</small></div></div><div class="n">128</div></div>
-        <div class="integ-row"><div class="l"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg><div><b>ImagingStudy</b><small>metadata citra</small></div></div><div class="n">96</div></div>
-        <div class="integ-row"><div class="l"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg><div><b>DiagnosticReport</b><small>bacaan + ICD-10</small></div></div><div class="n">88</div></div>
-        <div class="integ-foot"><span class="mut"># last sync</span> <span class="ok">200 OK</span> · 10-Sep 09:14<br><span class="mut">api-satusehat-stg.dto.kemkes.go.id</span></div>
+        <div class="integ-row"><div class="l"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg><div><b>ServiceRequest</b><small>order pemeriksaan</small></div></div><div class="n">✓</div></div>
+        <div class="integ-row"><div class="l"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg><div><b>ImagingStudy</b><small>metadata citra</small></div></div><div class="n">✓</div></div>
+        <div class="integ-row"><div class="l"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg><div><b>DiagnosticReport</b><small>bacaan + ICD-10</small></div></div><div class="n">✓</div></div>
+        <div class="integ-foot" id="integFoot"><span class="mut"># memeriksa backend…</span></div>
       </div>
     </div>
   </section>
@@ -237,5 +236,39 @@ a{text-decoration:none;color:inherit}
   <div class="footer"><span>SATUSEHAT PACS Hub · Tugas SIMRS · Sandbox environment</span><span class="mono">v0.1 · FHIR R4</span></div>
 </div>
 
+<script>
+// Live menu data: backend health (LIVE/MOCK) and the local PACS archive. Nothing here is invented.
+(function(){
+  const API_BASE=location.protocol.startsWith('http')?location.origin:'http://localhost:8000';
+  const $=q=>document.querySelector(q);
+  const esc=v=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const ACT_ICON='<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg>';
+  function setConn(html,color){$('#connText').innerHTML=html;const led=$('#conn .led');if(led&&color){led.style.background=color;led.style.boxShadow='0 0 6px '+color;}}
+  function localDay(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  fetch(API_BASE+'/api/health').then(r=>r.json()).then(h=>{
+    const live=h.mode==='LIVE';
+    setConn('SATUSEHAT <b>'+(live?'Terhubung · LIVE':'Mode MOCK')+'</b>',live?null:'var(--amber)');
+    $('#statMode').textContent=h.mode;
+    $('#statModeSub').innerHTML=live?'<b>sandbox</b> Kemenkes':'respons simulasi';
+    $('#integFoot').innerHTML='<span class="mut"># mode</span> <span class="ok">'+esc(h.mode)+'</span><br><span class="mut">'+esc(String(h.base||'').replace(/^https?:\/\//,''))+'</span>';
+  }).catch(()=>{
+    setConn('Backend <b>offline</b>','var(--red)');
+    $('#statModeSub').textContent='backend offline';
+    $('#integFoot').innerHTML='<span class="mut"># backend offline — jalankan uvicorn</span>';
+  });
+  fetch(API_BASE+'/api/studies').then(r=>r.json()).then(list=>{
+    const today=localDay(new Date());
+    const withFile=list.filter(x=>x.file).length;
+    $('#statToday').textContent=list.filter(x=>(x.created||'').slice(0,10)===today).length;
+    $('#statArchive').textContent=list.length;
+    $('#statArchiveSub').textContent=withFile+' dengan citra';
+    $('#modArchive').textContent=list.length;
+    $('#actList').innerHTML=list.length?list.slice(0,4).map(x=>'<div class="act"><div class="act-ic">'+ACT_ICON+'</div><div class="act-main"><b>'+esc((x.description||'Studi').toUpperCase())+' — '+esc(x.name||'—')+'</b><small>'+esc((x.instalasi||'').replace('Instalasi ',''))+' · No. Arsip '+esc(x.id)+'</small></div><span class="act-tag '+(x.sent?'sent':x.file?'new':'wait')+'">'+(x.sent?'Terkirim':x.file?'Baru':'Tanpa citra')+'</span></div>').join('')
+      :'<div class="act"><div class="act-main"><b>Belum ada aktivitas</b><small>mulai dari Instalasi → simpan studi</small></div></div>';
+  }).catch(()=>{
+    $('#actList').innerHTML='<div class="act"><div class="act-main"><b>Aktivitas tidak tersedia</b><small>backend offline</small></div></div>';
+  });
+})();
+</script>
 </body>
 </html>

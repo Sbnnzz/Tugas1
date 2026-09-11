@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Masuk · SATUSEHAT PACS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg-void:#06080a;--bg-app:#0b0f14;--bg-elev:#10151b;--bg-panel:#131a22;--bg-panel-2:#182029;--bg-hover:#1d2731;
+  --line:#232d38;--line-soft:#1a222b;--txt:#dfe7ee;--txt-2:#93a1af;--txt-3:#5c6875;
+  --accent:#29c6c2;--accent-2:#1aa8a4;--accent-dim:rgba(41,198,194,.13);
+  --amber:#f2a63b;--amber-dim:rgba(242,166,59,.13);--green:#35c46b;--red:#e5484d;--blue:#4a90e2;--purple:#9d7bff;
+  --shadow:0 8px 30px rgba(0,0,0,.45);--radius:6px;--mono:'JetBrains Mono','Consolas',monospace;--h-brand:44px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg-void);color:var(--txt);font-size:13px;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1000px 500px at 85% -5%,rgba(41,198,194,.05),transparent)}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+a{text-decoration:none;color:inherit}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-track{background:var(--bg-void)}::-webkit-scrollbar-thumb{background:#28323d;border-radius:5px;border:2px solid var(--bg-void)}
+.mono{font-family:var(--mono)}
+
+/* brand */
+.brand{height:var(--h-brand);display:flex;align-items:center;gap:14px;padding:0 16px;background:linear-gradient(180deg,#0e141a,#0a0e13);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.logo{display:flex;align-items:center;gap:9px}
+.logo-mark{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;box-shadow:0 0 0 1px rgba(41,198,194,.3),0 2px 10px rgba(41,198,194,.3)}
+.logo-mark svg{width:16px;height:16px;stroke:#04211f;stroke-width:2.2;fill:none}
+.logo-name{font-weight:700;font-size:13.5px}.logo-name b{color:var(--accent)}
+.logo-sub{font-size:9px;letter-spacing:.14em;color:var(--txt-3);text-transform:uppercase;font-weight:600;margin-top:1px}
+.brand-sep{width:1px;height:22px;background:var(--line)}
+.env-badge{display:flex;align-items:center;gap:6px;padding:3px 9px;border-radius:20px;background:var(--amber-dim);border:1px solid rgba(242,166,59,.3)}
+.env-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.env-badge span{font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--amber)}
+.topnav{display:flex;gap:2px;margin-left:6px}
+.topnav a{padding:6px 13px;border-radius:6px;font-size:12px;font-weight:600;color:var(--txt-2);transition:.12s}
+.topnav a:hover{background:var(--bg-hover);color:var(--txt)}.topnav a.active{background:var(--accent-dim);color:var(--accent)}
+.brand-spacer{flex:1}
+.unit-sel{display:flex;align-items:center;gap:8px;padding:5px 12px;border-radius:var(--radius);background:var(--bg-panel);border:1px solid var(--line);font-size:12px}
+.unit-sel select{background:none;border:none;color:var(--txt);font-family:inherit;font-weight:600;font-size:12px;outline:none;cursor:pointer}
+.avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2c3a47,#1c2732);border:1px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--txt-2)}
+
+.wrap{max-width:1240px;margin:0 auto;padding:24px 26px 60px}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+.page-head h1{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.page-head p{font-size:13px;color:var(--txt-2);margin-top:4px}
+.page-head .accession{font-family:var(--mono);font-size:12px;color:var(--txt-3);background:var(--bg-panel);border:1px solid var(--line);padding:7px 12px;border-radius:8px}
+.page-head .accession b{color:var(--accent)}
+
+/* stepper */
+.stepper{display:flex;align-items:center;gap:0;margin-bottom:24px;background:var(--bg-elev);border:1px solid var(--line);border-radius:12px;padding:6px}
+.step{flex:1;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;position:relative}
+.step.active{background:var(--accent-dim)}
+.step .num{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;font-family:var(--mono);background:var(--bg-panel);color:var(--txt-3);border:1px solid var(--line);flex-shrink:0}
+.step.active .num{background:var(--accent);color:#042321;border-color:var(--accent)}
+.step.done .num{background:rgba(53,196,107,.2);color:var(--green);border-color:rgba(53,196,107,.4)}
+.step b{font-size:12px;font-weight:600}.step.active b{color:var(--accent)}.step:not(.active) b{color:var(--txt-2)}
+.step small{display:block;font-size:9.5px;color:var(--txt-3)}
+.step-arrow{color:var(--txt-3);opacity:.4;padding:0 2px}.step-arrow svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* layout */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.col{display:flex;flex-direction:column;gap:16px}
+.card{background:var(--bg-elev);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card-head{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line-soft)}
+.card-head .hicon{width:26px;height:26px;border-radius:7px;background:var(--accent-dim);display:grid;place-items:center}
+.card-head .hicon svg{width:15px;height:15px;stroke:var(--accent);fill:none;stroke-width:1.8}
+.card-head b{font-size:13px;font-weight:600}
+.card-head small{margin-left:auto;font-size:10px;color:var(--txt-3);font-family:var(--mono)}
+.card-body{padding:16px}
+
+/* fields */
+.field{margin-bottom:13px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--txt-3);font-weight:600;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;background:var(--bg-panel);border:1px solid var(--line);border-radius:7px;padding:9px 11px;color:var(--txt);font-family:inherit;font-size:13px;outline:none;transition:border-color .12s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.field .mono{font-family:var(--mono)}
+.field textarea{resize:vertical;line-height:1.5}
+.field-row{display:flex;gap:11px}.field-row .field{flex:1}
+.nik-row{display:flex;gap:8px;align-items:flex-end}
+.nik-row .field{flex:1;margin-bottom:0}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;border-radius:7px;font-size:12.5px;font-weight:600;transition:filter .12s,transform .06s,background .12s;white-space:nowrap}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+.btn-ghost{background:var(--bg-panel);border:1px solid var(--line);color:var(--txt-2)}
+.btn-ghost:hover{background:var(--bg-hover);color:var(--txt)}
+.btn-primary{background:linear-gradient(180deg,var(--accent),var(--accent-2));color:#042321;box-shadow:0 3px 12px rgba(41,198,194,.28)}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-block{width:100%;padding:12px}
+.ihs-badge{display:none;align-items:center;gap:8px;margin-top:11px;padding:9px 12px;background:rgba(53,196,107,.09);border:1px solid rgba(53,196,107,.3);border-radius:8px;font-size:12px}
+.ihs-badge.show{display:flex}
+.ihs-badge svg{width:15px;height:15px;stroke:var(--green);fill:none;stroke-width:2.4}
+.ihs-badge b{font-family:var(--mono);color:var(--green)}
+.ihs-badge span{color:var(--txt-2)}
+
+/* upload dropzone */
+.dropzone{border:1.5px dashed var(--line);border-radius:10px;padding:26px 18px;text-align:center;transition:.15s;cursor:pointer;background:var(--bg-panel)}
+.dropzone:hover,.dropzone.drag{border-color:var(--accent);background:var(--accent-dim)}
+.dropzone svg{width:34px;height:34px;stroke:var(--accent);fill:none;stroke-width:1.5;margin-bottom:10px}
+.dropzone b{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+.dropzone small{font-size:11px;color:var(--txt-3)}
+.dropzone .fmts{margin-top:10px;display:flex;gap:6px;justify-content:center}
+.dropzone .fmts span{font-family:var(--mono);font-size:9px;font-weight:600;padding:2px 7px;border-radius:4px;background:var(--bg-void);color:var(--txt-2);border:1px solid var(--line)}
+.preview{display:none;gap:13px;align-items:center;padding:12px;background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;margin-top:12px}
+.preview.show{display:flex}
+.preview .thumb{width:74px;height:74px;border-radius:8px;overflow:hidden;background:#05070a;flex-shrink:0;border:1px solid var(--line)}
+.preview .thumb svg{width:100%;height:100%;display:block}
+.preview .pinfo{flex:1;min-width:0}
+.preview .pinfo b{font-size:12.5px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.preview .pinfo small{font-size:10.5px;color:var(--txt-3);font-family:var(--mono);display:block;margin-top:3px}
+.preview .pmeta{display:flex;gap:6px;margin-top:7px}
+.preview .pmeta span{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:4px;background:var(--accent-dim);color:var(--accent)}
+
+/* live FHIR console */
+.console{background:#05080b;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.console-head{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--bg-panel);border-bottom:1px solid var(--line)}
+.console-head span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2);font-weight:600;display:flex;align-items:center;gap:8px}
+.console-head .led{width:6px;height:6px;border-radius:50%;background:var(--txt-3)}
+.console-head.live .led{background:var(--green);box-shadow:0 0 6px var(--green)}
+.console-body{max-height:280px;overflow:auto;padding:12px 13px;font-family:var(--mono);font-size:11px;line-height:1.65;white-space:pre-wrap;word-break:break-word;color:#8fa3b3}
+.console-body .key{color:#7fb2e8}.console-body .str{color:#c3e88d}.console-body .method{color:var(--accent);font-weight:600}.console-body .url{color:var(--txt-2)}.console-body .ok{color:var(--green)}.console-body .muted{color:var(--txt-3)}.console-body .err{color:var(--red)}.console-body .amber{color:var(--amber)}
+.actions{display:flex;gap:11px;margin-top:2px}
+.actions .btn{flex:1}
+
+@media(max-width:920px){.grid{grid-template-columns:1fr}.stepper{overflow-x:auto}.page-head{flex-direction:column;align-items:flex-start;gap:10px}}
+/* login */
+.login-wrap{min-height:calc(100vh - var(--h-brand));display:grid;place-items:center;padding:24px}
+.login-card{width:100%;max-width:380px}
+.login-msg{min-height:18px;font-size:12px;color:var(--red);margin:-2px 0 12px}
+.login-as p{font-size:13px;color:var(--txt-2);line-height:1.6;margin-bottom:14px}.login-as b{color:var(--txt)}.login-as small{color:var(--txt-3)}
+.login-foot{margin-top:14px;font-size:10.5px;color:var(--txt-3);text-align:center;font-family:var(--mono)}
+</style>
+</head>
+<body>
+
+<header class="brand">
+  <a href="login.html" class="logo">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18" stroke-linecap="round"/><path d="M7 7l10 10M17 7L7 17" opacity=".4" stroke-linecap="round"/></svg></div>
+    <div><div class="logo-name">SATUSEHAT <b>PACS</b> Hub</div><div class="logo-sub">Masuk Petugas</div></div>
+  </a>
+  <div class="brand-sep"></div>
+  <div class="env-badge"><i class="dot"></i><span>SANDBOX</span></div>
+</header>
+
+<div class="login-wrap">
+  <form class="card login-card" id="loginForm">
+    <div class="card-head"><b>Masuk</b><small>SIMRS · PACS Hub</small></div>
+    <div class="card-body">
+      <div class="login-as" id="loginAs" style="display:none">
+        <p>Tab ini bisa lanjut sebagai <b id="asName"></b><br><small id="asRole"></small></p>
+        <button class="btn btn-primary btn-block" type="button" id="asContinue">Lanjut sebagai <span id="asUser"></span></button>
+        <button class="btn btn-ghost btn-block" type="button" id="asSwitch" style="margin-top:9px">Masuk dengan akun lain</button>
+      </div>
+      <div class="field"><label for="username">Username</label><input id="username" name="username" autocomplete="username" required autofocus /></div>
+      <div class="field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required /></div>
+      <div class="login-msg" id="loginMsg"></div>
+      <button class="btn btn-primary btn-block" id="loginBtn" type="submit">Masuk</button>
+      <div class="login-foot" id="loginFoot">memeriksa backend…</div>
+    </div>
+  </form>
+</div>
+
+<script>
+const API_BASE=location.protocol.startsWith('http')?location.origin:'http://localhost:8000';
+const HOME={radiografer:'instalasi.html',radiolog:'pacs.html',dokter_bedah:'bedah.html',admin:'index.html'};
+const next=new URLSearchParams(location.search).get('next')||'';
+// Only return to a plain page name from this site, never to an outside URL.
+const target=user=>/^[a-z]+\.html(#[a-z]*)?$/i.test(next)?next:(HOME[user.role]||'index.html');
+const $=q=>document.querySelector(q);
+
+const TAB_KEY='simrs_tab_token';
+// Each tab has its own login: keep it for this tab, then go on.
+function enter(user){sessionStorage.setItem(TAB_KEY,user.token);location.replace(target(user));}
+function formVisible(on){
+  document.querySelectorAll('#loginForm .field,#loginBtn').forEach(e=>{e.style.display=on?'':'none';});
+  $('#loginAs').style.display=on?'none':'';
+  if(on)$('#username').focus();
+}
+function showContinue(user,thisTab){
+  $('#asName').textContent=user.full_name;
+  $('#asRole').textContent=user.role_label+(thisTab?' · sudah masuk di tab ini':' · akun terakhir di browser ini');
+  $('#asUser').textContent=user.username;
+  formVisible(false);
+  $('#asContinue').onclick=async()=>{
+    if(thisTab){location.replace(target(user));return;}
+    const r=await fetch(API_BASE+'/api/auth/tab-session',{method:'POST'}).catch(()=>null);
+    const d=r?await r.json().catch(()=>({})):{};
+    if(r&&r.ok)enter(d);else{formVisible(true);$('#loginMsg').textContent=d.detail||'Silakan masuk lagi';}
+  };
+  $('#asSwitch').onclick=()=>{sessionStorage.removeItem(TAB_KEY);formVisible(true);};
+}
+// Already logged in, in this tab or in this browser? Offer to continue instead of jumping away.
+(async()=>{
+  const mine=sessionStorage.getItem(TAB_KEY);
+  if(mine){
+    const r=await fetch(API_BASE+'/api/auth/me',{headers:{Authorization:'Bearer '+mine}}).catch(()=>null);
+    if(r&&r.ok){showContinue(await r.json(),true);return;}
+    sessionStorage.removeItem(TAB_KEY);
+  }
+  const r=await fetch(API_BASE+'/api/auth/me').catch(()=>null);   // cookie: the account last used in this browser
+  if(r&&r.ok)showContinue(await r.json(),false);
+})();
+fetch(API_BASE+'/api/health').then(r=>r.json())
+  .then(h=>{$('#loginFoot').textContent='backend '+h.mode+' · SATUSEHAT sandbox';})
+  .catch(()=>{$('#loginFoot').textContent='backend offline — jalankan uvicorn, buka lewat http://localhost:8000';});
+
+$('#loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const msg=$('#loginMsg'),btn=$('#loginBtn');
+  msg.textContent='';btn.disabled=true;btn.style.opacity='.7';
+  try{
+    const r=await fetch(API_BASE+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:$('#username').value,password:$('#password').value})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){msg.textContent=d.detail||('Gagal masuk ('+r.status+')');return;}
+    enter(d);
+  }catch(err){
+    msg.textContent='Backend tidak terhubung';
+  }finally{
+    btn.disabled=false;btn.style.opacity='';
+  }
+});
+</script>
+</body>
+</html>

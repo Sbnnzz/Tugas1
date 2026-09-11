@@ -14,7 +14,6 @@ Tugas1/
 │   ├─ index.html            # Main menu
 │   ├─ instalasi.html        # Input pemeriksaan + upload + real NIK lookup + Kirim
 │   ├─ pacs.html             # PACS viewer: grid + real DWV DICOM (scroll, W/L, MPR)
-│   ├─ viewer.html           # Standalone live DWV viewer
 │   └─ sample-chest.dcm, sample-ct.dcm   # single-slice demo files
 ├─ Backend/                  # FastAPI
 │   ├─ main.py               # routes + serves Frontend + /api/normalize-series

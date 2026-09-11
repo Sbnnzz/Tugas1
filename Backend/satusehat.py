@@ -21,6 +21,16 @@ def _now_iso():
     return datetime.datetime.now().astimezone().isoformat(timespec="seconds")
 
 
+def _local_iso(value):
+    """'2026-09-11T09:00' from a datetime-local input -> ISO 8601 with the local UTC offset."""
+    if not value:
+        return ""
+    try:
+        return datetime.datetime.fromisoformat(str(value)).astimezone().isoformat(timespec="seconds")
+    except ValueError:
+        return ""
+
+
 def _mock_id(suffix):
     return f"{uuid.uuid4()}"[:8] + "-mock-" + suffix
 
@@ -81,7 +91,7 @@ class SatuSehat:
     def __init__(self):
         self._token = None
         self._expires_at = 0.0
-        self._location_ref = None
+        self._locations = {}
 
     # ---- OAuth2 ----
     async def get_token(self):
@@ -233,28 +243,30 @@ class SatuSehat:
                         "display": study.get("name") or config.DEFAULT_PATIENT_NAME}
         return {"reference": f"Patient/{config.DEFAULT_PATIENT_ID}", "display": config.DEFAULT_PATIENT_NAME}
 
-    async def _location(self, logs):
-        """Resolve the radiology Location: configured ID, cached ID, the org's first
-        Location, or a newly created one (done once, then cached)."""
-        if config.LOCATION_ID:
-            return {"reference": f"Location/{config.LOCATION_ID}", "display": "Instalasi Radiologi"}
-        if self._location_ref:
-            return self._location_ref
-        found = await self.search("Location", {"organization": config.ORG_ID})
+    async def _location(self, logs, code="RAD-01", name="Instalasi Radiologi",
+                        description="Instalasi Radiologi - Ruang Pemeriksaan"):
+        """Resolve one of this org's Locations by its local code (RAD-01 radiology room,
+        OK-01 operating room, ...): configured id (radiology only), cached id, found by
+        identifier, or created once. Returns a reference dict, or None if creating failed."""
+        if code == "RAD-01" and config.LOCATION_ID:
+            return {"reference": f"Location/{config.LOCATION_ID}", "display": name}
+        if code in self._locations:
+            return self._locations[code]
+        org = config.ORG_ID or "ORG-SANDBOX"
+        system = f"http://sys-ids.kemkes.go.id/location/{org}"
+        found = await self.search("Location", {"identifier": f"{system}|{code}"})
         logs.append({"step": "Location", **found})
         body = found["response"] if isinstance(found["response"], dict) else {}
         if found["status"] < 300 and body.get("entry"):
             loc = body["entry"][0]["resource"]
-            self._location_ref = {"reference": f"Location/{loc['id']}",
-                                  "display": loc.get("name", "Instalasi Radiologi")}
-            return self._location_ref
-        org = config.ORG_ID or "ORG-SANDBOX"
+            self._locations[code] = {"reference": f"Location/{loc['id']}", "display": loc.get("name", name)}
+            return self._locations[code]
         created = await self.create("Location", {
             "resourceType": "Location",
-            "identifier": [{"system": f"http://sys-ids.kemkes.go.id/location/{org}", "value": "RAD-01"}],
+            "identifier": [{"system": system, "value": code}],
             "status": "active",
-            "name": "Instalasi Radiologi",
-            "description": "Instalasi Radiologi - Ruang Pemeriksaan",
+            "name": name,
+            "description": description,
             "mode": "instance",
             "physicalType": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/location-physical-type",
                                          "code": "ro", "display": "Room"}]},
@@ -264,9 +276,8 @@ class SatuSehat:
         logs.append({"step": "Location", **created})
         if created["status"] >= 300:
             return None
-        self._location_ref = {"reference": f"Location/{created['response']['id']}",
-                              "display": "Instalasi Radiologi"}
-        return self._location_ref
+        self._locations[code] = {"reference": f"Location/{created['response']['id']}", "display": name}
+        return self._locations[code]
 
     # ---- high-level: the full radiology chain ----
     async def send_study(self, study):
@@ -419,6 +430,92 @@ class SatuSehat:
             return result
 
         result.update(ok=True, diagnostic_report_id=dr_id)
+        return result
+
+    # ---- high-level: surgery (Instalasi Bedah) ----
+    async def send_procedure(self, op):
+        """Send one operation as the chain SATUSEHAT requires for surgery:
+        Patient -> Encounter (inpatient, operating room OK-01) -> Procedure (ICD-9-CM).
+
+        op: {"patient":  {nik, name},
+             "schedule": {start, end, surgeon, anesthesiologist, anesthesia},   # start/end: datetime-local
+             "report":   {pre_dx_code, pre_dx_text, proc_code, proc_text, post_dx, findings, complications}}
+        Stops at the first failed step. Every step is logged for the frontend API console."""
+        logs = []
+        result = {"ok": False, "mode": config.MODE, "logs": logs, "encounter_id": "", "procedure_id": ""}
+
+        tok = await self.get_token()
+        logs.append({"step": "token", **tok})
+        if tok["status"] >= 300:
+            return result
+
+        org = config.ORG_ID or "ORG-SANDBOX"
+        tag = datetime.datetime.now().strftime("%y%m%d%H%M%S") + uuid.uuid4().hex[:4].upper()
+        patient_in, sched, rep = op.get("patient", {}), op.get("schedule", {}), op.get("report", {})
+        start = _local_iso(sched.get("start")) or _now_iso()
+        end = _local_iso(sched.get("end"))
+
+        patient = await self._patient({"nik": patient_in.get("nik", ""), "name": patient_in.get("name", "")}, logs)
+        practitioner = {"reference": f"Practitioner/{config.PRACTITIONER_ID}", "display": config.PRACTITIONER_NAME}
+        location = await self._location(logs, "OK-01", "Instalasi Bedah Sentral - Kamar Operasi 1", "Kamar Operasi 1")
+        if location is None:
+            return result
+
+        async def step(resource_type, resource):
+            res = await self.create(resource_type, resource)
+            logs.append({"step": resource_type, **res})
+            body = res["response"] if isinstance(res["response"], dict) else {}
+            return body.get("id") if res["status"] < 300 else None
+
+        enc_id = await step("Encounter", {
+            "resourceType": "Encounter",
+            "identifier": [{"system": f"http://sys-ids.kemkes.go.id/encounter/{org}", "value": "ENCOK" + tag}],
+            "status": "arrived",
+            "class": {"system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                      "code": "IMP", "display": "inpatient encounter"},
+            "subject": patient,
+            "participant": [{"type": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                                                   "code": "ATND", "display": "attender"}]}],
+                             "individual": practitioner}],
+            "period": {"start": start},
+            "location": [{"location": location}],
+            "statusHistory": [{"status": "arrived", "period": {"start": start}}],
+            "serviceProvider": {"reference": f"Organization/{org}"},
+        })
+        if not enc_id:
+            return result
+        result["encounter_id"] = enc_id
+
+        notes = [f"{label}: {value}" for label, value in (
+            ("Diagnosis pasca-operasi", rep.get("post_dx")),
+            ("Temuan operasi", rep.get("findings")),
+            ("Komplikasi", rep.get("complications")),
+            ("Operator", sched.get("surgeon")),
+            ("Anestesi", " · ".join(v for v in (sched.get("anesthesia"), sched.get("anesthesiologist")) if v)),
+        ) if value]
+        procedure = {
+            "resourceType": "Procedure",
+            "status": "completed",
+            "category": {"coding": [{"system": "http://snomed.info/sct", "code": "387713003",
+                                     "display": "Surgical procedure"}], "text": "Surgical procedure"},
+            "code": {"coding": [{"system": "http://hl7.org/fhir/sid/icd-9-cm",
+                                 "code": rep.get("proc_code", ""), "display": rep.get("proc_text", "")}]},
+            "subject": patient,
+            "encounter": {"reference": f"Encounter/{enc_id}"},
+            "performedPeriod": {"start": start, **({"end": end} if end else {})},
+            "performer": [{"actor": practitioner}],
+        }
+        if rep.get("pre_dx_code"):
+            procedure["reasonCode"] = [{"coding": [{"system": "http://hl7.org/fhir/sid/icd-10",
+                                                    "code": rep["pre_dx_code"], "display": rep.get("pre_dx_text", "")}]}]
+        if notes:
+            procedure["note"] = [{"text": "\n".join(notes)}]
+
+        proc_id = await step("Procedure", procedure)
+        if not proc_id:
+            return result
+
+        result.update(ok=True, procedure_id=proc_id)
         return result
 
 client = SatuSehat()

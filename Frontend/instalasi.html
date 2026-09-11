@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Instalasi Workstation · SATUSEHAT PACS</title>
+<script src="auth.js"></script>
+<title>Instalasi Radiografi · SATUSEHAT PACS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -127,6 +128,27 @@ a{text-decoration:none;color:inherit}
 .actions .btn{flex:1}
 
 @media(max-width:920px){.grid{grid-template-columns:1fr}.stepper{overflow-x:auto}.page-head{flex-direction:column;align-items:flex-start;gap:10px}}
+/* permintaan masuk */
+.rq-empty{font-size:12px;color:var(--txt-3)}
+.rq-item{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg-panel);margin-bottom:9px;cursor:pointer;transition:border-color .12s}
+.rq-item:last-child{margin-bottom:0}.rq-item:hover{border-color:var(--accent)}
+.rq-item.active{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.rq-item .rt{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600}
+.rq-item .rt span{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:4px;background:var(--accent-dim);color:var(--accent)}
+.rq-item .rt .cito{background:var(--red);color:#fff}
+.rq-item .rd{font-size:10.5px;color:var(--txt-3);font-family:var(--mono);margin-top:3px}
+.rq-item .rr{font-size:12px;color:var(--txt-2);margin-top:5px}
+.preview .pinfo small.file-warn{color:var(--red)}
+/* step by step */
+.wz-step{display:none}.wz-step.active{display:flex;flex-direction:column;gap:16px}
+.wz-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px}
+.wz-nav .btn{min-width:140px}
+.wz-hint{flex:1;text-align:center;font-size:12px;color:var(--amber)}
+.wz-kv{display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px}
+.wz-kv:last-child{border-bottom:none}.wz-kv .k{color:var(--txt-3);white-space:nowrap}.wz-kv .v{text-align:right;word-break:break-word}
+.wz-done{margin-top:12px;padding:12px;border-radius:9px;background:rgba(53,196,107,.09);border:1px solid rgba(53,196,107,.3);color:var(--green);font-size:12.5px;line-height:1.6}
+.wz-done .btn{margin-top:8px}
+.stepper .step{cursor:pointer}
 </style>
 </head>
 <body>
@@ -134,14 +156,15 @@ a{text-decoration:none;color:inherit}
 <header class="brand">
   <a href="index.html" class="logo">
     <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18" stroke-linecap="round"/><path d="M7 7l10 10M17 7L7 17" opacity=".4" stroke-linecap="round"/></svg></div>
-    <div><div class="logo-name">SATUSEHAT <b>PACS</b> Hub</div><div class="logo-sub">Instalasi Workstation</div></div>
+    <div><div class="logo-name">SATUSEHAT <b>PACS</b> Hub</div><div class="logo-sub">Instalasi Radiografi</div></div>
   </a>
   <div class="brand-sep"></div>
   <div class="env-badge"><i class="dot"></i><span>SANDBOX</span></div>
   <nav class="topnav">
     <a href="index.html">Menu</a>
-    <a href="instalasi.html" class="active">Instalasi</a>
+    <a href="instalasi.html" class="active">Instalasi Radiografi</a>
     <a href="pacs.html">PACS Viewer</a>
+    <a href="bedah.html">Bedah</a>
   </nav>
   <div class="brand-spacer"></div>
   <div class="unit-sel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5c6875" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M4 10h16"/></svg><select id="unit"><option>Instalasi Radiologi</option><option>Instalasi Bedah</option></select></div>
@@ -151,61 +174,67 @@ a{text-decoration:none;color:inherit}
 <div class="wrap">
   <div class="page-head">
     <div><h1>Pendaftaran Pemeriksaan</h1><p id="unitSub">Instalasi Radiologi · RSUD Dr. Soetomo</p></div>
-    <div class="accession">Accession · <b>RAD-2025-004822</b></div>
+    <div class="accession">No. Arsip · <b id="accVal">belum disimpan</b></div>
   </div>
 
   <!-- STEPPER -->
   <div class="stepper">
-    <div class="step active"><div class="num">1</div><div><b>Data Pasien</b><small>identitas & NIK</small></div></div>
+    <div class="step active"><div class="num">1</div><div><b>Permintaan</b><small>pilih permintaan masuk</small></div></div>
     <div class="step-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
-    <div class="step"><div class="num">2</div><div><b>Permintaan</b><small>dokter & modality</small></div></div>
+    <div class="step"><div class="num">2</div><div><b>Pasien</b><small>identitas &amp; pemeriksaan</small></div></div>
     <div class="step-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
-    <div class="step"><div class="num">3</div><div><b>Upload Citra</b><small>DICOM / PNG</small></div></div>
+    <div class="step"><div class="num">3</div><div><b>Citra</b><small>upload DICOM</small></div></div>
     <div class="step-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
-    <div class="step"><div class="num">4</div><div><b>Bacaan</b><small>ICD-10</small></div></div>
-    <div class="step-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
-    <div class="step"><div class="num">5</div><div><b>Kirim</b><small>SATUSEHAT</small></div></div>
+    <div class="step"><div class="num">4</div><div><b>Kirim</b><small>ke radiolog</small></div></div>
   </div>
 
-  <div class="grid">
-    <!-- LEFT: patient + request -->
-    <div class="col">
-      <div class="card">
-        <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div><b>Data Pasien</b><small>FHIR Patient</small></div>
-        <div class="card-body">
-          <div class="nik-row">
-            <div class="field"><label>NIK (KTP)</label><input class="mono" id="nik" placeholder="16 digit NIK" value="9271060312000001" /></div>
-            <button class="btn btn-ghost" id="cekBtn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Cek SATUSEHAT</button>
+  <div class="wizard">
+    <section class="wz-step active" data-step="0">
+      <div class="card" id="worklistCard">
+        <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div><b>Permintaan Masuk</b><small id="wlCount">memuat…</small></div>
+        <div class="card-body" id="rqList"><div class="rq-empty">Memuat permintaan…</div></div>
+      </div>
+    </section>
+    <section class="wz-step" data-step="1">
+      <div class="grid">
+        <div class="col">
+          <div class="card">
+            <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div><b>Data Pasien</b><small>FHIR Patient</small></div>
+            <div class="card-body">
+              <div class="nik-row">
+                <div class="field"><label>NIK (KTP)</label><input class="mono" id="nik" placeholder="16 digit NIK" value="9271060312000001" /></div>
+                <button class="btn btn-ghost" id="cekBtn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Cek SATUSEHAT</button>
+              </div>
+              <div class="ihs-badge" id="ihsBadge"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg><span>IHS Number ditemukan:</span><b id="ihsVal">—</b></div>
+              <div class="field-row" style="margin-top:13px"><div class="field"><label>Nama Lengkap</label><input id="nama" value="Ardianto Putra" /></div></div>
+              <div class="field-row">
+                <div class="field"><label>Jenis Kelamin</label><select id="jk"><option>Laki-laki</option><option>Perempuan</option></select></div>
+                <div class="field"><label>Tanggal Lahir</label><input class="mono" id="dob" value="1992-01-09" /></div>
+              </div>
+              <div class="field-row">
+                <div class="field"><label>No. Rekam Medis</label><input class="mono" value="00-12-84-56" /></div>
+                <div class="field"><label>Penjamin</label><select><option>BPJS Kesehatan</option><option>Umum</option><option>Asuransi</option></select></div>
+              </div>
+            </div>
           </div>
-          <div class="ihs-badge" id="ihsBadge"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg><span>IHS Number ditemukan:</span><b id="ihsVal">—</b></div>
-          <div class="field-row" style="margin-top:13px"><div class="field"><label>Nama Lengkap</label><input id="nama" value="Ardianto Putra" /></div></div>
-          <div class="field-row">
-            <div class="field"><label>Jenis Kelamin</label><select id="jk"><option>Laki-laki</option><option>Perempuan</option></select></div>
-            <div class="field"><label>Tanggal Lahir</label><input class="mono" id="dob" value="1992-01-09" /></div>
-          </div>
-          <div class="field-row">
-            <div class="field"><label>No. Rekam Medis</label><input class="mono" value="00-12-84-56" /></div>
-            <div class="field"><label>Penjamin</label><select><option>BPJS Kesehatan</option><option>Umum</option><option>Asuransi</option></select></div>
+        </div>
+        <div class="col">
+          <div class="card">
+            <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><path d="M9 12h6M9 16h4"/></svg></div><b>Permintaan Pemeriksaan</b><small>FHIR ServiceRequest</small></div>
+            <div class="card-body">
+              <div class="field-row">
+                <div class="field"><label>Dokter Perujuk</label><input id="doctor" value="dr. Sari Wulandari, Sp.PD" /></div>
+                <div class="field" style="flex:.7"><label>Modality</label><select id="modality"><option>CT</option><option>DX (X-Ray)</option><option>MR</option><option>US</option></select></div>
+              </div>
+              <div class="field"><label>Jenis Pemeriksaan</label><input id="exam" value="CT Abdomen dengan Kontras" /></div>
+              <div class="field"><label>Diagnosa Klinis / Indikasi</label><input id="clinical" value="Nyeri perut kanan bawah, suspek appendicitis" /></div>
+              <div class="field"><label>Instalasi Asal</label><select><option>Instalasi Radiologi · RSUD Dr. Soetomo</option><option>Instalasi Radiologi · RS Universitas Airlangga</option><option>Instalasi Bedah · RSUD Dr. Soetomo</option></select></div>
+            </div>
           </div>
         </div>
       </div>
-
-      <div class="card">
-        <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><path d="M9 12h6M9 16h4"/></svg></div><b>Permintaan Pemeriksaan</b><small>FHIR ServiceRequest</small></div>
-        <div class="card-body">
-          <div class="field-row">
-            <div class="field"><label>Dokter Perujuk</label><input value="dr. Sari Wulandari, Sp.PD" /></div>
-            <div class="field" style="flex:.7"><label>Modality</label><select id="modality"><option>CT</option><option>DX (X-Ray)</option><option>MR</option><option>US</option></select></div>
-          </div>
-          <div class="field"><label>Jenis Pemeriksaan</label><input id="exam" value="CT Abdomen dengan Kontras" /></div>
-          <div class="field"><label>Diagnosa Klinis / Indikasi</label><input value="Nyeri perut kanan bawah, suspek appendicitis" /></div>
-          <div class="field"><label>Instalasi Asal</label><select><option>Instalasi Radiologi · RSUD Dr. Soetomo</option><option>Instalasi Radiologi · RS Universitas Airlangga</option><option>Instalasi Bedah · RSUD Dr. Soetomo</option></select></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT: upload + bacaan + console -->
-    <div class="col">
+    </section>
+    <section class="wz-step" data-step="2">
       <div class="card">
         <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/><circle cx="8.5" cy="10" r="1.5"/></svg></div><b>Upload Citra</b><small>→ PACS Archive</small></div>
         <div class="card-body">
@@ -223,26 +252,41 @@ a{text-decoration:none;color:inherit}
           </div>
         </div>
       </div>
-
-      <div class="card">
-        <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M9 13h6M9 17h4"/></svg></div><b>Bacaan Radiologi</b><small>FHIR DiagnosticReport</small></div>
-        <div class="card-body">
-          <div class="field-row">
-            <div class="field" style="flex:.8"><label>Kode ICD-10</label><input class="mono" id="icd" value="K35.8" /></div>
-            <div class="field" style="flex:1.4"><label>Diagnosis</label><input id="dx" value="Acute appendicitis, unspecified" /></div>
+    </section>
+    <section class="wz-step" data-step="3">
+      <div class="grid">
+        <div class="col">
+          <div class="card" id="wzSummaryCard">
+            <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div><b>Ringkasan</b><small>periksa sebelum kirim</small></div>
+            <div class="card-body" id="wzSummaryBody"></div>
           </div>
-          <div class="field"><label>Temuan / Kesan</label><textarea id="finding" rows="2">Tampak penebalan dinding apendiks disertai fat stranding periapendikular. Kesan: appendicitis akut.</textarea></div>
-          <div class="actions">
-            <button class="btn btn-ghost" id="saveBtn"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan ke Instalasi DB</button>
-            <button class="btn btn-primary" id="sendBtn"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Kirim ke SATUSEHAT</button>
+          <div class="card">
+            <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M9 13h6M9 17h4"/></svg></div><b>Bacaan Radiologi</b><small>FHIR DiagnosticReport</small></div>
+            <div class="card-body">
+              <div class="field-row">
+                <div class="field" style="flex:.8"><label>Kode ICD-10</label><input class="mono" id="icd" value="K35.8" /></div>
+                <div class="field" style="flex:1.4"><label>Diagnosis</label><input id="dx" value="Acute appendicitis, unspecified" /></div>
+              </div>
+              <div class="field"><label>Temuan / Kesan</label><textarea id="finding" rows="2">Tampak penebalan dinding apendiks disertai fat stranding periapendikular. Kesan: appendicitis akut.</textarea></div>
+              <div class="actions">
+                <button class="btn btn-ghost" id="saveBtn"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan &amp; kirim ke Radiolog</button>
+                <button class="btn btn-primary" id="sendBtn"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Kirim ke SATUSEHAT</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="console">
+            <div class="console-head" id="consoleHead"><span><i class="led"></i>FHIR R4 · Sandbox</span><span class="mono" style="font-size:9px;color:var(--txt-3)" id="cStatus">preview otomatis</span></div>
+            <div class="console-body" id="console"></div>
           </div>
         </div>
       </div>
-
-      <div class="console">
-        <div class="console-head" id="consoleHead"><span><i class="led"></i>FHIR R4 · Sandbox</span><span class="mono" style="font-size:9px;color:var(--txt-3)" id="cStatus">preview otomatis</span></div>
-        <div class="console-body" id="console"></div>
-      </div>
+    </section>
+    <div class="wz-nav">
+      <button class="btn btn-ghost" id="wzBack">← Kembali</button>
+      <span class="wz-hint" id="wzHint"></span>
+      <button class="btn btn-primary" id="wzNext">Lanjut →</button>
     </div>
   </div>
 </div>
@@ -299,7 +343,7 @@ async function mockCek(){
   await new Promise(r=>setTimeout(r,900));
   $('#ihsVal').textContent='P02478315092';$('#ihsBadge').classList.add('show');
   b.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Ditemukan';b.style.pointerEvents='';
-  document.querySelectorAll('.step')[0].classList.add('done');
+  
 }
 $('#cekBtn').addEventListener('click',async()=>{
   const b=$('#cekBtn'),nik=$('#nik').value.trim();
@@ -307,8 +351,7 @@ $('#cekBtn').addEventListener('click',async()=>{
   let data;
   try{
     const r=await fetch(API_BASE+'/api/satusehat/patient?nik='+encodeURIComponent(nik));
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    data=await r.json();
+    data=r.ok?await r.json():{status:r.status,response:{}};
   }catch(err){
     console.warn('SATUSEHAT backend unreachable, using simulation:',err);
     return mockCek();
@@ -317,7 +360,7 @@ $('#cekBtn').addEventListener('click',async()=>{
   if(code>=200&&code<300&&entry){
     $('#ihsVal').textContent=entry.resource.id;$('#ihsBadge').classList.add('show');
     b.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Ditemukan';
-    document.querySelectorAll('.step')[0].classList.add('done');
+    
   }else{
     $('#ihsBadge').classList.remove('show');
     b.innerHTML=code>=200&&code<300?'Tidak ditemukan':'Gagal ('+code+')';
@@ -328,12 +371,67 @@ $('#cekBtn').addEventListener('click',async()=>{
 // upload
 const dz=$('#dropzone'),fi=$('#fileInput'),pv=$('#preview');
 let pickedFile=null;
+// Read a few header tags from a DICOM Part-10 file (explicit or implicit VR little endian).
+// Returns null for files that are not DICOM (PNG/JPG), so the form is left as typed.
+async function readDicomHeader(file){
+  const buf=await file.slice(0,262144).arrayBuffer(),v=new DataView(buf),u8=new Uint8Array(buf);
+  if(!(u8[128]===68&&u8[129]===73&&u8[130]===67&&u8[131]===77))return null;  // "DICM"
+  const want={'00080060':'modality','00081030':'studyDesc','0008103E':'seriesDesc','00180015':'bodyPart',
+              '00180050':'thickness','00280010':'rows','00280011':'cols'};
+  const longVR=['OB','OW','OF','SQ','UT','UN','OD','OL','UC','UR','OV'];
+  const hex4=n=>n.toString(16).padStart(4,'0').toUpperCase();
+  const text=(o,n)=>String.fromCharCode(...u8.subarray(o,o+n)).replace(/[\0 ]+$/,'').trim();
+  const out={};
+  let pos=132;
+  while(pos+8<=buf.byteLength){
+    const g=v.getUint16(pos,true),e=v.getUint16(pos+2,true);
+    if(g>0x0028)break;
+    const vr=String.fromCharCode(u8[pos+4],u8[pos+5]);
+    let len,val;
+    if(/^[A-Z]{2}$/.test(vr)){
+      if(longVR.includes(vr)){len=v.getUint32(pos+8,true);val=pos+12;}else{len=v.getUint16(pos+6,true);val=pos+8;}
+    }else{len=v.getUint32(pos+4,true);val=pos+8;}
+    if(len===0xFFFFFFFF||val+len>buf.byteLength)break;
+    const key=hex4(g)+hex4(e);
+    if(want[key])out[want[key]]=(key==='00280010'||key==='00280011')?v.getUint16(val,true):text(val,len);
+    pos=val+len;
+  }
+  return out;
+}
+const DICOM_MODALITY={CR:'DX (X-Ray)',DX:'DX (X-Ray)',DR:'DX (X-Ray)',CT:'CT',MR:'MR',US:'US'};
+const EXAM_PREFIX={'DX (X-Ray)':'Foto','CT':'CT','MR':'MRI','US':'USG'};
+const REGION_ID={CHEST:'Thorax',THORAX:'Thorax',ABDOMEN:'Abdomen',HEAD:'Kepala',BRAIN:'Kepala',SKULL:'Kepala',
+                 PELVIS:'Pelvis',SPINE:'Vertebra',CSPINE:'Vertebra Servikal',LSPINE:'Vertebra Lumbal',
+                 KNEE:'Genu',HAND:'Manus',FOOT:'Pedis',BREAST:'Mammae'};
+// Fill Modality, Jenis Pemeriksaan and the preview labels from the picked file, so the saved
+// label always matches the image (e.g. a chest X-ray is not saved as "CT Abdomen").
+async function inspectDicom(file){
+  let h;
+  try{h=await readDicomHeader(file);}catch(err){console.warn('DICOM header not readable:',err);return;}
+  if(!h||!h.modality)return;
+  const mod=h.modality.toUpperCase(),option=DICOM_MODALITY[mod];
+  if(option&&!selectedOrder)$('#modality').value=option;
+  const part=(h.bodyPart||'').toUpperCase();
+  const region=REGION_ID[part]||(part?part.charAt(0)+part.slice(1).toLowerCase():'');
+  const exam=h.studyDesc||h.seriesDesc||((EXAM_PREFIX[option]||mod)+(region?' '+region:''));  // no body part in file: don't keep a stale one
+  if(exam&&!selectedOrder)$('#exam').value=exam;
+  const chips=$('#modBadge').parentElement.children;
+  chips[0].textContent=mod;
+  if(chips[1])chips[1].textContent=part||'—';
+  if(chips[2])chips[2].textContent=h.thickness?Number(h.thickness)+'mm':(h.rows&&h.cols?h.cols+'×'+h.rows:'—');
+  $('#fileMeta').textContent=(file.size/1048576).toFixed(2)+' MB · DICOM '+mod+(h.rows&&h.cols?' · '+h.cols+' × '+h.rows:'');
+  const ordered=selectedOrder&&(selectedOrder.data.exam||{}).modality,fileGroup=({CR:'DX',DR:'DX'})[mod]||mod;
+  $('#fileMeta').classList.toggle('file-warn',!!ordered&&ordered!==fileGroup);
+  if(ordered&&ordered!==fileGroup)$('#fileMeta').textContent+=' · berkas '+mod+', permintaan '+ordered+'!';
+  renderPreview();
+}
 function showFile(name){
   $('#previewThumb').innerHTML=scanSVG(Date.now());
   $('#fileName').textContent=name||'chest_ct_abdomen.dcm';
   if(pickedFile){$('#fileMeta').textContent=(pickedFile.size/1048576).toFixed(2)+' MB · '+(pickedFile.name.split('.').pop()||'').toUpperCase();$('#modBadge').textContent=$('#modality').value.split(' ')[0];}
+  if(pickedFile)inspectDicom(pickedFile);
   pv.classList.add('show');
-  document.querySelectorAll('.step')[2].classList.add('done');
+  wzRender();
 }
 dz.addEventListener('click',()=>fi.click());
 fi.addEventListener('change',e=>{if(e.target.files[0]){pickedFile=e.target.files[0];showFile(pickedFile.name)}});
@@ -343,15 +441,19 @@ dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)pickedFile=f
 
 // save: local PACS archive through the backend, simulated when it is unreachable
 function mockSave(){const b=$('#saveBtn');b.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Tersimpan di Instalasi DB';setTimeout(()=>{b.innerHTML='<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan ke Instalasi DB'},2200)}
-const SAVE_LABEL='<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan ke Instalasi DB';
+const SAVE_LABEL='<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan &amp; kirim ke Radiolog';
 // Save to the local PACS archive (Backend/data): the picked file plus the form as metadata.
 $('#saveBtn').addEventListener('click',async()=>{
   const b=$('#saveBtn');
+  if(!selectedOrder){b.textContent='Pilih permintaan dulu';setTimeout(()=>{b.innerHTML=SAVE_LABEL},2500);window.scrollTo({top:$('#worklistCard').getBoundingClientRect().top+window.scrollY-60,behavior:'smooth'});return;}
+  if($('#fileMeta').classList.contains('file-warn')&&!confirm('Modality berkas tidak sama dengan permintaan. Tetap simpan?'))return;
   const meta={
     name:$('#nama').value.trim(),nik:$('#nik').value.trim(),gender:$('#jk').value,birthDate:$('#dob').value.trim(),
     modality:$('#modality').value.split(' ')[0],description:$('#exam').value.trim(),
-    icd10:$('#icd').value.trim(),diagnosis:$('#dx').value.trim(),finding:$('#finding').value.trim(),
-    instalasi:$('#unit').value
+    ...(simrsCan('report')?{icd10:$('#icd').value.trim(),diagnosis:$('#dx').value.trim(),finding:$('#finding').value.trim()}:{}),
+    doctor:$('#doctor').value.trim(),clinical:$('#clinical').value.trim(),
+    instalasi:$('#unit').value,
+    order_id:selectedOrder.id
   };
   const fd=new FormData();
   if(pickedFile)fd.append('file',pickedFile,pickedFile.name);
@@ -372,6 +474,8 @@ $('#saveBtn').addEventListener('click',async()=>{
     return;
   }
   const study=await r.json();
+  $('#accVal').textContent=study.id;
+  wzSaved=study;wzRender();loadRequests();
   b.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Tersimpan · '+esc(study.id)+(study.file?'':' (tanpa citra)');
   setTimeout(()=>{b.innerHTML=SAVE_LABEL},3000);
 });
@@ -394,8 +498,8 @@ async function mockSend(icd,dx){
   await wait(650);log('<span class="ok">201 Created</span> <span class="key">id</span>:<span class="str">"b71e…dr"</span>');
   await wait(250);log('\n<span class="ok">✓ Studi terkirim</span> <span class="muted">· 2 resource · 0 error</span>');
   cStatus.textContent='done · 200';
-  document.querySelectorAll('.step')[3].classList.add('done');
-  document.querySelectorAll('.step')[4].classList.add('done');
+  
+  
   b.style.pointerEvents='';b.style.opacity='';b.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Terkirim ke SATUSEHAT';
   setTimeout(()=>{b.innerHTML='<svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Kirim ke SATUSEHAT'},2800);
 }
@@ -422,8 +526,7 @@ $('#sendBtn').addEventListener('click',async()=>{
   let data;
   try{
     const r=await fetch(API_BASE+'/api/satusehat/send-study',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    data=await r.json();
+    data=r.ok?await r.json():simrsDenied(r.status,API_BASE+'/api/satusehat/send-study');
   }catch(err){
     console.warn('SATUSEHAT backend unreachable, using simulation:',err);
     return mockSend(payload.icd10,payload.diagnosis);
@@ -448,11 +551,102 @@ $('#sendBtn').addEventListener('click',async()=>{
   }
   log('\n'+(data.ok?'<span class="ok">✓ Studi terkirim</span>':'<span class="err">✗ Pengiriman gagal</span>')+' <span class="muted">· mode '+esc(data.mode??'')+' · '+errors+' error</span>');
   cStatus.textContent=data.ok?'done · '+data.mode:'error · '+data.mode;
-  if(data.ok){document.querySelectorAll('.step')[3].classList.add('done');document.querySelectorAll('.step')[4].classList.add('done');}
+  if(data.ok){}
   b.style.pointerEvents='';b.style.opacity='';
   b.innerHTML=data.ok?'<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Terkirim ke SATUSEHAT':SEND_LABEL;
   if(data.ok)setTimeout(()=>{b.innerHTML=SEND_LABEL},2800);
 });
+// Role: a radiographer registers and uploads; the reading is written and sent by the radiologist in PACS.
+(window.simrsUser||Promise.resolve()).then(()=>{
+  if(simrsCan('report'))return;
+  ['#icd','#dx','#finding'].forEach(q=>{const e=$(q);e.readOnly=true;e.style.opacity='.55';e.title='Diisi Radiolog di PACS';});
+  $('#sendBtn').style.display='none';
+  const note=$('#icd').closest('.card').querySelector('.card-head small');
+  if(note)note.textContent='diisi Radiolog di PACS';
+});
+// Incoming radiology requests: the radiographer picks one and the form is filled from it.
+// Patient and exam come from the request (read-only); the uploaded image must match what was ordered.
+let selectedOrder=null;
+const MODALITY_OPTION={DX:'DX (X-Ray)',CT:'CT',MR:'MR',US:'US'};
+const ORDER_FIELDS=['#nik','#nama','#jk','#dob','#doctor','#modality','#exam','#clinical'];
+async function loadRequests(){
+  const box=$('#rqList');
+  let list;
+  try{const r=await fetch(API_BASE+'/api/orders?status=requested');if(!r.ok)throw new Error('HTTP '+r.status);list=await r.json();}
+  catch(err){box.innerHTML='<div class="rq-empty">Permintaan tidak dapat dimuat.</div>';$('#wlCount').textContent='—';return;}
+  $('#wlCount').textContent=list.length+' menunggu';
+  if(!list.length){box.innerHTML='<div class="rq-empty">Tidak ada permintaan yang menunggu. Permintaan dibuat dokter di halaman Bedah.</div>';return;}
+  box.innerHTML='';
+  list.forEach(o=>{
+    const d=o.data||{},p=d.patient||{},ex=d.exam||{};
+    const el=document.createElement('div');el.className='rq-item'+(selectedOrder&&selectedOrder.id===o.id?' active':'');
+    el.innerHTML='<div class="rt"><span>'+esc(ex.modality||'—')+'</span>'+esc(ex.description||'Pemeriksaan')+(d.priority==='CITO'?' <span class="cito">CITO</span>':'')+'</div>'+
+      '<div class="rd">'+esc(o.id)+' · '+esc(p.name||'—')+' · '+esc(p.nik||'')+'</div>'+
+      '<div class="rr">'+esc(d.requester||o.created_by)+(d.indication&&d.indication.text?' — '+esc(d.indication.text):'')+'</div>';
+    el.onclick=()=>{selectOrder(o);document.querySelectorAll('.rq-item').forEach(x=>x.classList.toggle('active',x===el));};
+    box.appendChild(el);
+  });
+}
+function selectOrder(o){
+  const d=o.data||{},p=d.patient||{},ex=d.exam||{};
+  selectedOrder=o;
+  $('#nik').value=p.nik||'';$('#nama').value=p.name||'';if(p.gender)$('#jk').value=p.gender;$('#dob').value=p.birthDate||'';
+  $('#doctor').value=d.requester||'';$('#modality').value=MODALITY_OPTION[ex.modality]||ex.modality||'';
+  $('#exam').value=ex.description||'';$('#clinical').value=(d.indication&&d.indication.text)||'';
+  ORDER_FIELDS.forEach(q=>{const e=$(q);if(e.tagName==='SELECT')e.disabled=true;else e.readOnly=true;});
+  $('#accVal').textContent='permintaan '+o.id;
+  $('#ihsBadge').classList.remove('show');
+  wzSaved=null;wzRender();
+  renderPreview();
+  if(pickedFile)inspectDicom(pickedFile);
+}
+(window.simrsUser||Promise.resolve()).then(()=>loadRequests());
+// Step by step: one step on screen at a time. 1 Permintaan -> 2 Pasien -> 3 Citra -> 4 Kirim.
+// A step opens only when the one before it is done; the bar at the top shows where you are.
+let wzStep=0,wzSaved=null;
+const WZ_READY=[()=>true,()=>!!selectedOrder,()=>!!selectedOrder,()=>!!selectedOrder&&!!pickedFile];
+const WZ_DONE=[()=>!!selectedOrder,()=>!!selectedOrder&&wzStep>1,()=>!!pickedFile,()=>!!wzSaved];
+const WZ_BLOCKED=['','Pilih salah satu permintaan masuk dulu.','Pilih salah satu permintaan masuk dulu.','Upload citra DICOM hasil pemeriksaan dulu.'];
+let wzHintTimer=null;
+function wzHint(msg){const h=$('#wzHint');h.textContent=msg;clearTimeout(wzHintTimer);wzHintTimer=setTimeout(()=>{h.textContent='';},3500);}
+function wzGo(n){
+  if(n<0||n>3)return;
+  if(!WZ_READY[n]()){wzHint(WZ_BLOCKED[n]);return;}
+  wzStep=n;wzRender();window.scrollTo({top:0,behavior:'smooth'});
+}
+function wzRow(k,v){return '<div class="wz-kv"><span class="k">'+esc(k)+'</span><span class="v">'+esc(v)+'</span></div>';}
+function wzSummary(){
+  const o=selectedOrder,d=(o&&o.data)||{},p=d.patient||{},ex=d.exam||{};
+  $('#wzSummaryBody').innerHTML=
+    wzRow('Permintaan',o?o.id+(d.priority==='CITO'?' · CITO':''):'—')+
+    wzRow('Pasien',(p.name||'—')+(p.nik?' · '+p.nik:''))+
+    wzRow('Pemeriksaan',((ex.modality||'')+' · '+(ex.description||'')).replace(/^ · /,''))+
+    wzRow('Dokter perujuk',d.requester||'—')+
+    wzRow('Citra',pickedFile?pickedFile.name+' · '+$('#fileMeta').textContent:'belum ada')+
+    (wzSaved?'<div class="wz-done">✓ Tersimpan · No. Arsip '+esc(wzSaved.id)+' — sudah masuk worklist Radiolog.<br>'+
+      '<button class="btn btn-ghost" id="wzAgain">Kerjakan permintaan berikutnya</button></div>':'');
+  if(wzSaved)$('#wzAgain').onclick=wzReset;
+}
+function wzRender(){
+  document.querySelectorAll('.wz-step').forEach(s=>s.classList.toggle('active',Number(s.dataset.step)===wzStep));
+  document.querySelectorAll('.stepper .step').forEach((s,i)=>{s.classList.toggle('active',i===wzStep);s.classList.toggle('done',i!==wzStep&&WZ_DONE[i]());});
+  $('#wzBack').style.visibility=wzStep===0?'hidden':'';
+  $('#wzNext').style.display=wzStep===3?'none':'';
+  $('#saveBtn').style.display=wzSaved?'none':'';
+  if(wzStep===3)wzSummary();
+}
+// start over with the next request; patient fields stay locked (no walk-in registration)
+function wzReset(){
+  selectedOrder=null;pickedFile=null;wzSaved=null;
+  fi.value='';pv.classList.remove('show');$('#fileMeta').classList.remove('file-warn');
+  ['#nik','#nama','#dob','#doctor','#exam','#clinical'].forEach(q=>{$(q).value='';});
+  $('#accVal').textContent='belum disimpan';
+  wzStep=0;loadRequests();wzRender();window.scrollTo({top:0,behavior:'smooth'});
+}
+$('#wzBack').addEventListener('click',()=>wzGo(wzStep-1));
+$('#wzNext').addEventListener('click',()=>wzGo(wzStep+1));
+document.querySelectorAll('.stepper .step').forEach((s,i)=>s.addEventListener('click',()=>wzGo(i)));
+wzRender();
 </script>
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 </body>

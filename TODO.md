@@ -13,7 +13,7 @@ ke Claude Code** dan dikerjain tanpa perlu tau obrolan sebelumnya. Kerjain urut.
   Backend **FastAPI** (jembatan SATUSEHAT + arsip PACS lokal + serve frontend).
 - **Struktur:**
   - `Frontend/` → `index.html` (menu), `instalasi.html` (input+upload), `pacs.html`
-    (viewer grid + DWV), `viewer.html` (live DWV), `sample-*.dcm` (contoh).
+    (viewer grid + DWV), `sample-*.dcm` (contoh).
   - `Backend/` → `main.py` (FastAPI routes + serve Frontend), `satusehat.py`
     (OAuth2 + FHIR client, live/mock), `config.py` (baca `.env`).
   - `reference/react-aistudio/` → app React lama (arsip, JANGAN dipakai/di-edit).
