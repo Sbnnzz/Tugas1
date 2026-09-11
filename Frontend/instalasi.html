@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="auth.js"></script>
 <title>Instalasi Workstation · SATUSEHAT PACS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -142,7 +143,7 @@ a{text-decoration:none;color:inherit}
     <a href="index.html">Menu</a>
     <a href="instalasi.html" class="active">Instalasi</a>
     <a href="pacs.html">PACS Viewer</a>
-    <a href="viewer.html">Live Viewer</a>
+    <a href="bedah.html">Bedah</a>
   </nav>
   <div class="brand-spacer"></div>
   <div class="unit-sel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5c6875" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M4 10h16"/></svg><select id="unit"><option>Instalasi Radiologi</option><option>Instalasi Bedah</option></select></div>
@@ -306,8 +307,7 @@ $('#cekBtn').addEventListener('click',async()=>{
   let data;
   try{
     const r=await fetch(API_BASE+'/api/satusehat/patient?nik='+encodeURIComponent(nik));
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    data=await r.json();
+    data=r.ok?await r.json():{status:r.status,response:{}};
   }catch(err){
     console.warn('SATUSEHAT backend unreachable, using simulation:',err);
     return mockCek();
@@ -327,10 +327,62 @@ $('#cekBtn').addEventListener('click',async()=>{
 // upload
 const dz=$('#dropzone'),fi=$('#fileInput'),pv=$('#preview');
 let pickedFile=null;
+// Read a few header tags from a DICOM Part-10 file (explicit or implicit VR little endian).
+// Returns null for files that are not DICOM (PNG/JPG), so the form is left as typed.
+async function readDicomHeader(file){
+  const buf=await file.slice(0,262144).arrayBuffer(),v=new DataView(buf),u8=new Uint8Array(buf);
+  if(!(u8[128]===68&&u8[129]===73&&u8[130]===67&&u8[131]===77))return null;  // "DICM"
+  const want={'00080060':'modality','00081030':'studyDesc','0008103E':'seriesDesc','00180015':'bodyPart',
+              '00180050':'thickness','00280010':'rows','00280011':'cols'};
+  const longVR=['OB','OW','OF','SQ','UT','UN','OD','OL','UC','UR','OV'];
+  const hex4=n=>n.toString(16).padStart(4,'0').toUpperCase();
+  const text=(o,n)=>String.fromCharCode(...u8.subarray(o,o+n)).replace(/[\0 ]+$/,'').trim();
+  const out={};
+  let pos=132;
+  while(pos+8<=buf.byteLength){
+    const g=v.getUint16(pos,true),e=v.getUint16(pos+2,true);
+    if(g>0x0028)break;
+    const vr=String.fromCharCode(u8[pos+4],u8[pos+5]);
+    let len,val;
+    if(/^[A-Z]{2}$/.test(vr)){
+      if(longVR.includes(vr)){len=v.getUint32(pos+8,true);val=pos+12;}else{len=v.getUint16(pos+6,true);val=pos+8;}
+    }else{len=v.getUint32(pos+4,true);val=pos+8;}
+    if(len===0xFFFFFFFF||val+len>buf.byteLength)break;
+    const key=hex4(g)+hex4(e);
+    if(want[key])out[want[key]]=(key==='00280010'||key==='00280011')?v.getUint16(val,true):text(val,len);
+    pos=val+len;
+  }
+  return out;
+}
+const DICOM_MODALITY={CR:'DX (X-Ray)',DX:'DX (X-Ray)',DR:'DX (X-Ray)',CT:'CT',MR:'MR',US:'US'};
+const EXAM_PREFIX={'DX (X-Ray)':'Foto','CT':'CT','MR':'MRI','US':'USG'};
+const REGION_ID={CHEST:'Thorax',THORAX:'Thorax',ABDOMEN:'Abdomen',HEAD:'Kepala',BRAIN:'Kepala',SKULL:'Kepala',
+                 PELVIS:'Pelvis',SPINE:'Vertebra',CSPINE:'Vertebra Servikal',LSPINE:'Vertebra Lumbal',
+                 KNEE:'Genu',HAND:'Manus',FOOT:'Pedis',BREAST:'Mammae'};
+// Fill Modality, Jenis Pemeriksaan and the preview labels from the picked file, so the saved
+// label always matches the image (e.g. a chest X-ray is not saved as "CT Abdomen").
+async function inspectDicom(file){
+  let h;
+  try{h=await readDicomHeader(file);}catch(err){console.warn('DICOM header not readable:',err);return;}
+  if(!h||!h.modality)return;
+  const mod=h.modality.toUpperCase(),option=DICOM_MODALITY[mod];
+  if(option)$('#modality').value=option;
+  const part=(h.bodyPart||'').toUpperCase();
+  const region=REGION_ID[part]||(part?part.charAt(0)+part.slice(1).toLowerCase():'');
+  const exam=h.studyDesc||h.seriesDesc||((EXAM_PREFIX[option]||mod)+(region?' '+region:''));  // no body part in file: don't keep a stale one
+  if(exam)$('#exam').value=exam;
+  const chips=$('#modBadge').parentElement.children;
+  chips[0].textContent=mod;
+  if(chips[1])chips[1].textContent=part||'—';
+  if(chips[2])chips[2].textContent=h.thickness?Number(h.thickness)+'mm':(h.rows&&h.cols?h.cols+'×'+h.rows:'—');
+  $('#fileMeta').textContent=(file.size/1048576).toFixed(2)+' MB · DICOM '+mod+(h.rows&&h.cols?' · '+h.cols+' × '+h.rows:'');
+  renderPreview();
+}
 function showFile(name){
   $('#previewThumb').innerHTML=scanSVG(Date.now());
   $('#fileName').textContent=name||'chest_ct_abdomen.dcm';
   if(pickedFile){$('#fileMeta').textContent=(pickedFile.size/1048576).toFixed(2)+' MB · '+(pickedFile.name.split('.').pop()||'').toUpperCase();$('#modBadge').textContent=$('#modality').value.split(' ')[0];}
+  if(pickedFile)inspectDicom(pickedFile);
   pv.classList.add('show');
   document.querySelectorAll('.step')[2].classList.add('done');
 }
@@ -349,7 +401,7 @@ $('#saveBtn').addEventListener('click',async()=>{
   const meta={
     name:$('#nama').value.trim(),nik:$('#nik').value.trim(),gender:$('#jk').value,birthDate:$('#dob').value.trim(),
     modality:$('#modality').value.split(' ')[0],description:$('#exam').value.trim(),
-    icd10:$('#icd').value.trim(),diagnosis:$('#dx').value.trim(),finding:$('#finding').value.trim(),
+    ...(simrsCan('report')?{icd10:$('#icd').value.trim(),diagnosis:$('#dx').value.trim(),finding:$('#finding').value.trim()}:{}),
     doctor:$('#doctor').value.trim(),clinical:$('#clinical').value.trim(),
     instalasi:$('#unit').value
   };
@@ -423,8 +475,7 @@ $('#sendBtn').addEventListener('click',async()=>{
   let data;
   try{
     const r=await fetch(API_BASE+'/api/satusehat/send-study',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    data=await r.json();
+    data=r.ok?await r.json():simrsDenied(r.status,API_BASE+'/api/satusehat/send-study');
   }catch(err){
     console.warn('SATUSEHAT backend unreachable, using simulation:',err);
     return mockSend(payload.icd10,payload.diagnosis);
@@ -453,6 +504,14 @@ $('#sendBtn').addEventListener('click',async()=>{
   b.style.pointerEvents='';b.style.opacity='';
   b.innerHTML=data.ok?'<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Terkirim ke SATUSEHAT':SEND_LABEL;
   if(data.ok)setTimeout(()=>{b.innerHTML=SEND_LABEL},2800);
+});
+// Role: a radiographer registers and uploads; the reading is written and sent by the radiologist in PACS.
+(window.simrsUser||Promise.resolve()).then(()=>{
+  if(simrsCan('report'))return;
+  ['#icd','#dx','#finding'].forEach(q=>{const e=$(q);e.readOnly=true;e.style.opacity='.55';e.title='Diisi Radiolog di PACS';});
+  $('#sendBtn').style.display='none';
+  const note=$('#icd').closest('.card').querySelector('.card-head small');
+  if(note)note.textContent='diisi Radiolog di PACS';
 });
 </script>
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>

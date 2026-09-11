@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="auth.js"></script>
 <title>SATUSEHAT PACS Hub · Menu</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -138,7 +139,7 @@ a{text-decoration:none;color:inherit}
     <a href="index.html" class="active">Menu</a>
     <a href="instalasi.html">Instalasi</a>
     <a href="pacs.html">PACS Viewer</a>
-    <a href="viewer.html">Live Viewer</a>
+    <a href="bedah.html">Bedah</a>
   </nav>
   <div class="brand-spacer"></div>
   <div class="conn" id="conn"><i class="led"></i><small id="connText">SATUSEHAT <b>memeriksa…</b></small></div>
@@ -201,11 +202,11 @@ a{text-decoration:none;color:inherit}
       <p>Input pemeriksaan, registrasi pasien via NIK, upload citra DICOM/PNG, dan bacaan radiolog dengan kode ICD-10.</p>
       <div class="mod-foot"><span class="mod-stat"><b>Langkah 1</b> input · upload · simpan</span><span class="mod-go">Buka <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
     </a>
-    <a class="mod" href="instalasi.html#bedah" style="--brd:rgba(157,123,255,.4);--glow:rgba(157,123,255,.14);--ic:#9d7bff;--ic-bg:rgba(157,123,255,.13);--ic-brd:rgba(157,123,255,.25)">
+    <a class="mod" href="bedah.html" style="--brd:rgba(157,123,255,.4);--glow:rgba(157,123,255,.14);--ic:#9d7bff;--ic-bg:rgba(157,123,255,.13);--ic-brd:rgba(157,123,255,.25)">
       <div class="mod-icon"><svg viewBox="0 0 24 24"><path d="M14.5 3.5l6 6L9 21H3v-6z"/><path d="M12 6l6 6"/></svg></div>
       <h3>Instalasi Bedah</h3>
-      <p>Formulir pemeriksaan yang sama dengan unit Instalasi Bedah — citra dan bacaan dikirim sebagai ImagingStudy + DiagnosticReport ke SATUSEHAT.</p>
-      <div class="mod-foot"><span class="mod-stat"><b>Langkah 1</b> unit Bedah</span><span class="mod-go">Buka <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      <p>Jadwal &amp; laporan operasi, lengkap dengan hasil radiologi pasien — dikirim sebagai Encounter + Procedure (ICD-9-CM) ke SATUSEHAT.</p>
+      <div class="mod-foot"><span class="mod-stat"><b>Langkah 3</b> jadwal · laporan operasi</span><span class="mod-go">Buka <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
     </a>
     <a class="mod" href="pacs.html" style="--brd:rgba(74,144,226,.4);--glow:rgba(74,144,226,.14);--ic:#4a90e2;--ic-bg:rgba(74,144,226,.13);--ic-brd:rgba(74,144,226,.25)">
       <div class="mod-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
@@ -262,7 +263,7 @@ a{text-decoration:none;color:inherit}
     $('#statArchive').textContent=list.length;
     $('#statArchiveSub').textContent=withFile+' dengan citra';
     $('#modArchive').textContent=list.length;
-    $('#actList').innerHTML=list.length?list.slice(0,4).map(x=>'<div class="act"><div class="act-ic">'+ACT_ICON+'</div><div class="act-main"><b>'+esc((x.description||'Studi').toUpperCase())+' — '+esc(x.name||'—')+'</b><small>'+esc((x.instalasi||'').replace('Instalasi ',''))+' · No. Arsip '+esc(x.id)+'</small></div><span class="act-tag '+(x.file?'new':'wait')+'">'+(x.file?'Baru':'Tanpa citra')+'</span></div>').join('')
+    $('#actList').innerHTML=list.length?list.slice(0,4).map(x=>'<div class="act"><div class="act-ic">'+ACT_ICON+'</div><div class="act-main"><b>'+esc((x.description||'Studi').toUpperCase())+' — '+esc(x.name||'—')+'</b><small>'+esc((x.instalasi||'').replace('Instalasi ',''))+' · No. Arsip '+esc(x.id)+'</small></div><span class="act-tag '+(x.sent?'sent':x.file?'new':'wait')+'">'+(x.sent?'Terkirim':x.file?'Baru':'Tanpa citra')+'</span></div>').join('')
       :'<div class="act"><div class="act-main"><b>Belum ada aktivitas</b><small>mulai dari Instalasi → simpan studi</small></div></div>';
   }).catch(()=>{
     $('#actList').innerHTML='<div class="act"><div class="act-main"><b>Aktivitas tidak tersedia</b><small>backend offline</small></div></div>';

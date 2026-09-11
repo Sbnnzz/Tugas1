@@ -14,12 +14,15 @@ import json
 import uuid
 import datetime
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
+import auth
 import config
+import operations
 from satusehat import client as sehat
 
 app = FastAPI(title="SATUSEHAT PACS Hub API", version="1.0")
@@ -32,7 +35,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def no_stale_pages(request: Request, call_next):
+    """Make browsers re-check pages and scripts on every load (a 304 when unchanged), so they
+    never show a copy saved before the last update."""
+    response = await call_next(request)
+    if not request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+
 os.makedirs(config.UPLOAD_DIR, exist_ok=True)
+auth.init_db()
+operations.init_db()
+
+# Who may call what. Pages hide what a role cannot use; these checks are the real guard.
+ADMIN = ("admin",)
+REPORTERS = ("radiolog", "admin")                         # write the reading, send to SATUSEHAT
+ARCHIVE_WRITE = ("radiografer", "admin")                  # register + upload studies
+ARCHIVE_READ = ("radiografer", "radiolog", "dokter_bedah", "admin")
+READING_FIELDS = ("icd10", "diagnosis", "finding")
+BEDAH = ("dokter_bedah", "admin")                           # surgery schedule + operation report
 
 
 # ---------- archive helpers ----------
@@ -52,6 +75,44 @@ def save_studies(studies):
         json.dump(studies, f, indent=2, ensure_ascii=False)
 
 
+def update_study(sid, fields):
+    studies = load_studies()
+    for study in studies:
+        if study["id"] == sid:
+            study.update(fields)
+            save_studies(studies)
+            return study
+    return None
+
+
+# ---------- login ----------
+class LoginBody(BaseModel):
+    username: str
+    password: str
+
+
+@app.post("/api/auth/login")
+def login(body: LoginBody, response: Response):
+    user = auth.authenticate(body.username.strip(), body.password)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Username atau password salah")
+    response.set_cookie(auth.SESSION_COOKIE, auth.create_session(user["username"]),
+                        max_age=auth.SESSION_TTL, httponly=True, samesite="lax")
+    return user
+
+
+@app.post("/api/auth/logout")
+def logout(request: Request, response: Response):
+    auth.end_session(request.cookies.get(auth.SESSION_COOKIE, ""))
+    response.delete_cookie(auth.SESSION_COOKIE)
+    return {"ok": True}
+
+
+@app.get("/api/auth/me")
+def me(user: dict = Depends(auth.current_user)):
+    return user
+
+
 # ---------- status ----------
 @app.get("/api/health")
 def health():
@@ -66,45 +127,91 @@ def health():
 
 # ---------- SATUSEHAT bridge ----------
 @app.post("/api/satusehat/token")
-async def token():
+async def token(user: dict = Depends(auth.require_roles(*ADMIN))):
     return await sehat.get_token()
 
 
 @app.get("/api/satusehat/patient")
-async def patient(nik: str):
+async def patient(nik: str, user: dict = Depends(auth.require_roles(*ARCHIVE_READ))):
     return await sehat.search_patient(nik)
 
 
 @app.post("/api/satusehat/imaging-study")
-async def imaging_study(payload: dict):
+async def imaging_study(payload: dict, user: dict = Depends(auth.require_roles(*ADMIN))):
     return await sehat.create("ImagingStudy", payload)
 
 
 @app.post("/api/satusehat/diagnostic-report")
-async def diagnostic_report(payload: dict):
+async def diagnostic_report(payload: dict, user: dict = Depends(auth.require_roles(*ADMIN))):
     return await sehat.create("DiagnosticReport", payload)
 
 
 @app.post("/api/satusehat/send-study")
-async def send_study(body: dict):
+async def send_study(body: dict, user: dict = Depends(auth.require_roles(*REPORTERS))):
     """Build ImagingStudy + DiagnosticReport from a study and POST both.
     body: {name, nik, modality, description, icd10, diagnosis, finding, instalasi}
     Returns a step-by-step log for the frontend API console."""
-    return await sehat.send_study(body)
+    result = await sehat.send_study(body)
+    if result.get("ok") and body.get("archive_id"):
+        # keep the radiologist's reading with the archived study; the surgeon reads it in Bedah
+        update_study(body["archive_id"], {
+            **{key: body.get(key, "") for key in READING_FIELDS},
+            "sent": True, "reported_by": user["username"],
+            "imaging_study_id": result.get("imaging_study_id", ""),
+            "diagnostic_report_id": result.get("diagnostic_report_id", ""),
+        })
+    return result
+
+
+# ---------- Instalasi Bedah (surgery) ----------
+@app.get("/api/operations")
+def list_operations(user: dict = Depends(auth.require_roles(*BEDAH))):
+    return operations.list_operations()
+
+
+@app.post("/api/operations")
+def save_operation(body: dict, user: dict = Depends(auth.require_roles(*BEDAH))):
+    """Create or update an operation. body: {id?, patient, schedule, report}"""
+    data = {key: body.get(key) or {} for key in ("patient", "schedule", "report")}
+    try:
+        return operations.save_operation(body.get("id"), data, user["username"])
+    except operations.AlreadySent:
+        raise HTTPException(status_code=409, detail="Operasi sudah dikirim ke SATUSEHAT; buat laporan baru")
+
+
+@app.post("/api/satusehat/send-procedure")
+async def send_procedure(body: dict, user: dict = Depends(auth.require_roles(*BEDAH))):
+    """Send a saved operation as Encounter + Procedure. body: {operation_id}"""
+    op = operations.get_operation(body.get("operation_id") or "")
+    if op is None:
+        raise HTTPException(status_code=404, detail="Operasi belum disimpan")
+    if op["status"] == "sent":
+        raise HTTPException(status_code=409, detail="Operasi sudah dikirim ke SATUSEHAT")
+    result = await sehat.send_procedure(op["data"])
+    if result["ok"]:
+        operations.mark_sent(op["id"], result["encounter_id"], result["procedure_id"])
+    result["operation"] = operations.get_operation(op["id"])
+    return result
 
 
 # ---------- local PACS archive ----------
 @app.get("/api/studies")
-def list_studies():
+def list_studies(user: dict = Depends(auth.require_roles(*ARCHIVE_READ))):
     return load_studies()
 
 
 @app.post("/api/studies")
-async def add_study(file: UploadFile = File(None), meta: str = Form("{}")):
+async def add_study(file: UploadFile = File(None), meta: str = Form("{}"),
+                    user: dict = Depends(auth.require_roles(*ARCHIVE_WRITE))):
     try:
         m = json.loads(meta or "{}")
     except ValueError:
         m = {}
+    if user["role"] not in REPORTERS:
+        # only a radiologist writes the reading; drop it if someone else sends one
+        for key in READING_FIELDS:
+            m.pop(key, None)
+    m["saved_by"] = user["username"]
     sid = uuid.uuid4().hex[:12]
     filename = None
     if file is not None:
@@ -126,7 +233,7 @@ async def add_study(file: UploadFile = File(None), meta: str = Form("{}")):
 
 
 @app.get("/api/studies/{sid}/file")
-def study_file(sid: str):
+def study_file(sid: str, user: dict = Depends(auth.require_roles(*ARCHIVE_READ))):
     study = next((s for s in load_studies() if s["id"] == sid), None)
     if not study or not study.get("file"):
         raise HTTPException(status_code=404, detail="file not found")

@@ -46,6 +46,8 @@ LOCATION_ID = os.getenv("SATUSEHAT_LOCATION_ID", "").strip()
 DATA_DIR = os.path.join(_HERE, "data")
 UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
 STUDIES_DB = os.path.join(DATA_DIR, "studies.json")
+# staff accounts + login sessions (SQLite)
+DB_PATH = os.path.join(DATA_DIR, "simrs.db")
 
 # --- frontend location (served as static files) ---
 FRONTEND_DIR = os.path.join(os.path.dirname(_HERE), "Frontend")

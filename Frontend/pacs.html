@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="auth.js"></script>
 <title>SATUSEHAT PACS Hub · Viewer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -212,7 +213,7 @@ a{text-decoration:none;color:inherit}
     </a>
     <div class="brand-sep"></div>
     <div class="env-badge"><i class="dot"></i><span>SANDBOX</span></div>
-    <nav class="topnav"><a href="index.html">Menu</a><a href="instalasi.html">Instalasi</a><a href="pacs.html" class="active">PACS Viewer</a><a href="viewer.html">Live Viewer</a></nav>
+    <nav class="topnav"><a href="index.html">Menu</a><a href="instalasi.html">Instalasi</a><a href="pacs.html" class="active">PACS Viewer</a><a href="bedah.html">Bedah</a></nav>
     <div class="brand-spacer"></div>
     <div class="conn"><i class="led"></i><small>SATUSEHAT <b>Terhubung</b> · FHIR R4</small></div>
     <div class="brand-user"><div class="avatar">RA</div><div class="who"><b>dr. Rahmat Adiputra, Sp.Rad</b><small>Radiolog · RSUD Dr. Soetomo</small></div></div>
@@ -239,23 +240,13 @@ a{text-decoration:none;color:inherit}
     <input type="file" id="pacsFolder" webkitdirectory multiple style="display:none" />
     <div class="tsep"></div>
     <div class="tool-group">
-      <button class="tool active" data-tool="scroll" data-tip="Stack / Scroll"><svg viewBox="0 0 24 24"><path d="M12 5v14M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></button>
-      <button class="tool" data-tool="wl" data-tip="Window / Level"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 010 18z" fill="currentColor" stroke="none"/></svg></button>
-      <button class="tool" data-tool="zoom" data-tip="Zoom"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg></button>
-      <button class="tool" data-tool="pan" data-tip="Pan"><svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 00-4 0M14 10V4a2 2 0 00-4 0v6M10 10.5V6a2 2 0 00-4 0v8"/><path d="M18 8a2 2 0 014 0v6a8 8 0 01-8 8h-2a8 8 0 01-6.6-3.5L3 15"/></svg></button>
+      <button class="tool" data-tool="scroll" data-tip="Scroll slice (CT / MR)"><svg viewBox="0 0 24 24"><path d="M12 5v14M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></button>
+      <button class="tool active" data-tool="wl" data-tip="Window / Level (drag di citra)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 010 18z" fill="currentColor" stroke="none"/></svg></button>
+      <button class="tool" data-tool="zoom" data-tip="Zoom / Geser (roda mouse = zoom, drag = geser)"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg></button>
     </div>
     <div class="tsep"></div>
     <div class="tool-group">
-      <button class="tool" data-tool="length" data-tip="Ukur Jarak"><svg viewBox="0 0 24 24"><path d="M3 17L17 3l4 4L7 21z"/><path d="M8 8l2 2M11 5l2 2M5 11l2 2"/></svg></button>
-      <button class="tool" data-tool="angle" data-tip="Ukur Sudut"><svg viewBox="0 0 24 24"><path d="M5 19h16M5 19V5M5 19l14-7"/></svg></button>
-      <button class="tool" data-tool="annot" data-tip="Anotasi"><svg viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16z"/><path d="M13 5l4 4"/></svg></button>
-      <button class="tool" data-tool="invert" data-tip="Invert"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 3a9 9 0 010 18" fill="currentColor" stroke="none" opacity=".9"/></svg></button>
-    </div>
-    <div class="tsep"></div>
-    <div class="tool-group" id="layouts">
-      <button class="tool" data-layout="1" data-tip="1×1"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1"/></svg></button>
-      <button class="tool" data-layout="2" data-tip="1×2"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="16" rx="1"/><rect x="13" y="4" width="7" height="16" rx="1"/></svg></button>
-      <button class="tool active" data-layout="4" data-tip="2×2"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg></button>
+      <button class="tool" id="resetView" data-tip="Reset tampilan (zoom + window/level)"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
     </div>
     <div class="wl-readout"><div class="wl"><label>WINDOW</label><b id="wlW">400</b></div><div class="wl"><label>LEVEL</label><b id="wlL">40</b></div></div>
     <div class="toolbar-spacer"></div>
@@ -274,9 +265,8 @@ a{text-decoration:none;color:inherit}
 
     <main class="viewer">
       <div class="vgrid layout-4" id="vgrid"></div>
-      <div class="dwv-mode" id="dwvMode">
+      <div class="dwv-mode show" id="dwvMode">
         <div id="layerGroup0"></div>
-        <button class="dwv-close" id="dwvClose"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>Kembali ke arsip</button>
         <div class="ovl tl" id="dwvTL"></div>
         <div class="ovl tr" id="dwvTR"></div>
         <div class="ovl br"><span class="a">SATUSEHAT PACS · DWV live</span><br><span class="k">RSUD Dr. Soetomo</span></div>
@@ -447,7 +437,6 @@ function buildPanels(){
     vgrid.appendChild(vp);
   });
 }
-buildPanels();
 function loadSeries(i){const s=SERIES[i];document.getElementById('wlW').textContent=s.W;document.getElementById('wlL').textContent=s.L;
   const active=document.querySelector('.vp.active')||document.querySelector('.vp');const idx=[...vgrid.children].indexOf(active);
   PANELS[idx]=i;buildPanels();[...vgrid.children][idx]?.classList.add('active');}
@@ -506,7 +495,8 @@ function buildPayload(){
     icd10:satu.querySelector('.icd').value.trim(),
     diagnosis:satu.querySelectorAll('input')[1].value.trim(),
     finding:satu.querySelector('textarea').value.trim(),
-    instalasi:studyKv('Instalasi')||'Instalasi Radiologi'
+    instalasi:studyKv('Instalasi')||'Instalasi Radiologi',
+    archive_id:(window.currentArchive||{}).id||''   // lets the backend keep the reading with the study
   };
 }
 sendBtn.onclick=async()=>{
@@ -515,8 +505,7 @@ sendBtn.onclick=async()=>{
   let data;
   try{
     const r=await fetch(API_BASE+'/api/satusehat/send-study',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    data=await r.json();
+    data=r.ok?await r.json():simrsDenied(r.status,API_BASE+'/api/satusehat/send-study');
   }catch(err){
     console.warn('SATUSEHAT backend unreachable, using simulation:',err);
     return mockSend(payload.icd10,payload.diagnosis);
@@ -542,6 +531,7 @@ sendBtn.onclick=async()=>{
   const errors=(data.logs||[]).filter(l=>!(Number(l.status)>=200&&Number(l.status)<300)).length;
   log('\n'+(data.ok?'<span class="ok">✓ Study terkirim</span>':'<span class="err">✗ Pengiriman gagal</span>')+' <span class="muted">· mode '+esc(data.mode)+' · '+errors+' error</span>');
   consoleStatus.textContent=data.ok?'done · '+data.mode:'error · '+data.mode;
+  if(data.ok&&window.currentArchive)setStudyKv('Status','Terkirim');
   sendBtn.style.pointerEvents='';sendBtn.style.opacity='';
   sendBtn.innerHTML=data.ok?'<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> Terkirim':SEND_ICON;
   if(data.ok)setTimeout(()=>{sendBtn.innerHTML=SEND_ICON},2600);
@@ -597,7 +587,7 @@ async function loadArchive(){
   studies.forEach((s,i)=>{
     const el=document.createElement('div');el.className='wcard';
     el.innerHTML=`<div class="wcard-thumb">${scanSVG(archiveScanType(s),i+40,false)}</div>
-    <div class="wcard-info"><span class="mod-badge">${esc(s.modality||'—')}</span><div class="wt">${esc(s.description||'Studi tanpa judul')}</div><div class="wd">${esc(archiveDate(s.created))} · ${esc(s.name||'—')}</div><div class="wtag"><span class="dot" style="background:${s.file?'var(--sel)':'var(--txt-3)'}"></span>${s.file?'Baru':'Tanpa citra'}</div></div>`;
+    <div class="wcard-info"><span class="mod-badge">${esc(s.modality||'—')}</span><div class="wt">${esc(s.description||'Studi tanpa judul')}</div><div class="wd">${esc(archiveDate(s.created))} · ${esc(s.name||'—')}</div><div class="wtag"><span class="dot" style="background:${s.sent?'var(--green)':s.file?'var(--sel)':'var(--txt-3)'}"></span>${s.sent?'Terkirim':s.file?'Baru':'Tanpa citra'}</div></div>`;
     el.onclick=()=>{document.querySelectorAll('.wcard').forEach(x=>x.classList.remove('active'));el.classList.add('active');openFromArchive(s);};
     stripList.appendChild(el);
     s._card=el;
@@ -626,8 +616,6 @@ try{ const vc=new ViewConfig('layerGroup0'); const opt=new AppOptions({'*':[vc]}
 catch(e){ console.error('DWV init',e); }
 const dwvMode=$('#dwvMode'),dwvDz=$('#dwvDz'),dwvSpin=$('#dwvSpin');
 function openMode(){ dwvMode.classList.add('show'); }
-function closeMode(){ dwvMode.classList.remove('show'); }
-$('#dwvClose').onclick=closeMode;
 $('#openDicom').onclick=()=>$('#pacsFile').click();
 $('#dzPick').onclick=()=>$('#pacsFile').click();
 $('#dzSample').onclick=()=>{ openMode(); dwvSpin.classList.add('show'); dwvApp.loadURLs(['sample-chest.dcm']); };
@@ -643,17 +631,18 @@ dwvApp&&dwvApp.addEventListener('load',ev=>{
     const name=String(tag(m,'00100010')||'ANONYMOUS').replace(/\^/g,', ');const mod=tag(m,'00080060')||'—';
     const rows=tag(m,'00280010')||'?';const cols=tag(m,'00280011')||'?';const desc=tag(m,'00081030')||tag(m,'0008103E')||'DICOM Study';
     window.currentStudy={name,pid:tag(m,'00100020')||'',mod,desc};
-    if(window.pendingArchive){const a=window.pendingArchive;window.currentStudy={name:a.name||name,pid:a.nik||'',mod:a.modality||mod,desc:a.description||desc};window.pendingArchive=null;}
+    window.currentArchive=window.pendingArchive||null;if(window.pendingArchive){const a=window.pendingArchive;window.currentStudy={name:a.name||name,pid:a.nik||'',mod:a.modality||mod,desc:a.description||desc};window.pendingArchive=null;}
     $('#dwvTL').innerHTML='<span class="v">'+name+'</span><br><span class="k">'+mod+' · '+desc+'</span><br><span class="k">'+rows+'×'+cols+' · DWV live</span>';
     $('#dwvTR').innerHTML='<span class="v">'+mod+'</span><br><span class="k">Real DICOM</span>';
     const ww=tag(m,'00281051'),wc=tag(m,'00281050'); if(ww)$('#wlW').textContent=Math.round(ww); if(wc)$('#wlL').textContent=Math.round(wc);
-    dwvApp.setTool('Scroll');
+    dwvApp.setTool('WindowLevel');document.querySelectorAll('.tool[data-tool]').forEach(x=>x.classList.toggle('active',x.dataset.tool==='wl'));
   }catch(_){}
 });
 dwvApp&&dwvApp.addEventListener('wlchange',ev=>{try{const v=ev.detail.value;if(v){$('#wlL').textContent=Math.round(v[0]);$('#wlW').textContent=Math.round(v[1]);}}catch(_){}});
 dwvApp&&dwvApp.addEventListener('loaderror',()=>{dwvSpin.classList.remove('show');});
 const toolMap={wl:'WindowLevel',zoom:'ZoomAndPan',pan:'ZoomAndPan',scroll:'Scroll'};
 document.querySelectorAll('.tool[data-tool]').forEach(b=>b.addEventListener('click',()=>{ if(dwvMode.classList.contains('show')&&dwvApp){const t=toolMap[b.dataset.tool];if(t)try{dwvApp.setTool(t);}catch(_){}}}));
+$('#resetView').addEventListener('click',()=>{ if(!dwvApp)return; try{ dwvApp.resetDisplay(); }catch(_){ try{ dwvApp.resetLayout(); }catch(e){ console.warn('reset failed',e); } } });
 // W/L presets ("other windows")
 function getVC(){ try{ return dwvApp.getStageController().getActiveLayerGroup().getActiveViewLayer().getViewController(); }catch(_){ return null; } }
 $('#wlPreset').addEventListener('change',e=>{ const v=e.target.value; if(!v)return; const p=v.split(',').map(Number); const vc=getVC(); if(vc){ try{ vc.setWindowLevel(new WindowLevel(p[0],p[1])); $('#wlL').textContent=p[0]; $('#wlW').textContent=p[1]; }catch(err){ console.warn('preset',err); } } });
