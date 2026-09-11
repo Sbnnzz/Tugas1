@@ -124,6 +124,17 @@ a{text-decoration:none;color:inherit}
 .footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--txt-3)}
 
 @media(max-width:960px){.hero{grid-template-columns:1fr}.hero-visual{display:none}.stats{grid-template-columns:1fr 1fr}.modules{grid-template-columns:1fr}.bottom{grid-template-columns:1fr}}
+/* technical details (collapsed) + plain result line */
+.tech{margin-top:12px;border:1px solid var(--line);border-radius:9px;background:var(--bg-panel)}
+.tech>summary{cursor:pointer;list-style:none;padding:8px 12px;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--txt-3)}
+.tech>summary::-webkit-details-marker{display:none}
+.tech>summary::before{content:'\25B8  '}.tech[open]>summary::before{content:'\25BE  '}
+.tech[open]>summary{border-bottom:1px solid var(--line)}
+.tech>*:not(summary){margin:10px}
+.result-line{margin-top:10px;font-size:12.5px;line-height:1.5}
+.result-line:empty{display:none}
+.result-line.ok{color:var(--green)}.result-line.err{color:var(--red)}.result-line.info{color:var(--txt-2)}
+.integ-plain{padding:14px 18px 0;font-size:12.5px;color:var(--txt-2);line-height:1.6}
 </style>
 </head>
 <body>
@@ -156,8 +167,8 @@ a{text-decoration:none;color:inherit}
       <p>Hub PACS terpusat yang menyatukan Instalasi Radiologi dan Instalasi Bedah ke dalam satu Central DICOM Archive — lalu melaporkan setiap studi ke platform <b>SATUSEHAT</b> secara otomatis melalui standar HL7 FHIR R4.</p>
       <div class="hero-chips">
         <div class="chip"><i class="led"></i>Sandbox aktif</div>
-        <div class="chip"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg>OAuth2 · client_credentials</div>
-        <div class="chip"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg>DICOM · ImagingStudy</div>
+        <div class="chip"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg>Koneksi aman</div>
+        <div class="chip"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg>Citra DICOM &amp; NIfTI</div>
       </div>
     </div>
     <div class="hero-visual">
@@ -223,13 +234,17 @@ a{text-decoration:none;color:inherit}
       <div id="actList"><div class="act"><div class="act-main"><b>Memuat aktivitas…</b><small>arsip lokal</small></div></div></div>
     </div>
     <div class="card">
-      <div class="card-head"><span>Integrasi SATUSEHAT</span><a href="pacs.html">Konsol</a></div>
-      <div class="integ">
-        <div class="integ-row"><div class="l"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg><div><b>ServiceRequest</b><small>order pemeriksaan</small></div></div><div class="n">✓</div></div>
-        <div class="integ-row"><div class="l"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg><div><b>ImagingStudy</b><small>metadata citra</small></div></div><div class="n">✓</div></div>
-        <div class="integ-row"><div class="l"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg><div><b>DiagnosticReport</b><small>bacaan + ICD-10</small></div></div><div class="n">✓</div></div>
-        <div class="integ-foot" id="integFoot"><span class="mut"># memeriksa backend…</span></div>
-      </div>
+      <div class="card-head"><span>Integrasi SATUSEHAT</span><a href="pacs.html">Buka PACS</a></div>
+      <div class="integ-plain">Hasil bacaan radiologi dan laporan operasi dikirim otomatis ke SATUSEHAT (sandbox).</div>
+      <details class="tech">
+        <summary>Detail teknis</summary>
+        <div class="integ">
+          <div class="integ-row"><div class="l"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg><div><b>ServiceRequest</b><small>order pemeriksaan</small></div></div><div class="n">✓</div></div>
+          <div class="integ-row"><div class="l"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/></svg><div><b>ImagingStudy</b><small>metadata citra</small></div></div><div class="n">✓</div></div>
+          <div class="integ-row"><div class="l"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg><div><b>DiagnosticReport</b><small>bacaan + ICD-10</small></div></div><div class="n">✓</div></div>
+          <div class="integ-foot" id="integFoot"><span class="mut"># memeriksa backend…</span></div>
+        </div>
+      </details>
     </div>
   </section>
 

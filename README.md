@@ -91,6 +91,15 @@ Hasilnya 3 studi menunggu bacaan radiolog (PACS) dan 3 permintaan menunggu radio
 `Backend/data/demo_films/` (nama & NIK pasien sudah tertulis di dalam berkas).
 Sumber citra: `Backend/seed_samples/SOURCES.md`.
 
+## Format citra
+
+Instalasi Radiografi dan PACS menerima **DICOM** (`.dcm`, `.ima`, `.dic`, `.img`, atau tanpa
+ekstensi) dan **NIfTI** (`.nii`, `.nii.gz`). NIfTI dikonversi otomatis ke irisan DICOM oleh backend
+(nibabel + pydicom) sehingga bisa di-scroll di PACS. PNG/JPG **tidak diterima** — isi berkas dicek,
+bukan hanya namanya. Contoh NIfTI untuk dicoba: `Backend/seed_samples/mri_brain_axial.nii.gz`.
+
+Setelah `git pull`, jalankan lagi `pip install -r requirements.txt` (butuh `nibabel` dan `numpy`).
+
 ## Endpoint utama (backend)
 
 | Method | Path | Fungsi |
@@ -101,6 +110,8 @@ Sumber citra: `Backend/seed_samples/SOURCES.md`.
 | GET/POST | `/api/operations` | jadwal & laporan operasi (Dokter Bedah) |
 | POST | `/api/satusehat/send-procedure` | kirim Encounter + Procedure (ICD-9-CM) |
 | GET/POST | `/api/orders` | permintaan radiologi (dokter → radiografer → radiolog) |
+| GET  | `/api/studies/{id}/slices` | citra satu studi arsip sebagai irisan DICOM (NIfTI dikonversi) |
+| POST | `/api/normalize-series` | berkas multi-irisan / NIfTI dari PACS → satu seri yang bisa di-scroll |
 | POST | `/api/satusehat/token` | ambil access token OAuth2 |
 | GET  | `/api/satusehat/patient?nik=` | cari pasien by NIK → IHS |
 | POST | `/api/satusehat/send-study` | build + kirim ImagingStudy + DiagnosticReport |

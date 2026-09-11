@@ -27,6 +27,7 @@ from pydantic import BaseModel
 import auth
 import config
 import operations
+import nifti
 import orders
 from satusehat import client as sehat
 
@@ -289,10 +290,14 @@ async def add_study(file: UploadFile = File(None), meta: str = Form("{}"),
     sid = uuid.uuid4().hex[:12]
     filename = None
     if file is not None:
+        raw = await file.read()
+        if not (nifti.is_dicom(raw) or nifti.is_nifti(raw)):
+            raise HTTPException(status_code=400,
+                                detail="Hanya berkas DICOM (.dcm, .ima) atau NIfTI (.nii, .nii.gz) yang diterima")
         safe = os.path.basename(file.filename or "study.dcm")
         filename = f"{sid}_{safe}"
         with open(os.path.join(config.UPLOAD_DIR, filename), "wb") as f:
-            f.write(await file.read())
+            f.write(raw)
     study = {
         "id": sid,
         "created": datetime.datetime.now().isoformat(timespec="seconds"),
@@ -340,6 +345,12 @@ async def normalize_series(files: List[UploadFile] = File(...),
     parsed = []
     for uf in files:
         raw = await uf.read()
+        if nifti.is_nifti(raw):
+            try:
+                parsed.extend(nifti.nifti_to_datasets(raw))  # a NIfTI volume -> DICOM slices
+            except Exception:
+                pass  # unreadable NIfTI: skip it
+            continue
         try:
             parsed.append(pydicom.dcmread(io.BytesIO(raw)))
         except Exception:
@@ -359,6 +370,30 @@ async def normalize_series(files: List[UploadFile] = File(...),
         ds.save_as(os.path.join(out, name))
         urls.append(f"/api/series/{sid}/{name}")
     return {"series_id": sid, "count": len(urls), "urls": urls}
+
+
+@app.get("/api/studies/{sid}/slices")
+def study_slices(sid: str, user: dict = Depends(auth.require_roles(*REPORTERS))):
+    """URLs of the DICOM images for one archived study. A NIfTI study is converted once into
+    DICOM slices (cached under data/series) so the viewer can show it as a volume."""
+    study = next((s for s in load_studies() if s["id"] == sid), None)
+    if not study or not study.get("file"):
+        raise HTTPException(status_code=404, detail="file not found")
+    path = os.path.join(config.UPLOAD_DIR, study["file"])
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="file missing on disk")
+    with open(path, "rb") as f:
+        raw = f.read()
+    if not nifti.is_nifti(raw):
+        return {"count": 1, "urls": [f"/api/studies/{sid}/file"]}
+    key = "nifti-" + os.path.basename(sid)
+    out = os.path.join(SERIES_DIR, key)
+    if not (os.path.isdir(out) and os.listdir(out)):
+        os.makedirs(out, exist_ok=True)
+        for i, ds in enumerate(nifti.nifti_to_datasets(raw, study), 1):
+            ds.save_as(os.path.join(out, f"{i:04d}.dcm"))
+    names = sorted(os.listdir(out))
+    return {"count": len(names), "urls": [f"/api/series/{key}/{n}" for n in names]}
 
 
 @app.get("/api/series/{sid}/{name}")
