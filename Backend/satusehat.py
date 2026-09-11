@@ -105,18 +105,19 @@ class SatuSehat:
     # ---- OAuth2 ----
     async def get_token(self):
         if config.MOCK:
+            # fake token (not a real credential); kept server-side like the live one
+            self._token = "ey" + uuid.uuid4().hex
             return {
                 "mode": "MOCK",
                 "request": {"method": "POST", "url": f"{config.OAUTH_URL}/accesstoken"},
                 "response": {
-                    "access_token": "ey" + uuid.uuid4().hex,
+                    "access_token": self._token,
                     "token_type": "BearerToken",
                     "expires_in": "3599",
                     "issued_at": str(int(time.time() * 1000)),
                     "status": "approved",
                 },
                 "status": 200,
-                "token": "ey" + uuid.uuid4().hex,
             }
 
         # reuse a cached, still-valid token
@@ -126,7 +127,6 @@ class SatuSehat:
                 "request": {"method": "POST", "url": f"{config.OAUTH_URL}/accesstoken", "cached": True},
                 "response": {"access_token": self._token[:12] + "…", "cached": True},
                 "status": 200,
-                "token": self._token,
             }
 
         url = f"{config.OAUTH_URL}/accesstoken?grant_type=client_credentials"
@@ -150,13 +150,14 @@ class SatuSehat:
             "request": {"method": "POST", "url": url},
             "response": safe,
             "status": r.status_code,
-            "token": self._token,
         }
 
     async def _auth_headers(self):
-        tok = await self.get_token()
+        # get_token() refreshes/caches self._token; the raw token is never returned to the
+        # browser (only the masked form rides in the logs), so read it from here internally.
+        await self.get_token()
         return {
-            "Authorization": f"Bearer {tok['token']}",
+            "Authorization": f"Bearer {self._token}",
             "Content-Type": "application/json",
         }
 

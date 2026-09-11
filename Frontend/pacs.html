@@ -773,8 +773,8 @@ dwvApp&&dwvApp.addEventListener('load',ev=>{
     const rows=tag(m,'00280010')||'?';const cols=tag(m,'00280011')||'?';const desc=tag(m,'00081030')||tag(m,'0008103E')||'DICOM Study';
     window.currentStudy={name,pid:tag(m,'00100020')||'',mod,desc};
     window.currentArchive=window.pendingArchive||null;if(window.pendingArchive){const a=window.pendingArchive;window.currentStudy={name:a.name||name,pid:a.nik||'',mod:a.modality||mod,desc:a.description||desc};window.pendingArchive=null;}
-    $('#dwvTL').innerHTML='<span class="v">'+name+'</span><br><span class="k">'+mod+' · '+desc+'</span><br><span class="k">'+rows+'×'+cols+' · DWV live</span>';
-    $('#dwvTR').innerHTML='<span class="v">'+mod+'</span><br><span class="k">Real DICOM</span>';
+    $('#dwvTL').innerHTML='<span class="v">'+esc(name)+'</span><br><span class="k">'+esc(mod)+' · '+esc(desc)+'</span><br><span class="k">'+esc(rows)+'×'+esc(cols)+' · DWV live</span>';
+    $('#dwvTR').innerHTML='<span class="v">'+esc(mod)+'</span><br><span class="k">Real DICOM</span>';
     const ww=tag(m,'00281051'),wc=tag(m,'00281050'); if(ww)$('#wlW').textContent=Math.round(ww); if(wc)$('#wlL').textContent=Math.round(wc);
     dwvApp.setTool('WindowLevel');document.querySelectorAll('.tool[data-tool]').forEach(x=>x.classList.toggle('active',x.dataset.tool==='wl'));
   }catch(_){}
