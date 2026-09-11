@@ -213,7 +213,7 @@ a{text-decoration:none;color:inherit}
     </a>
     <div class="brand-sep"></div>
     <div class="env-badge"><i class="dot"></i><span>SANDBOX</span></div>
-    <nav class="topnav"><a href="index.html">Menu</a><a href="instalasi.html">Instalasi</a><a href="pacs.html" class="active">PACS Viewer</a><a href="bedah.html">Bedah</a></nav>
+    <nav class="topnav"><a href="index.html">Menu</a><a href="instalasi.html">Instalasi Radiografi</a><a href="pacs.html" class="active">PACS Viewer</a><a href="bedah.html">Bedah</a></nav>
     <div class="brand-spacer"></div>
     <div class="conn"><i class="led"></i><small>SATUSEHAT <b>Terhubung</b> · FHIR R4</small></div>
     <div class="brand-user"><div class="avatar">RA</div><div class="who"><b>dr. Rahmat Adiputra, Sp.Rad</b><small>Radiolog · RSUD Dr. Soetomo</small></div></div>
@@ -615,16 +615,26 @@ const $=s=>document.querySelector(s);
 let dwvApp;
 try{ const vc=new ViewConfig('layerGroup0'); const opt=new AppOptions({'*':[vc]}); opt.tools={Scroll:{},WindowLevel:{},ZoomAndPan:{}}; dwvApp=new App(); dwvApp.init(opt); }
 catch(e){ console.error('DWV init',e); }
+// One study on screen at a time. DWV draws a second dataset loaded into the same view as a
+// coloured overlay (rainbow colour map), so clear the viewer before every load, and let only
+// the latest click win when an earlier download finishes late.
+let loadToken=0;
+function freshViewer(){
+  try{ dwvApp.abortAllLoads(); }catch(_){}
+  try{ dwvApp.reset(); dwvApp.setDataViewConfigs({'*':[new ViewConfig('layerGroup0')]}); }catch(e){ console.warn('viewer reset',e); }
+}
+function showFiles(files){ loadToken++; freshViewer(); window.pendingArchive=null; dwvApp.loadFiles(files); }
+function showURLs(urls){ loadToken++; freshViewer(); window.pendingArchive=null; dwvApp.loadURLs(urls); }
 const dwvMode=$('#dwvMode'),dwvDz=$('#dwvDz'),dwvSpin=$('#dwvSpin');
 function openMode(){ dwvMode.classList.add('show'); }
 $('#openDicom').onclick=()=>$('#pacsFile').click();
 $('#dzPick').onclick=()=>$('#pacsFile').click();
-$('#dzSample').onclick=()=>{ openMode(); dwvSpin.classList.add('show'); dwvApp.loadURLs(['sample-chest.dcm']); };
-$('#pacsFile').addEventListener('change',e=>{ if(e.target.files.length){ openMode(); dwvSpin.classList.add('show'); dwvApp.loadFiles(e.target.files);} });
+$('#dzSample').onclick=()=>{ openMode(); dwvSpin.classList.add('show'); showURLs(['sample-chest.dcm']); };
+$('#pacsFile').addEventListener('change',e=>{ if(e.target.files.length){ openMode(); dwvSpin.classList.add('show'); showFiles(e.target.files);} });
 const viewer=document.querySelector('.viewer');
 ['dragover','dragenter'].forEach(ev=>viewer.addEventListener(ev,e=>{e.preventDefault();openMode();dwvDz.classList.add('drag');}));
 viewer.addEventListener('dragleave',e=>{e.preventDefault();dwvDz.classList.remove('drag');});
-viewer.addEventListener('drop',e=>{e.preventDefault();dwvDz.classList.remove('drag');openMode();if(e.dataTransfer.files.length){dwvSpin.classList.add('show');dwvApp.loadFiles(e.dataTransfer.files);}});
+viewer.addEventListener('drop',e=>{e.preventDefault();dwvDz.classList.remove('drag');openMode();if(e.dataTransfer.files.length){dwvSpin.classList.add('show');showFiles(e.dataTransfer.files);}});
 function tag(m,t){try{return m[t]&&m[t].value?m[t].value[0]:'';}catch(_){return '';}}
 dwvApp&&dwvApp.addEventListener('load',ev=>{
   dwvDz.classList.add('hide'); dwvSpin.classList.remove('show');
@@ -649,7 +659,7 @@ function getVC(){ try{ return dwvApp.getStageController().getActiveLayerGroup().
 $('#wlPreset').addEventListener('change',e=>{ const v=e.target.value; if(!v)return; const p=v.split(',').map(Number); const vc=getVC(); if(vc){ try{ vc.setWindowLevel(new WindowLevel(p[0],p[1])); $('#wlL').textContent=p[0]; $('#wlW').textContent=p[1]; }catch(err){ console.warn('preset',err); } } });
 // folder / multi-slice series
 $('#openFolder').onclick=()=>$('#pacsFolder').click();
-$('#pacsFolder').addEventListener('change',e=>{ const files=[...e.target.files].filter(f=>/\.dcm$/i.test(f.name)||f.type==='application/dicom'); if(files.length){ openMode(); dwvSpin.classList.add('show'); dwvApp.loadFiles(files); dwvApp.setTool && setTimeout(()=>{try{dwvApp.setTool('Scroll');}catch(_){}} ,300); } });
+$('#pacsFolder').addEventListener('change',e=>{ const files=[...e.target.files].filter(f=>/\.dcm$/i.test(f.name)||f.type==='application/dicom'); if(files.length){ openMode(); dwvSpin.classList.add('show'); showFiles(files); dwvApp.setTool && setTimeout(()=>{try{dwvApp.setTool('Scroll');}catch(_){}} ,300); } });
 // Open a study from the local PACS archive in DWV, and prefill the SATUSEHAT tab with its saved reading.
 window.openArchiveStudy=async(study)=>{
   if(!dwvApp||!study.file)return;
@@ -661,11 +671,14 @@ window.openArchiveStudy=async(study)=>{
     if(study.finding)satu.querySelector('textarea').value=study.finding;
   }
   openMode(); dwvSpin.classList.add('show');
+  const token=++loadToken;
   try{
     const r=await fetch(API_BASE+'/api/studies/'+encodeURIComponent(study.id)+'/file');
     if(!r.ok)throw new Error('HTTP '+r.status);
     const blob=await r.blob();
     const name=study.file.replace(/^[0-9a-f]{12}_/,'');
+    if(token!==loadToken)return;   // a newer click is already loading; drop this one
+    freshViewer();
     window.pendingArchive=study;
     dwvApp.loadFiles([new File([blob],name,{type:blob.type||'application/dicom'})]);
   }catch(e){

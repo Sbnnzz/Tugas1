@@ -15,7 +15,7 @@ terintegrasi dengan platform **SATUSEHAT** (Kemenkes) lewat standar **HL7 FHIR R
 Tugas1/
 ├─ Frontend/                 # buka di browser — tanpa build
 │   ├─ index.html            # Menu utama
-│   ├─ instalasi.html        # Workstation input pemeriksaan + upload
+│   ├─ instalasi.html        # Instalasi Radiografi: permintaan masuk + upload citra
 │   ├─ pacs.html             # PACS Viewer (worklist + DWV real DICOM)
 │   ├─ bedah.html            # Instalasi Bedah: jadwal + laporan operasi
 │   └─ sample-*.dcm          # contoh DICOM untuk tes
@@ -62,7 +62,7 @@ Saat pertama kali backend jalan, akun demo dibuat otomatis:
 | Username | Password | Peran | Bisa |
 |---|---|---|---|
 | `admin` | `admin123` | Admin | semua |
-| `radiografer` | `radiografer123` | Radiografer | Instalasi: kerjakan permintaan masuk, upload citra, kirim ke radiolog (tidak bisa isi bacaan) |
+| `radiografer` | `radiografer123` | Radiografer | Instalasi Radiografi: kerjakan permintaan masuk, upload citra, kirim ke radiolog (tidak bisa isi bacaan) |
 | `radiolog` | `radiolog123` | Radiolog | PACS: baca, isi bacaan, kirim ke SATUSEHAT |
 | `bedah` | `bedah123` | Dokter Bedah | Bedah: minta pemeriksaan radiologi, lihat hasil, jadwal & laporan operasi, kirim Procedure |
 
