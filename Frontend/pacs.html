@@ -781,6 +781,7 @@ dwvApp&&dwvApp.addEventListener('load',ev=>{
 });
 // after the WHOLE load finishes: pick layout (MPR for volumes, single for 2D)
 dwvApp&&dwvApp.addEventListener('loadend',()=>{
+  dwvSpin.classList.remove('show');   // loading sequence finished (success, error OR abort) — never leave the spinner stuck
   try{
     const stg=dwvApp.getStageController();
     const vc=stg.getActiveLayerGroup().getActiveViewLayer().getViewController();
@@ -807,6 +808,7 @@ dwvApp&&dwvApp.addEventListener('loadend',()=>{
 });
 dwvApp&&dwvApp.addEventListener('wlchange',ev=>{try{const v=ev.detail.value;if(v){$('#wlL').textContent=Math.round(v[0]);$('#wlW').textContent=Math.round(v[1]);}}catch(_){}});
 dwvApp&&dwvApp.addEventListener('loaderror',()=>{dwvSpin.classList.remove('show');});
+dwvApp&&dwvApp.addEventListener('loadabort',()=>{dwvSpin.classList.remove('show');});
 const toolMap={wl:'WindowLevel',zoom:'ZoomAndPan',pan:'ZoomAndPan',scroll:'Scroll'};
 function setActiveTool(key){ try{ dwvApp.setTool(toolMap[key]); }catch(_){} document.querySelectorAll('.tool[data-tool]').forEach(x=>x.classList.toggle('active',x.dataset.tool===key)); }
 document.querySelectorAll('.tool[data-tool]').forEach(b=>b.addEventListener('click',()=>{ if(dwvMode.classList.contains('show')&&dwvApp){const t=toolMap[b.dataset.tool];if(t)try{dwvApp.setTool(t);}catch(_){}}}));
@@ -840,6 +842,7 @@ window.openArchiveStudy=async(study)=>{
       return new File([await s.blob()], String(i+1).padStart(4,'0')+'.dcm', {type:'application/dicom'});
     }));
     if(token!==loadToken)return;   // a newer click is already loading; drop this one
+    if(!files.length){ dwvSpin.classList.remove('show'); console.warn('archive study has no slices'); return; }
     freshViewer();
     window.pendingArchive=study;
     dwvApp.loadFiles(files);
