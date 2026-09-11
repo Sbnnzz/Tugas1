@@ -23,6 +23,7 @@ from pydantic import BaseModel
 import auth
 import config
 import operations
+import orders
 from satusehat import client as sehat
 
 app = FastAPI(title="SATUSEHAT PACS Hub API", version="1.0")
@@ -48,6 +49,7 @@ async def no_stale_pages(request: Request, call_next):
 os.makedirs(config.UPLOAD_DIR, exist_ok=True)
 auth.init_db()
 operations.init_db()
+orders.init_db()
 
 # Who may call what. Pages hide what a role cannot use; these checks are the real guard.
 ADMIN = ("admin",)
@@ -56,6 +58,8 @@ ARCHIVE_WRITE = ("radiografer", "admin")                  # register + upload st
 ARCHIVE_READ = ("radiografer", "radiolog", "dokter_bedah", "admin")
 READING_FIELDS = ("icd10", "diagnosis", "finding")
 BEDAH = ("dokter_bedah", "admin")                           # surgery schedule + operation report
+ORDERERS = ("dokter_bedah", "admin")                        # request radiology exams
+EXAM_MODALITIES = ("DX", "CT", "MR", "US")
 
 
 # ---------- archive helpers ----------
@@ -154,13 +158,45 @@ async def send_study(body: dict, user: dict = Depends(auth.require_roles(*REPORT
     result = await sehat.send_study(body)
     if result.get("ok") and body.get("archive_id"):
         # keep the radiologist's reading with the archived study; the surgeon reads it in Bedah
-        update_study(body["archive_id"], {
+        study = update_study(body["archive_id"], {
             **{key: body.get(key, "") for key in READING_FIELDS},
             "sent": True, "reported_by": user["username"],
             "imaging_study_id": result.get("imaging_study_id", ""),
             "diagnostic_report_id": result.get("diagnostic_report_id", ""),
         })
+        if study and study.get("order_id"):
+            orders.set_reported(study["order_id"])
     return result
+
+
+# ---------- radiology requests (permintaan radiologi) ----------
+@app.get("/api/orders")
+def list_orders(status: str = "", nik: str = "", user: dict = Depends(auth.require_roles(*ARCHIVE_READ))):
+    """Requests, newest first, each with its archive study (and the reading, once sent) attached."""
+    studies = {st["id"]: st for st in load_studies()}
+    result = []
+    for order in orders.list_orders(status or None, nik or None):
+        study = studies.get(order["study_id"] or "")
+        order["study"] = ({key: study.get(key) for key in ("id", "file", "created", "modality", "sent",
+                                                          "icd10", "diagnosis", "finding", "reported_by")}
+                          if study else None)
+        result.append(order)
+    return result
+
+
+@app.post("/api/orders")
+def create_order(body: dict, user: dict = Depends(auth.require_roles(*ORDERERS))):
+    """A doctor requests an exam. body: {patient{nik,name,gender,birthDate}, exam{modality,description},
+    indication{icd10,text}, priority, note}"""
+    patient, exam = body.get("patient") or {}, body.get("exam") or {}
+    if not str(patient.get("nik", "")).strip() or not str(exam.get("description", "")).strip():
+        raise HTTPException(status_code=400, detail="NIK pasien dan jenis pemeriksaan wajib diisi")
+    if exam.get("modality") not in EXAM_MODALITIES:
+        raise HTTPException(status_code=400, detail="Modality harus salah satu dari " + ", ".join(EXAM_MODALITIES))
+    data = {"patient": patient, "exam": exam, "indication": body.get("indication") or {},
+            "priority": body.get("priority") or "Biasa", "note": body.get("note") or "",
+            "requester": user["full_name"]}
+    return orders.create_order(data, user["username"])
 
 
 # ---------- Instalasi Bedah (surgery) ----------
@@ -212,6 +248,22 @@ async def add_study(file: UploadFile = File(None), meta: str = Form("{}"),
         for key in READING_FIELDS:
             m.pop(key, None)
     m["saved_by"] = user["username"]
+    order_id = m.get("order_id") or ""
+    if order_id:
+        order = orders.get_order(order_id)
+        if order is None:
+            raise HTTPException(status_code=404, detail="Permintaan radiologi tidak ditemukan")
+        if order["status"] != "requested":
+            raise HTTPException(status_code=409, detail="Permintaan ini sudah diproses")
+        # the request is the source of truth for the patient and what was ordered
+        patient, exam = order["data"].get("patient", {}), order["data"].get("exam", {})
+        m.update({"name": patient.get("name", ""), "nik": patient.get("nik", ""),
+                  "gender": patient.get("gender", ""), "birthDate": patient.get("birthDate", ""),
+                  "modality": exam.get("modality", ""), "description": exam.get("description", ""),
+                  "doctor": order["data"].get("requester", ""),
+                  "clinical": order["data"].get("indication", {}).get("text", ""), "order_id": order_id})
+    elif user["role"] == "radiografer":
+        raise HTTPException(status_code=400, detail="Pilih permintaan radiologi terlebih dulu")
     sid = uuid.uuid4().hex[:12]
     filename = None
     if file is not None:
@@ -229,6 +281,11 @@ async def add_study(file: UploadFile = File(None), meta: str = Form("{}"),
     studies = load_studies()
     studies.insert(0, study)
     save_studies(studies)
+    if order_id:
+        try:
+            orders.set_imaged(order_id, sid)
+        except orders.NotRequested:
+            pass  # finished by someone else at the same moment; the study is kept
     return study
 
 

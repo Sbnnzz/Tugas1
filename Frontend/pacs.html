@@ -571,6 +571,7 @@ async function loadArchive(){
     const r=await fetch(API_BASE+'/api/studies');
     if(!r.ok)throw new Error('HTTP '+r.status);
     studies=await r.json();
+    studies.sort((a,b)=>(a.sent?1:0)-(b.sent?1:0));  // waiting for a reading first
   }catch(err){
     console.warn('Archive unavailable, keeping demo worklist:',err);
     return;

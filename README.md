@@ -62,9 +62,9 @@ Saat pertama kali backend jalan, akun demo dibuat otomatis:
 | Username | Password | Peran | Bisa |
 |---|---|---|---|
 | `admin` | `admin123` | Admin | semua |
-| `radiografer` | `radiografer123` | Radiografer | Instalasi: registrasi, upload, simpan (tidak bisa isi bacaan / kirim) |
+| `radiografer` | `radiografer123` | Radiografer | Instalasi: kerjakan permintaan masuk, upload citra, kirim ke radiolog (tidak bisa isi bacaan) |
 | `radiolog` | `radiolog123` | Radiolog | PACS: baca, isi bacaan, kirim ke SATUSEHAT |
-| `bedah` | `bedah123` | Dokter Bedah | Bedah: lihat hasil radiologi, jadwal & laporan operasi, kirim Procedure |
+| `bedah` | `bedah123` | Dokter Bedah | Bedah: minta pemeriksaan radiologi, lihat hasil, jadwal & laporan operasi, kirim Procedure |
 
 Password demo ini hanya untuk sandbox/tugas. Kelola akun dari folder `Backend/`:
 ```bash
@@ -73,6 +73,23 @@ python seed_users.py add dokter2 radiolog "dr. Nama, Sp.Rad" # tambah akun (pass
 python seed_users.py passwd radiolog                        # ganti password
 ```
 Teman satu wifi login ke server yang sama (`http://<IP-laptop>:8000`) dengan akun yang sama.
+
+## Alur & data demo
+
+```
+Dokter Bedah ──permintaan──► Radiografer ──upload citra──► Radiolog ──bacaan──► SATUSEHAT
+      ▲                                                                 │
+      └──────────── lihat hasil, lalu jadwal & laporan operasi ◄───────┘
+```
+
+Isi data demo (X-ray, CT, MRI untuk pasien dummy SATUSEHAT) dari folder `Backend/`:
+```bash
+python seed_demo.py --reset    # backup Backend/data dulu, akun tidak dihapus
+```
+Hasilnya 3 studi menunggu bacaan radiolog (PACS) dan 3 permintaan menunggu radiografer
+(Instalasi). Untuk tiap permintaan tersedia berkas DICOM siap upload di
+`Backend/data/demo_films/` (nama & NIK pasien sudah tertulis di dalam berkas).
+Sumber citra: `Backend/seed_samples/SOURCES.md`.
 
 ## Endpoint utama (backend)
 
@@ -83,6 +100,7 @@ Teman satu wifi login ke server yang sama (`http://<IP-laptop>:8000`) dengan aku
 | GET  | `/api/auth/me` | akun yang sedang login + peran |
 | GET/POST | `/api/operations` | jadwal & laporan operasi (Dokter Bedah) |
 | POST | `/api/satusehat/send-procedure` | kirim Encounter + Procedure (ICD-9-CM) |
+| GET/POST | `/api/orders` | permintaan radiologi (dokter → radiografer → radiolog) |
 | POST | `/api/satusehat/token` | ambil access token OAuth2 |
 | GET  | `/api/satusehat/patient?nik=` | cari pasien by NIK → IHS |
 | POST | `/api/satusehat/send-study` | build + kirim ImagingStudy + DiagnosticReport |

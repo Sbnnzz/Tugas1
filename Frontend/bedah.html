@@ -142,6 +142,19 @@ a{text-decoration:none;color:inherit}
 .tag.sent{background:rgba(53,196,107,.15);color:var(--green)}
 .tag.scheduled{background:var(--amber-dim);color:var(--amber)}
 .field input:disabled,.field select:disabled,.field textarea:disabled{opacity:.6}
+/* tabs + request list */
+.tabs{display:flex;gap:4px;margin:18px 0 16px;border-bottom:1px solid var(--line)}
+.tab-btn{padding:10px 16px;font-size:13px;font-weight:600;color:var(--txt-2);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab-btn small{font-weight:400;font-size:10.5px;color:var(--txt-3);margin-left:7px}
+.tab-btn:hover{color:var(--txt)}.tab-btn.on{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-pane{display:none}.tab-pane.active{display:block}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chip{padding:5px 10px;border-radius:14px;border:1px solid var(--line);background:var(--bg-panel);font-size:11.5px;color:var(--txt-2)}
+.chip b{font-family:var(--mono);margin-left:3px;color:var(--txt)}
+.chip.on{border-color:var(--accent);background:var(--accent-dim);color:var(--accent)}
+.rq-row{cursor:pointer;transition:border-color .12s}.rq-row:hover{border-color:var(--accent)}
+.rq-row.active{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.muted-s{font-size:10.5px;color:var(--txt-3)}
 </style>
 </head>
 <body>
@@ -169,96 +182,112 @@ a{text-decoration:none;color:inherit}
     <div class="accession">No. Operasi · <b id="opVal">belum disimpan</b></div>
   </div>
 
-  <div class="stepper">
-    <div class="step active"><div class="num">1</div><div><b>Pasien</b><small>NIK &amp; identitas</small></div></div>
-    <div class="step-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
-    <div class="step"><div class="num">2</div><div><b>Hasil Radiologi</b><small>dari arsip PACS</small></div></div>
-    <div class="step-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
-    <div class="step"><div class="num">3</div><div><b>Jadwal</b><small>kamar operasi</small></div></div>
-    <div class="step-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
-    <div class="step"><div class="num">4</div><div><b>Laporan</b><small>ICD-9-CM</small></div></div>
-    <div class="step-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
-    <div class="step"><div class="num">5</div><div><b>Kirim</b><small>SATUSEHAT</small></div></div>
-  </div>
 
-  <div class="grid">
-    <div class="col">
-      <div class="card">
-        <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div><b>Data Pasien</b><small>FHIR Patient</small></div>
-        <div class="card-body">
-          <div class="nik-row">
-            <div class="field"><label>NIK (KTP)</label><input class="mono" id="nik" placeholder="16 digit NIK" value="9271060312000001" /></div>
-            <button class="btn btn-ghost" id="cekBtn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Cek SATUSEHAT</button>
-          </div>
-          <div class="ihs-badge" id="ihsBadge"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg><span>IHS Number ditemukan:</span><b id="ihsVal">—</b></div>
-          <div class="field-row" style="margin-top:13px"><div class="field"><label>Nama Lengkap</label><input id="nama" value="Ardianto Putra" /></div></div>
-          <div class="field-row">
-            <div class="field"><label>Jenis Kelamin</label><select id="jk"><option>Laki-laki</option><option>Perempuan</option></select></div>
-            <div class="field"><label>Tanggal Lahir</label><input class="mono" id="dob" value="1992-01-09" /></div>
-          </div>
-        </div>
+  <div class="card">
+    <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div><b>Data Pasien</b><small>FHIR Patient</small></div>
+    <div class="card-body">
+      <div class="nik-row">
+        <div class="field"><label>NIK (KTP)</label><input class="mono" id="nik" placeholder="16 digit NIK" value="9271060312000001" /></div>
+        <button class="btn btn-ghost" id="cekBtn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Cek SATUSEHAT</button>
       </div>
-
-      <div class="card">
-        <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/><circle cx="8.5" cy="10" r="1.5"/></svg></div><b>Hasil Radiologi Pasien</b><small>arsip PACS</small></div>
-        <div class="card-body" id="radList"><div class="rad-empty">Memuat hasil radiologi…</div></div>
-      </div>
-
-      <div class="card">
-        <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg></div><b>Jadwal Operasi</b><small>FHIR Encounter</small></div>
-        <div class="card-body">
-          <div class="field-row">
-            <div class="field"><label>Mulai Operasi</label><input class="mono" type="datetime-local" id="opStart" /></div>
-            <div class="field"><label>Selesai Operasi</label><input class="mono" type="datetime-local" id="opEnd" /></div>
-          </div>
-          <div class="field"><label>Kamar Operasi</label><select id="room"><option value="OK-01">OK-01 · Kamar Operasi 1</option></select></div>
-          <div class="field-row">
-            <div class="field"><label>Dokter Bedah (Operator)</label><input id="surgeon" /></div>
-            <div class="field"><label>Dokter Anestesi</label><input id="anesthesiologist" value="dr. Lestari Wibowo, Sp.An" /></div>
-          </div>
-          <div class="field"><label>Jenis Anestesi</label><select id="anesthesia"><option>Anestesi Umum</option><option>Anestesi Spinal</option><option>Anestesi Lokal</option></select></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col">
-      <div class="card">
-        <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M9 13h6M9 17h4"/></svg></div><b>Laporan Operasi</b><small>FHIR Procedure</small></div>
-        <div class="card-body">
-          <div class="field-row">
-            <div class="field" style="flex:.8"><label>ICD-10 Pra-Operasi</label><input class="mono" id="preCode" value="K35.8" /></div>
-            <div class="field" style="flex:1.4"><label>Diagnosis Pra-Operasi</label><input id="preText" value="Acute appendicitis, other and unspecified" /></div>
-          </div>
-          <div class="field"><label>Tindakan (ICD-9-CM)</label><select id="proc">
-            <option value="47.09">47.09 · Apendektomi (terbuka)</option>
-            <option value="47.01">47.01 · Apendektomi laparoskopik</option>
-            <option value="51.23">51.23 · Kolesistektomi laparoskopik</option>
-            <option value="53.00">53.00 · Herniorafi inguinal unilateral</option>
-            <option value="54.11">54.11 · Laparotomi eksplorasi</option>
-            <option value="74.1">74.1 · Seksio sesarea</option>
-            <option value="32.41">32.41 · Lobektomi paru torakoskopik</option>
-          </select></div>
-          <div class="field"><label>Diagnosis Pasca-Operasi</label><input id="postDx" value="Apendisitis akut, tidak perforasi" /></div>
-          <div class="field"><label>Temuan Operasi</label><textarea id="findings" rows="3">Apendiks hiperemis dan edema, panjang ±8 cm, tidak perforasi. Tidak tampak abses. Apendiks dipotong, puntung dijahit.</textarea></div>
-          <div class="field"><label>Komplikasi</label><input id="complications" value="Tidak ada" /></div>
-          <div class="actions">
-            <button class="btn btn-ghost" id="saveOpBtn"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan Laporan</button>
-            <button class="btn btn-primary" id="sendOpBtn"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Kirim ke SATUSEHAT</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="console">
-        <div class="console-head" id="consoleHead"><span><i class="led"></i>FHIR R4 · Sandbox</span><span class="mono" style="font-size:9px;color:var(--txt-3)" id="cStatus">siap</span></div>
-        <div class="console-body" id="console"><span class="muted"># Encounter (kamar operasi) → Procedure (ICD-9-CM)</span></div>
-      </div>
-
-      <div class="card">
-        <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div><b>Riwayat Operasi</b><small><span id="opCount">—</span> · <a href="bedah.html" id="newOp" style="color:var(--accent)">+ laporan baru</a></small></div>
-        <div class="card-body" id="opList"><div class="rad-empty">Memuat…</div></div>
+      <div class="ihs-badge" id="ihsBadge"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg><span>IHS Number ditemukan:</span><b id="ihsVal">—</b></div>
+      <div class="field-row" style="margin-top:13px"><div class="field"><label>Nama Lengkap</label><input id="nama" value="Ardianto Putra" /></div></div>
+      <div class="field-row">
+        <div class="field"><label>Jenis Kelamin</label><select id="jk"><option>Laki-laki</option><option>Perempuan</option></select></div>
+        <div class="field"><label>Tanggal Lahir</label><input class="mono" id="dob" value="1992-01-09" /></div>
       </div>
     </div>
   </div>
+  <div class="tabs">
+    <button class="tab-btn on" data-tab="radiologi">Radiologi<small>permintaan &amp; hasil</small></button>
+    <button class="tab-btn" data-tab="operasi">Operasi<small>jadwal &amp; laporan</small></button>
+  </div>
+  <section class="tab-pane active" data-tab="radiologi">
+    <div class="grid">
+      <div class="col">
+        <div class="card" id="orderCard">
+          <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M21 16l-5-5-6 6"/><circle cx="8.5" cy="10" r="1.5"/></svg></div><b>Permintaan Radiologi</b><small>ke Instalasi Radiologi</small></div>
+          <div class="card-body">
+            <div class="field-row">
+              <div class="field" style="flex:.7"><label>Modality</label><select id="rqModality"><option value="DX">DX (X-Ray)</option><option value="CT" selected>CT</option><option value="MR">MR</option><option value="US">US</option></select></div>
+              <div class="field"><label>Jenis Pemeriksaan</label><input id="rqExam" value="CT Abdomen dengan Kontras" /></div>
+            </div>
+            <div class="field-row">
+              <div class="field" style="flex:.7"><label>ICD-10 Indikasi</label><input class="mono" id="rqIcd" value="K35.8" /></div>
+              <div class="field"><label>Indikasi Klinis</label><input id="rqReason" value="Nyeri perut kanan bawah, suspek apendisitis" /></div>
+            </div>
+            <div class="field-row">
+              <div class="field" style="flex:.7"><label>Prioritas</label><select id="rqPriority"><option>Biasa</option><option>CITO</option></select></div>
+              <div class="field"><label>Catatan untuk Radiologi</label><input id="rqNote" placeholder="opsional" /></div>
+            </div>
+            <div class="actions"><button class="btn btn-primary" id="rqBtn"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Kirim Permintaan ke Radiologi</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" id="rqListCard">
+          <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div><b>Daftar Permintaan Radiologi</b><small>semua pasien</small></div>
+          <div class="card-body"><div class="chips" id="rqFilters"></div><div id="radList"><div class="rad-empty">Memuat…</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="tab-pane" data-tab="operasi">
+    <div class="grid">
+      <div class="col">
+        <div class="card">
+          <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg></div><b>Jadwal Operasi</b><small>FHIR Encounter</small></div>
+          <div class="card-body">
+            <div class="field-row">
+              <div class="field"><label>Mulai Operasi</label><input class="mono" type="datetime-local" id="opStart" /></div>
+              <div class="field"><label>Selesai Operasi</label><input class="mono" type="datetime-local" id="opEnd" /></div>
+            </div>
+            <div class="field"><label>Kamar Operasi</label><select id="room"><option value="OK-01">OK-01 · Kamar Operasi 1</option></select></div>
+            <div class="field-row">
+              <div class="field"><label>Dokter Bedah (Operator)</label><input id="surgeon" /></div>
+              <div class="field"><label>Dokter Anestesi</label><input id="anesthesiologist" value="dr. Lestari Wibowo, Sp.An" /></div>
+            </div>
+            <div class="field"><label>Jenis Anestesi</label><select id="anesthesia"><option>Anestesi Umum</option><option>Anestesi Spinal</option><option>Anestesi Lokal</option></select></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M9 13h6M9 17h4"/></svg></div><b>Laporan Operasi</b><small>FHIR Procedure</small></div>
+          <div class="card-body">
+            <div class="field-row">
+              <div class="field" style="flex:.8"><label>ICD-10 Pra-Operasi</label><input class="mono" id="preCode" value="K35.8" /></div>
+              <div class="field" style="flex:1.4"><label>Diagnosis Pra-Operasi</label><input id="preText" value="Acute appendicitis, other and unspecified" /></div>
+            </div>
+            <div class="field"><label>Tindakan (ICD-9-CM)</label><select id="proc">
+              <option value="47.09">47.09 · Apendektomi (terbuka)</option>
+              <option value="47.01">47.01 · Apendektomi laparoskopik</option>
+              <option value="51.23">51.23 · Kolesistektomi laparoskopik</option>
+              <option value="53.00">53.00 · Herniorafi inguinal unilateral</option>
+              <option value="54.11">54.11 · Laparotomi eksplorasi</option>
+              <option value="74.1">74.1 · Seksio sesarea</option>
+              <option value="32.41">32.41 · Lobektomi paru torakoskopik</option>
+            </select></div>
+            <div class="field"><label>Diagnosis Pasca-Operasi</label><input id="postDx" value="Apendisitis akut, tidak perforasi" /></div>
+            <div class="field"><label>Temuan Operasi</label><textarea id="findings" rows="3">Apendiks hiperemis dan edema, panjang ±8 cm, tidak perforasi. Tidak tampak abses. Apendiks dipotong, puntung dijahit.</textarea></div>
+            <div class="field"><label>Komplikasi</label><input id="complications" value="Tidak ada" /></div>
+            <div class="actions">
+              <button class="btn btn-ghost" id="saveOpBtn"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Simpan Laporan</button>
+              <button class="btn btn-primary" id="sendOpBtn"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Kirim ke SATUSEHAT</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="console">
+          <div class="console-head" id="consoleHead"><span><i class="led"></i>FHIR R4 · Sandbox</span><span class="mono" style="font-size:9px;color:var(--txt-3)" id="cStatus">siap</span></div>
+          <div class="console-body" id="console"><span class="muted"># Encounter (kamar operasi) → Procedure (ICD-9-CM)</span></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="hicon"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div><b>Riwayat Operasi</b><small><span id="opCount">—</span> · <a href="bedah.html" id="newOp" style="color:var(--accent)">+ laporan baru</a></small></div>
+          <div class="card-body" id="opList"><div class="rad-empty">Memuat…</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
 
 <script>
@@ -284,20 +313,88 @@ function log(h){consoleEl.innerHTML+='\n'+h;consoleEl.scrollTop=consoleEl.scroll
 // defaults: operation today 09:00-10:15
 (function(){const s=new Date();s.setHours(9,0,0,0);const e=new Date(s.getTime()+75*60000);$('#opStart').value=localInput(s);$('#opEnd').value=localInput(e);})();
 
-// radiology results of this patient, from the PACS archive (the radiologist's reading is saved there on send)
-async function loadRadiology(nik){
-  const box=$('#radList');
-  let list;
-  try{const r=await fetch(API_BASE+'/api/studies');if(!r.ok)throw new Error('HTTP '+r.status);list=await r.json();}
-  catch(err){box.innerHTML='<div class="rad-empty">Arsip PACS tidak dapat dimuat.</div>';return;}
-  const mine=list.filter(s=>(s.nik||'')===nik);
-  if(!mine.length){box.innerHTML='<div class="rad-empty">Belum ada pemeriksaan radiologi untuk NIK ini.</div>';return;}
-  box.innerHTML=mine.map(s=>'<div class="rad-item"><div class="rt"><span>'+esc(s.modality||'—')+'</span>'+esc(s.description||'Studi')+
-    '<i class="tag '+(s.sent?'sent':'scheduled')+'">'+(s.sent?'Dibaca':'Menunggu bacaan')+'</i></div>'+
-    '<div class="rd">'+esc(fmtDate(s.created))+' · No. Arsip '+esc(s.id)+(s.file?'':' · tanpa citra')+'</div>'+
-    '<div class="rr">'+(s.icd10?'<b>'+esc(s.icd10)+'</b> '+esc(s.diagnosis||'')+(s.finding?' — '+esc(s.finding):''):'Belum ada bacaan radiolog.')+'</div></div>').join('');
-  markStep(1);
+// All radiology requests (every patient) with a status filter. Clicking a row opens it: the
+// patient is filled in above, and a finished request shows the radiologist's reading.
+const RQ_STATUS={requested:['Menunggu radiografer','scheduled'],imaged:['Menunggu radiolog','scheduled'],reported:['Selesai','sent']};
+const RQ_FILTERS=[['all','Semua'],['requested','Menunggu radiografer'],['imaged','Menunggu radiolog'],['reported','Selesai']];
+let rqAll=[],rqFilter='all',rqOpen=null;
+async function loadRadiology(){
+  try{const r=await fetch(API_BASE+'/api/orders');if(!r.ok)throw new Error('HTTP '+r.status);rqAll=await r.json();}
+  catch(err){$('#radList').innerHTML='<div class="rad-empty">Permintaan radiologi tidak dapat dimuat.</div>';return;}
+  renderOrders();
 }
+function renderOrders(){
+  $('#rqFilters').innerHTML=RQ_FILTERS.map(([k,label])=>{
+    const n=k==='all'?rqAll.length:rqAll.filter(o=>o.status===k).length;
+    return '<button class="chip'+(rqFilter===k?' on':'')+'" data-f="'+k+'">'+esc(label)+' <b>'+n+'</b></button>';
+  }).join('');
+  $('#rqFilters').querySelectorAll('.chip').forEach(c=>{c.onclick=()=>{rqFilter=c.dataset.f;renderOrders();};});
+  const list=rqFilter==='all'?rqAll:rqAll.filter(o=>o.status===rqFilter);
+  const box=$('#radList');
+  if(!list.length){box.innerHTML='<div class="rad-empty">Tidak ada permintaan di sini.</div>';return;}
+  box.innerHTML='';
+  list.forEach(o=>{
+    const d=o.data||{},p=d.patient||{},ex=d.exam||{},st=RQ_STATUS[o.status]||[o.status,'scheduled'],s=o.study;
+    const el=document.createElement('div');el.className='rad-item rq-row'+(rqOpen===o.id?' active':'');
+    let html='<div class="rt"><span>'+esc(ex.modality||'—')+'</span>'+esc(ex.description||'Pemeriksaan')+' · '+esc(p.name||'—')+
+      (d.priority==='CITO'?' <span style="background:var(--red);color:#fff">CITO</span>':'')+
+      '<i class="tag '+st[1]+'">'+st[0]+'</i></div>'+
+      '<div class="rd">'+esc(o.id)+' · '+esc(fmtDate(o.created))+' · '+esc(d.requester||o.created_by)+'</div>';
+    if(rqOpen===o.id){
+      html+=s&&s.icd10
+        ?'<div class="rr"><b>'+esc(s.icd10)+'</b> '+esc(s.diagnosis||'')+(s.finding?'<br>'+esc(s.finding):'')+
+          '<br><span class="muted-s">dibaca oleh '+esc(s.reported_by||'radiolog')+'</span></div>'+
+          '<div class="actions" style="margin-top:9px"><button class="btn btn-ghost" data-op="1">Lanjut ke Operasi →</button></div>'
+        :'<div class="rr">'+(o.status==='requested'?'Menunggu pemeriksaan oleh radiografer.':'Citra sudah diambil, menunggu bacaan radiolog.')+'</div>';
+    }
+    el.innerHTML=html;
+    el.onclick=e=>{
+      if(e.target.closest('[data-op]')){toOperation(o);return;}
+      rqOpen=rqOpen===o.id?null:o.id;usePatient(p);renderOrders();
+    };
+    box.appendChild(el);
+  });
+}
+// put a request's patient into the patient card (not while a sent, locked operation is open)
+function usePatient(p){
+  if($('#nik').disabled)return;
+  $('#nik').value=p.nik||'';$('#nama').value=p.name||'';if(p.gender)$('#jk').value=p.gender;$('#dob').value=p.birthDate||'';
+  $('#ihsBadge').classList.remove('show');
+}
+// finished request -> Operasi tab, with the radiologist's reading as the pre-operative diagnosis
+function toOperation(o){
+  const s=o.study||{};
+  usePatient((o.data||{}).patient||{});
+  if(s.icd10&&!$('#preCode').disabled){$('#preCode').value=s.icd10;$('#preText').value=s.diagnosis||'';}
+  showTab('operasi');
+}
+// two tabs: Radiologi (requests + results) and Operasi (schedule + report)
+function showTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.dataset.tab===name));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+
+// a new radiology request for this patient; the radiographer sees it in Instalasi
+$('#rqBtn').addEventListener('click',async()=>{
+  const b=$('#rqBtn'),label=b.innerHTML;
+  const body={patient:{nik:$('#nik').value.trim(),name:$('#nama').value.trim(),gender:$('#jk').value,birthDate:$('#dob').value.trim()},
+    exam:{modality:$('#rqModality').value,description:$('#rqExam').value.trim()},
+    indication:{icd10:$('#rqIcd').value.trim(),text:$('#rqReason').value.trim()},
+    priority:$('#rqPriority').value,note:$('#rqNote').value.trim()};
+  b.style.pointerEvents='none';
+  try{
+    const r=await fetch(API_BASE+'/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(d.detail||('HTTP '+r.status));
+    b.innerHTML=CHECK+'Terkirim · '+esc(d.id);
+    loadRadiology(body.patient.nik);
+  }catch(err){b.textContent='Gagal: '+err.message;}
+  b.style.pointerEvents='';
+  setTimeout(()=>{b.innerHTML=label;},3000);
+});
+
 
 // NIK lookup: real SATUSEHAT Patient search through the backend
 $('#cekBtn').addEventListener('click',async()=>{
@@ -362,7 +459,7 @@ async function loadOps(){
     el.innerHTML='<div class="rt"><span>'+esc(rep.proc_code||'—')+'</span>'+esc((rep.proc_label||'Operasi').replace(/^[\d.]+ · /,''))+
       '<i class="tag '+(op.status==='sent'?'sent':'scheduled')+'">'+(op.status==='sent'?'Terkirim':'Dijadwalkan')+'</i></div>'+
       '<div class="rd">'+esc(op.id)+' · '+esc(fmtDate(s.start))+' · '+esc(p.name||'—')+'</div>';
-    el.onclick=()=>{fillForm(op);document.querySelectorAll('.op-item').forEach(x=>x.classList.toggle('active',x===el));};
+    el.onclick=()=>{fillForm(op);showTab('operasi');document.querySelectorAll('.op-item').forEach(x=>x.classList.toggle('active',x===el));};
     box.appendChild(el);
   });
 }
