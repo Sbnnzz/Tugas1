@@ -189,8 +189,14 @@ a{text-decoration:none;color:inherit}
 .load-btn:hover{filter:brightness(1.12)}.load-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .dwv-mode{position:absolute;inset:0;z-index:20;background:#000;display:none}
 .dwv-mode.show{display:block}
-#layerGroup0{position:absolute;inset:0;width:100%;height:100%}
-#layerGroup0 canvas{position:absolute}
+.mpr-grid{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;background:var(--line-soft)}
+.mpr-grid.single{grid-template-columns:1fr;grid-template-rows:1fr}
+.mpr-grid.single #cell1,.mpr-grid.single #cell2,.mpr-grid.single #cell3{display:none}
+.mpr-cell{position:relative;background:#000;overflow:hidden}
+.mpr-cell .lg{position:absolute;inset:0;width:100%;height:100%}
+.mpr-cell .lg canvas{position:absolute}
+.mpr-lbl{position:absolute;top:6px;left:8px;font-family:Arial,'Helvetica Neue',sans-serif;font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--sel);opacity:.85;z-index:6;pointer-events:none;text-shadow:0 1px 2px #000}
+.mpr-grid.single .mpr-lbl{display:none}
 .dwv-close{position:absolute;top:10px;right:10px;z-index:30;display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:6px;background:rgba(18,24,32,.92);border:1px solid var(--line);color:var(--txt-2);font-size:12px;font-weight:600;cursor:pointer}
 .dwv-close:hover{color:var(--txt);border-color:#33414e}.dwv-close svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
 .dwv-dz{position:absolute;inset:0;z-index:25;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(5,7,9,.86);border:2px dashed var(--line)}
@@ -275,7 +281,12 @@ a{text-decoration:none;color:inherit}
     <main class="viewer">
       <div class="vgrid layout-4" id="vgrid"></div>
       <div class="dwv-mode" id="dwvMode">
-        <div id="layerGroup0"></div>
+        <div class="mpr-grid single" id="mprGrid">
+          <div class="mpr-cell" id="cell0"><div class="lg" id="layerGroup0"></div><span class="mpr-lbl">AXIAL</span></div>
+          <div class="mpr-cell" id="cell1"><div class="lg" id="layerGroup1"></div><span class="mpr-lbl">CORONAL</span></div>
+          <div class="mpr-cell" id="cell2"><div class="lg" id="layerGroup2"></div><span class="mpr-lbl">SAGITTAL</span></div>
+          <div class="mpr-cell" id="cell3"><div class="lg" id="layerGroup3"></div><span class="mpr-lbl">—</span></div>
+        </div>
         <button class="dwv-close" id="dwvClose"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>Kembali ke arsip</button>
         <div class="ovl tl" id="dwvTL"></div>
         <div class="ovl tr" id="dwvTR"></div>
@@ -608,7 +619,7 @@ loadArchive();
 import { App, AppOptions, ViewConfig, WindowLevel } from 'https://cdn.jsdelivr.net/npm/dwv@0.37.0-beta.12/+esm';
 const $=s=>document.querySelector(s);
 let dwvApp;
-try{ const vc=new ViewConfig('layerGroup0'); const opt=new AppOptions({'*':[vc]}); opt.tools={Scroll:{},WindowLevel:{},ZoomAndPan:{}}; dwvApp=new App(); dwvApp.init(opt); }
+try{ const vAx=new ViewConfig('layerGroup0'); const opt=new AppOptions({'*':[vAx]}); opt.tools={Scroll:{},WindowLevel:{},ZoomAndPan:{}}; dwvApp=new App(); dwvApp.init(opt); }
 catch(e){ console.error('DWV init',e); }
 const dwvMode=$('#dwvMode'),dwvDz=$('#dwvDz'),dwvSpin=$('#dwvSpin');
 function openMode(){ dwvMode.classList.add('show'); }
@@ -657,6 +668,32 @@ dwvApp&&dwvApp.addEventListener('load',ev=>{
     const ww=tag(m,'00281051'),wc=tag(m,'00281050'); if(ww)$('#wlW').textContent=Math.round(ww); if(wc)$('#wlL').textContent=Math.round(wc);
     dwvApp.setTool('Scroll');
   }catch(_){}
+});
+// after the WHOLE load finishes: pick layout (MPR for volumes, single for 2D)
+dwvApp&&dwvApp.addEventListener('loadend',()=>{
+  try{
+    const stg=dwvApp.getStageController();
+    const vc=stg.getActiveLayerGroup().getActiveViewLayer().getViewController();
+    const n=vc.getImageSize().get(vc.getScrollDimIndex());
+    const grid=document.getElementById('mprGrid');
+    const ids=dwvApp.getDataController().getDataIds();
+    if(n>1){                                       // volume → axial / coronal / sagittal MPR
+      grid.classList.remove('single');
+      requestAnimationFrame(()=>{ try{           // wait a frame so the un-hidden cells have size
+        const ax=new ViewConfig('layerGroup0'); ax.orientation='axial';
+        const co=new ViewConfig('layerGroup1'); co.orientation='coronal';
+        const sa=new ViewConfig('layerGroup2'); sa.orientation='sagittal';
+        stg.setDataViewConfigs({'*':[ax,co,sa]});
+        ids.forEach(id=>stg.render(id));
+        dwvApp.setTool('Scroll');
+      }catch(e){ console.warn('MPR render',e); } });
+    } else {                                       // single image → one native view
+      grid.classList.add('single');
+      stg.setDataViewConfigs({'*':[new ViewConfig('layerGroup0')]});
+      ids.forEach(id=>stg.render(id));
+      dwvApp.setTool('Scroll');
+    }
+  }catch(err){ console.warn('MPR layoutend',err); }
 });
 dwvApp&&dwvApp.addEventListener('wlchange',ev=>{try{const v=ev.detail.value;if(v){$('#wlL').textContent=Math.round(v[0]);$('#wlW').textContent=Math.round(v[1]);}}catch(_){}});
 dwvApp&&dwvApp.addEventListener('loaderror',()=>{dwvSpin.classList.remove('show');});
